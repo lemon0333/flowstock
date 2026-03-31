@@ -1,0 +1,14 @@
+# Local .terraform directories (바이너리 및 플러그인 포함)
+**/.terraform/*
+
+# .tfstate 파일 (민감 정보 포함 및 충돌 방지)
+*.tfstate
+*.tfstate.*
+
+# .env 및 민감한 변수 파일
+.env
+*.tfvars
+*.tfvars.json
+
+# OS 관련 파일
+.DS_Store

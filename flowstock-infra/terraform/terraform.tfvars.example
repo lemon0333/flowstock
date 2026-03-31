@@ -1,0 +1,8 @@
+# terraform.tfvars.example
+# 복사해서 terraform.tfvars로 사용
+# terraform.tfvars는 .gitignore에 추가!
+
+aws_region   = "ap-northeast-2"
+domain_name  = "flowstock.kr"
+environment  = "prod"
+ses_email    = "no-reply@flowstock.kr"
