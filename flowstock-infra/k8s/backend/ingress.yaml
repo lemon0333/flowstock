@@ -1,0 +1,45 @@
+# k3s 기본 Ingress Controller = Traefik
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: flowstock-backend-ingress
+  namespace: flowstock
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: flowstock-cors@kubernetescrd
+spec:
+  rules:
+    - host: api.flowstock.kr
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: flowstock-backend
+                port:
+                  number: 80
+---
+# CORS 미들웨어
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: flowstock-cors
+  namespace: flowstock
+spec:
+  headers:
+    accessControlAllowMethods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+      - PATCH
+    accessControlAllowHeaders:
+      - Authorization
+      - Content-Type
+    accessControlAllowOriginList:
+      - https://flowstock.kr
+      - https://www.flowstock.kr
+    accessControlMaxAge: 86400
+    addVaryHeader: true

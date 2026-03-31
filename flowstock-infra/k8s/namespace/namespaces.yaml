@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: flowstock
+  labels:
+    app: flowstock
+    env: prod
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: flowstock-monitoring
+  labels:
+    app: flowstock
+    env: monitoring
