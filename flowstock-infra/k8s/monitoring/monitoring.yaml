@@ -228,7 +228,7 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
 spec:
   rules:
-    - host: grafana.flowstock.kr
+    - host: grafana.flowstock.info
       http:
         paths:
           - path: /
@@ -238,7 +238,7 @@ spec:
                 name: grafana
                 port:
                   number: 3000
-    - host: jaeger.flowstock.kr
+    - host: jaeger.flowstock.info
       http:
         paths:
           - path: /

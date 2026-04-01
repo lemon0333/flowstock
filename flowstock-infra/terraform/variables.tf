@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "domain_name" {
   description = "FlowStock 도메인"
   type        = string
-  default     = "flowstock.kr"
+  default     = "flowstock.info"
 }
 
 variable "environment" {
