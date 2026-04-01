@@ -1,0 +1,88 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: flowstock-backend
+
+  # ── PostgreSQL ──
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:flowstock}
+    username: ${DB_USERNAME:flowstock}
+    password: ${DB_PASSWORD:flowstock}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  # ── JPA ──
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    open-in-view: false
+
+  # ── Flyway ──
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # ── Jackson ──
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+# ── JWT ──
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret-key-here-change-in-production}
+  access-token-expiry: ${JWT_ACCESS_EXPIRY:3600000}      # 1시간
+  refresh-token-expiry: ${JWT_REFRESH_EXPIRY:604800000}   # 7일
+
+# ── OAuth ──
+oauth:
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:}
+    jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
+  naver:
+    client-id: ${NAVER_CLIENT_ID:}
+    client-secret: ${NAVER_CLIENT_SECRET:}
+
+# ── Claude API ──
+claude:
+  api-key: ${CLAUDE_API_KEY:}
+
+# ── AWS ──
+cloud:
+  aws:
+    region:
+      static: ${AWS_REGION:ap-northeast-2}
+    s3:
+      bucket: ${AWS_S3_BUCKET:flowstock-bucket}
+    credentials:
+      access-key: ${AWS_ACCESS_KEY:}
+      secret-key: ${AWS_SECRET_KEY:}
+    stack:
+      auto: false
+
+# ── Actuator (k3s health/readiness probe) ──
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+
+# ── Logging ──
+logging:
+  level:
+    com.flowstock: ${LOG_LEVEL:INFO}
+    org.hibernate.SQL: DEBUG

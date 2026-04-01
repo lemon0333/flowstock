@@ -1,5 +1,21 @@
-package org.example.app.com.flowstock.domain.news.entity
+package com.flowstock.domain.news.entity
 
+import jakarta.persistence.CascadeType
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
+import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
+import com.flowstock.domain.stock.entity.Stock
+import com.flowstock.global.common.BaseEntity
 import java.time.LocalDateTime
 
 

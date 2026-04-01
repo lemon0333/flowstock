@@ -1,5 +1,11 @@
-package org.example.app.com.flowstock.infra.claude
+package com.flowstock.infra.claude
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBody
+import com.flowstock.domain.news.dto.NewsAnalysisResult
 
 
 @Component

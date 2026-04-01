@@ -1,5 +1,17 @@
-package org.example.app.com.flowstock.domain.news.service
+package com.flowstock.domain.news.service
 
+import com.flowstock.domain.news.entity.News
+import com.flowstock.domain.news.entity.NewsStockRelation
+import com.flowstock.domain.news.entity.RelationType
+import com.flowstock.domain.news.entity.Sentiment
+import com.flowstock.domain.news.repository.NewsRepository
+import com.flowstock.domain.stock.repository.StockRepository
+import com.flowstock.infra.claude.ClaudeClient
+import com.flowstock.domain.news.dto.NewsAnalysisResult
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 
 @Service

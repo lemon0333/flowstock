@@ -1,0 +1,50 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/flowstock
+    username: flowstock
+    password: flowstock
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  flyway:
+    enabled: false
+
+jwt:
+  secret: local-dev-secret-key-must-be-at-least-256-bits-long!!
+  access-token-expiry: 3600000
+  refresh-token-expiry: 604800000
+
+oauth:
+  google:
+    client-id: your-google-client-id
+    jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
+  naver:
+    client-id: your-naver-client-id
+    client-secret: your-naver-client-secret
+
+claude:
+  api-key: your-claude-api-key
+
+cloud:
+  aws:
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: flowstock-dev-bucket
+    credentials:
+      access-key: your-access-key
+      secret-key: your-secret-key
+    stack:
+      auto: false
+
+logging:
+  level:
+    com.flowstock: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
