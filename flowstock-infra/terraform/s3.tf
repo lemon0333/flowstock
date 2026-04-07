@@ -71,6 +71,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "backup" {
     id     = "delete-old-backups"
     status = "Enabled"
 
+    filter {}
+
     expiration {
       days = 30 # 30일 이후 자동 삭제
     }
