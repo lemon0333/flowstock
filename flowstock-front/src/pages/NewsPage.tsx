@@ -1,0 +1,142 @@
+/**
+ * ============================================================
+ * 뉴스 시각화 페이지 (/news)
+ * - 뉴스 목록 (클릭 시 네트워크 그래프에 반영)
+ * - 토스 스타일: 부드러운 카드 + 라운딩
+ * ============================================================
+ */
+
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Clock, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import Layout from "@/components/layout/Layout";
+import NetworkGraph from "@/components/stock/NetworkGraph";
+import { news, stocks } from "@/mocks/data";
+
+export default function NewsPage() {
+  const [selectedIds, setSelectedIds] = useState<string[]>(
+    news.slice(0, 3).map((n) => n.id)
+  );
+
+  const toggleNews = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const selectedNews = news.filter((n) => selectedIds.includes(n.id));
+  const affectedStockIds = [...new Set(selectedNews.flatMap((n) => n.relatedStocks))];
+  const affectedStocks = stocks.filter((s) => affectedStockIds.includes(s.id));
+
+  const ImpactIcon = ({ impact }: { impact: string }) => {
+    if (impact === "positive") return <TrendingUp className="h-4 w-4 text-positive" />;
+    if (impact === "negative") return <TrendingDown className="h-4 w-4 text-negative" />;
+    return <Minus className="h-4 w-4 text-muted-foreground" />;
+  };
+
+  return (
+    <Layout>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* ── 좌측: 뉴스 목록 ── */}
+        <div className="lg:col-span-1">
+          <h2 className="text-base font-bold text-foreground mb-3">
+            뉴스 선택
+          </h2>
+          <div className="bg-card rounded-2xl overflow-hidden max-h-[600px] overflow-y-auto" style={{ boxShadow: 'var(--shadow-card)' }}>
+            {news.map((item) => {
+              const isSelected = selectedIds.includes(item.id);
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => toggleNews(item.id)}
+                  className={`w-full text-left px-5 py-4 transition-all border-b border-border/50 last:border-0 ${
+                    isSelected ? "bg-primary/5 border-l-3 border-l-primary" : "hover:bg-accent/40 border-l-3 border-l-transparent"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <ImpactIcon impact={item.impact} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground leading-snug line-clamp-2">
+                        {item.title}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                        {item.summary}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {item.source} · {item.date}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── 우측: 네트워크 그래프 + 영향 종목 ── */}
+        <div className="lg:col-span-2 space-y-4">
+          <div>
+            <h2 className="text-base font-bold text-foreground mb-3">
+              뉴스-기업 관계 네트워크
+            </h2>
+            {selectedNews.length > 0 ? (
+              <NetworkGraph newsItems={selectedNews} height={350} />
+            ) : (
+              <div className="h-[350px] bg-card border border-border rounded-2xl flex items-center justify-center text-sm text-muted-foreground">
+                뉴스를 선택하면 관계 그래프가 표시됩니다
+              </div>
+            )}
+          </div>
+
+          <div>
+            <h2 className="text-base font-bold text-foreground mb-3">
+              영향받는 종목 ({affectedStocks.length})
+            </h2>
+            <div className="bg-card rounded-2xl overflow-hidden" style={{ boxShadow: 'var(--shadow-card)' }}>
+              {affectedStocks.length > 0 ? (
+                <div>
+                  <div className="flex items-center px-5 py-3 border-b border-border text-xs font-semibold text-muted-foreground">
+                    <span className="flex-1">종목</span>
+                    <span className="w-24 text-right">현재가</span>
+                    <span className="w-20 text-right">등락률</span>
+                    <span className="w-20 text-right">섹터</span>
+                  </div>
+                  {affectedStocks.map((s) => (
+                    <Link
+                      key={s.id}
+                      to={`/stock/${s.id}`}
+                      className="flex items-center px-5 py-3.5 hover:bg-accent/40 transition-colors border-b border-border/30 last:border-0"
+                    >
+                      <div className="flex-1 flex items-center gap-2">
+                        <span className="text-sm font-semibold text-foreground">{s.name}</span>
+                        <span className="ticker-tag">{s.id}</span>
+                      </div>
+                      <span className="w-24 text-right font-data text-sm font-medium text-foreground">
+                        {s.price.toLocaleString()}
+                      </span>
+                      <span className={`w-20 text-right font-data text-sm font-semibold ${
+                        s.changePercent >= 0 ? "text-positive" : "text-negative"
+                      }`}>
+                        {s.changePercent >= 0 ? "+" : ""}{s.changePercent.toFixed(2)}%
+                      </span>
+                      <span className="w-20 text-right text-xs text-muted-foreground">
+                        {s.sector}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-10 text-center text-sm text-muted-foreground">
+                  선택된 뉴스와 관련된 종목이 없습니다
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
+}
