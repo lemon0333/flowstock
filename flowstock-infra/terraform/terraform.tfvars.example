@@ -3,6 +3,6 @@
 # terraform.tfvars는 .gitignore에 추가!
 
 aws_region   = "ap-northeast-2"
-domain_name  = "flowstock.kr"
+domain_name  = "flowstock.info"
 environment  = "prod"
-ses_email    = "no-reply@flowstock.kr"
+ses_email    = "no-reply@flowstock.info"

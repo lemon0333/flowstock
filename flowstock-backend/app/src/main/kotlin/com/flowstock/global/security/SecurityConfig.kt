@@ -28,14 +28,10 @@ class SecurityConfig(
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 auth
-                    // 인증 없이 접근 가능
-                    .requestMatchers("/api/members/signup").permitAll()
-                    .requestMatchers("/api/members/login").permitAll()
-                    .requestMatchers("/api/members/token/refresh").permitAll()
-                    .requestMatchers("/api/members/oauth/**").permitAll()
-                    // 뉴스/주식 조회는 공개
-                    .requestMatchers(HttpMethod.GET, "/api/news/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/stocks/**").permitAll()
+                    // 인증 없이 접근 가능 (OAuth 로그인만 허용)
+                    .requestMatchers(HttpMethod.POST, "/api/members/oauth/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/members/oauth/naver/callback").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/members/token/refresh").permitAll()
                     // Actuator (k3s health check)
                     .requestMatchers("/actuator/**").permitAll()
                     // 나머지는 인증 필요

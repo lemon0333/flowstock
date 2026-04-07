@@ -1,48 +1,74 @@
 # FlowStock - AI 기반 주식 뉴스 분석 플랫폼
 
 ## 프로젝트 개요
-주식 관련 뉴스를 AI(Claude API)로 분석하여 종목과의 관계, 감성 분석, 영향도를 시각화하는 서비스.
+주식 관련 뉴스를 AI(Claude API + LangChain)로 분석하여 종목과의 관계, 감성 분석, 영향도를 시각화하는 서비스.
 도메인: `flowstock.info`
 
 ## 아키텍처
-- **프론트엔드**: AWS S3 + CloudFront CDN
-- **백엔드**: 온프레미스 k3s 클러스터 (Cloudflare Tunnel로 연결)
+- **프론트엔드**: React 18 + Vite → AWS S3 + CloudFront CDN
+- **백엔드 (Kotlin)**: Spring Boot 3.2 — 인증, CRUD, DB 접근, API Gateway
+- **AI 서비스 (Python)**: FastAPI + LangChain — 뉴스 분석, 차트 분석, 그래프 생성
 - **DB**: PostgreSQL 16 (k3s StatefulSet, 20Gi)
 - **캐시**: Redis 7 (k3s StatefulSet, 5Gi)
 - **모니터링**: Prometheus + Grafana + Jaeger
+- **인프라**: 온프레미스 k3s + Cloudflare Tunnel, AWS (S3/CloudFront/Route53)
+
+### 서비스 간 통신
+```
+Frontend (React :3000)
+  └→ Kotlin Backend (Spring Boot :8080)
+       ├── /api/members/oauth/** (인증 - OAuth Only)
+       ├── /api/stocks/** (종목 CRUD)
+       ├── /api/news/** (뉴스 CRUD)
+       ├── /api/market (시장지수)
+       └── /api/portfolio/** (포트폴리오)
+            └→ Python AI Service (FastAPI :8000)
+                 ├── /api/ai/news/analyze (뉴스 감성분석)
+                 ├── /api/ai/chart/analyze (차트 기술적 분석)
+                 └── /api/ai/graph/generate (네트워크 그래프)
+```
 
 ## Frontend (`flowstock-front/`)
 
 ### 스택
 - React 18 + TypeScript + Vite
 - Tailwind CSS + shadcn/ui (Radix UI)
-- TanStack React Query (서버 상태) + Zustand (클라이언트 상태)
-- React Router v6
+- TanStack React Query (서버 상태) + Zustand (클라이언트 상태, localStorage 영속화)
+- React Router v6 + ProtectedRoute (인증 필수)
 
 ### 주요 라이브러리
 - `@xyflow/react` - 뉴스-종목 네트워크 그래프
 - `lightweight-charts` - TradingView 캔들스틱 차트
 - `recharts` - 포트폴리오 분석 차트
-- `msw` - 개발용 API 모킹 (프로덕션에서 비활성화)
 
 ### 명령어
 ```bash
 cd flowstock-front
-npm run dev        # 개발 서버 (http://localhost:8080)
+npm run dev        # 개발 서버 (http://localhost:3000, /api → :8080 프록시)
 npm run build      # 프로덕션 빌드
 npm run lint       # ESLint
 npm run test       # Vitest 단위 테스트
 ```
 
 ### 페이지 구조
-| 경로 | 페이지 | 설명 |
-|------|--------|------|
-| `/` | Index | 시장 지수, 등락 종목, 뉴스 요약 |
-| `/stock/:id` | StockDetail | 캔들차트, 뉴스 네트워크 그래프 |
-| `/news` | NewsPage | 뉴스 목록 + 네트워크 시각화 |
-| `/portfolio` | PortfolioPage | 포트폴리오 관리, 섹터 분포 |
-| `/login` | LoginPage | 로그인 |
-| `/signup` | SignupPage | 회원가입 |
+| 경로 | 페이지 | 인증 | 설명 |
+|------|--------|------|------|
+| `/` | Index | 필수 | 시장 지수, 등락 종목, 뉴스 요약 |
+| `/stock/:id` | StockDetail | 필수 | 캔들차트, 뉴스 네트워크 그래프 |
+| `/news` | NewsPage | 필수 | 뉴스 목록 + 네트워크 시각화 |
+| `/portfolio` | PortfolioPage | 필수 | 포트폴리오 관리, 섹터 분포 |
+| `/login` | LoginPage | 공개 | Google/Naver OAuth 로그인 |
+
+### 주요 파일
+- `src/services/api.ts` — 중앙 API 클라이언트 (토큰 자동 첨부, 401 처리)
+- `src/components/auth/ProtectedRoute.tsx` — 인증 라우트 가드
+- `src/stores/useStore.ts` — Zustand 상태 (auth + portfolio, localStorage 영속화)
+
+### 프론트 환경변수
+- `VITE_API_URL` — 백엔드 API URL (기본: `/api`, 프록시 사용)
+- `VITE_GOOGLE_CLIENT_ID` — Google OAuth Client ID
+- `VITE_NAVER_CLIENT_ID` — Naver OAuth Client ID
+- `VITE_NAVER_CALLBACK_URL` — Naver OAuth 콜백 URL
 
 ### 경로 alias
 - `@/` → `src/`
@@ -54,6 +80,7 @@ npm run test       # Vitest 단위 테스트
 - Gradle (Kotlin DSL), JVM 21
 - Spring Data JPA + QueryDSL + Flyway
 - Spring Security + JWT (JJWT 0.12.3)
+- WebClient (Python AI 서비스 호출)
 
 ### 명령어
 ```bash
@@ -68,40 +95,92 @@ cd flowstock-backend
 ```
 com.flowstock
 ├── domain/
-│   ├── member/    # 회원, OAuth(Google/Naver), JWT 인증
-│   ├── news/      # 뉴스, AI 분석, 종목 연관관계
+│   ├── member/    # 회원, OAuth(Google/Naver), JWT 인증 (이메일 가입/로그인 제거됨)
+│   ├── news/      # 뉴스 CRUD, AI 분석 요청 (Python 서비스 호출)
 │   ├── stock/     # 종목, 가격(OHLCV)
 │   ├── dart/      # DART 공시 (미구현)
 │   └── portfolio/ # 포트폴리오 (미구현)
 ├── global/
-│   ├── security/  # JWT 필터, SecurityConfig
+│   ├── security/  # JWT 필터, SecurityConfig (OAuth 전용)
 │   ├── exception/ # BusinessException, ErrorCode
 │   ├── response/  # ApiResponse<T> 래퍼
 │   └── config/    # JPA Auditing, RestTemplate
 └── infra/
-    └── claude/    # Claude API 클라이언트
+    └── ai/        # AiServiceClient (Python FastAPI 호출)
 ```
 
 ### 주요 API
-- `POST /api/members/signup` - 회원가입
-- `POST /api/members/login` - 로그인
-- `POST /api/members/oauth/{provider}` - 소셜 로그인 (Google/Naver)
-- `GET /api/members/me` - 내 정보
-- `POST /api/members/token/refresh` - 토큰 갱신
+- `POST /api/members/oauth/{provider}` - 소셜 로그인 (Google/Naver) — 공개
+- `POST /api/members/token/refresh` - 토큰 갱신 — 공개
+- `GET /api/members/me` - 내 정보 — 인증 필수
+- `GET /api/news/**` - 뉴스 조회 — 인증 필수
+- `GET /api/stocks/**` - 종목 조회 — 인증 필수
+- `GET /actuator/**` - 헬스체크 — 공개
+
+### 인증 방식
+- **OAuth Only**: Google/Naver 소셜 로그인만 지원 (이메일 가입/로그인 제거)
+- 인증 안 된 요청은 OAuth, token refresh, actuator 외 전부 차단
 
 ### 프로파일
 - `local`: H2/로컬 PostgreSQL, Flyway 비활성, ddl-auto=update
 - `prod` (기본): PostgreSQL, Flyway 활성, ddl-auto=validate
 
-### 외부 API
-- **Claude (Anthropic)**: 뉴스 감성분석, 요약, 종목 연관도 추출
+### 외부 연동
+- **Python AI Service**: 뉴스 감성분석, 차트 분석, 그래프 생성 (`ai-service.url` 설정)
 - **KIS (한국투자증권)**: 주가 데이터
-- **DART**: 전자공시
+- **DART**: 전자공시 (미구현)
+
+## AI Service (`flowstock-ai/`)
+
+### 스택
+- Python 3.12 + FastAPI
+- LangChain + langchain-anthropic (Claude claude-sonnet-4-20250514)
+- Pydantic v2 (스키마 검증)
+- 향후: LangGraph (에이전트 오케스트레이션), LangSmith (트레이싱)
+
+### 명령어
+```bash
+cd flowstock-ai
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000  # 로컬 실행
+```
+
+### 에이전트 구조
+```
+flowstock-ai/
+├── app/
+│   ├── main.py              # FastAPI 엔트리포인트 + /health
+│   ├── config.py            # Settings (CLAUDE_API_KEY 등)
+│   ├── agents/
+│   │   ├── news_analyzer.py # 뉴스 감성분석 + 종목 연관도 추출
+│   │   ├── chart_agent.py   # OHLCV 기술적 분석
+│   │   └── graph_agent.py   # 뉴스-종목 네트워크 그래프 생성
+│   ├── models/
+│   │   └── schemas.py       # Pydantic 요청/응답 모델
+│   └── routers/
+│       ├── news.py          # POST /api/ai/news/analyze
+│       ├── chart.py         # POST /api/ai/chart/analyze
+│       └── graph.py         # POST /api/ai/graph/generate
+├── requirements.txt
+└── Dockerfile
+```
+
+### AI 에이전트별 역할
+| 에이전트 | API | 설명 |
+|---------|-----|------|
+| NewsAnalyzer | `POST /api/ai/news/analyze` | 뉴스 감성(POS/NEG/NEU), 요약, 중요도, 관련종목+영향도 |
+| ChartAgent | `POST /api/ai/chart/analyze` | OHLCV 패턴 분석, 추세, 지지/저항선 |
+| GraphAgent | `POST /api/ai/graph/generate` | ReactFlow 호환 노드/엣지 그래프 데이터 생성 |
+
+### AI 환경변수
+- `CLAUDE_API_KEY` — Anthropic API 키 (필수)
+- `APP_PORT` — 서버 포트 (기본: 8000)
+- `LOG_LEVEL` — 로그 레벨 (기본: INFO)
 
 ## Infrastructure (`flowstock-infra/`)
 
 ### Terraform (`terraform/`)
-- AWS Provider: ap-northeast-2 (서울)
+- AWS Provider: **ap-northeast-2** (서울) — CloudFront ACM만 us-east-1
 - S3: frontend(정적파일), backup(DB백업, 30일), assets(업로드)
 - CloudFront: S3 + API 오리진, SPA 라우팅, ACM SSL
 - Route53: flowstock.info DNS
@@ -112,15 +191,22 @@ com.flowstock
 ### Kubernetes (`k8s/`)
 - **네임스페이스**: flowstock, flowstock-monitoring
 - **백엔드**: Deployment (2~3 replica, HPA), ClusterIP Service
+- **AI 서비스**: Deployment (1 replica), ClusterIP Service (:8000)
 - **PostgreSQL**: StatefulSet, 20Gi PVC
 - **Redis**: StatefulSet, 5Gi, allkeys-lru 정책
 - **Ingress**: Traefik + CORS 미들웨어
 - **모니터링**: Prometheus(15s scrape) + Grafana + Jaeger
 
+### 시크릿 관리
+- `k8s/namespace/secrets.yaml` — `stringData` + `${VAR}` 플레이스홀더 (커밋 가능)
+- `flowstock-infra/.env` — 실제 시크릿 값 (.gitignore됨)
+- `flowstock-infra/.env.example` — 키 목록 템플릿 (커밋됨)
+- `flowstock-infra/scripts/generate-secrets.sh` — .env 로드 → envsubst → kubectl apply
+
 ### 배포 플로우
 1. Terraform apply (AWS 리소스)
-2. k3s 클러스터에 namespace, secrets 생성
-3. PostgreSQL → Redis → Backend → Ingress → Monitoring 순서 배포
+2. `.env` 파일 작성 후 `scripts/generate-secrets.sh` 실행
+3. PostgreSQL → Redis → AI Service → Backend → Ingress → Monitoring 순서 배포
 4. 프론트엔드: S3 업로드 + CloudFront 캐시 무효화
 
 ## 환경 변수 (시크릿)
@@ -129,6 +215,7 @@ com.flowstock
 - `DART_API_KEY`, `CLAUDE_API_KEY`
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
 - OAuth: `GOOGLE_CLIENT_ID`, `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`
+- 백엔드: `AI_SERVICE_URL` (Python 서비스 주소)
 
 ## 컨벤션
 - 커밋 메시지: `add : 설명` / `fix : 설명` 형식 (한국어)
@@ -136,9 +223,11 @@ com.flowstock
 - 예외 처리: `BusinessException` + `ErrorCode` enum
 - 엔티티: `BaseEntity` 상속 (createdAt, updatedAt 자동 관리)
 - 프론트 컴포넌트: shadcn/ui 기반, `cn()` 유틸로 클래스 병합
+- 인증: OAuth Only (Google/Naver), 이메일 가입/로그인 없음
 
 ## 주의사항
 - Terraform apply 시 기존 리소스가 있으면 반드시 `terraform import` 먼저 실행
-- MSW는 개발 환경에서만 동작 (`import.meta.env.PROD`로 체크)
 - 프론트 빌드 시 `@/` 경로 alias 확인
-- k8s secrets는 yaml이 아닌 `kubectl create secret` 명령어로 생성 권장
+- k8s secrets는 `scripts/generate-secrets.sh` 스크립트로 생성 (.env 필요)
+- 프론트 개발 서버 포트 3000, 백엔드 8080, AI 서비스 8000 (포트 충돌 주의)
+- AI 서비스는 k8s 내부에서 `http://ai-service.flowstock.svc.cluster.local:8000`으로 호출

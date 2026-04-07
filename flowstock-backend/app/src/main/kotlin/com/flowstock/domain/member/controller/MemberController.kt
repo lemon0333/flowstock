@@ -7,7 +7,6 @@ import com.flowstock.global.exception.BusinessException
 import com.flowstock.global.exception.ErrorCode
 import com.flowstock.global.response.ApiResponse
 import jakarta.validation.Valid
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
@@ -18,36 +17,6 @@ class MemberController(
     private val memberService: MemberService,
     private val naverOAuthService: NaverOAuthService,
 ) {
-
-    // ── 일반 회원가입 / 로그인 ──
-
-    @PostMapping("/signup")
-    fun signup(@Valid @RequestBody request: SignupRequest): ResponseEntity<ApiResponse<SignupResponse>> {
-        val result = memberService.signup(request)
-        val response = SignupResponse(
-            memberId = result.member.id,
-            email = result.member.email,
-            nickname = result.member.nickname,
-            role = result.member.role,
-            accessToken = result.accessToken,
-            refreshToken = result.refreshToken,
-            createdAt = result.member.createdAt,
-        )
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(ApiResponse.success(response, "회원 가입이 완료되었습니다."))
-    }
-
-    @PostMapping("/login")
-    fun login(@Valid @RequestBody request: LoginRequest): ResponseEntity<ApiResponse<LoginResponse>> {
-        val result = memberService.login(request)
-        val response = LoginResponse(
-            accessToken = result.accessToken,
-            refreshToken = result.refreshToken,
-            memberId = result.memberId,
-            nickname = result.nickname,
-        )
-        return ResponseEntity.ok(ApiResponse.success(response, "로그인 되었습니다."))
-    }
 
     @PostMapping("/logout")
     fun logout(): ResponseEntity<ApiResponse<Unit>> {

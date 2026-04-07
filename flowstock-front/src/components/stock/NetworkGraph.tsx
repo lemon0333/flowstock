@@ -19,7 +19,6 @@ import {
   Position,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { stocks } from "@/mocks/data";
 
 /** 뉴스 데이터 타입 */
 interface NewsItem {
@@ -29,8 +28,15 @@ interface NewsItem {
   impact: "positive" | "negative" | "neutral";
 }
 
+interface StockItem {
+  id: string;
+  name: string;
+  [key: string]: any;
+}
+
 interface Props {
   newsItems: NewsItem[];
+  stocks?: StockItem[];
   height?: number;
 }
 
@@ -67,7 +73,7 @@ const nodeTypes: NodeTypes = {
   stockNode: StockNode,
 };
 
-export default function NetworkGraph({ newsItems, height = 400 }: Props) {
+export default function NetworkGraph({ newsItems, stocks = [], height = 400 }: Props) {
   /** 노드/엣지 데이터 생성 */
   const { nodes, edges } = useMemo(() => {
     const nodeList: Node[] = [];

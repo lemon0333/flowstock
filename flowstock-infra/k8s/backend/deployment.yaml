@@ -90,6 +90,8 @@ spec:
                 secretKeyRef:
                   name: flowstock-secrets
                   key: AWS_SECRET_ACCESS_KEY
+            - name: AI_SERVICE_URL
+              value: "http://ai-service.flowstock.svc.cluster.local:8000"
           resources:
             requests:
               memory: "512Mi"

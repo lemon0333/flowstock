@@ -7,12 +7,12 @@
  * ============================================================
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Plus, Trash2, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { useStore } from "@/stores/useStore";
-import { stocks, news } from "@/mocks/data";
+import { stockApi, newsApi } from "@/services/api";
 
 /** 섹터별 색상 맵 */
 const SECTOR_COLORS: Record<string, string> = {
@@ -26,15 +26,38 @@ const SECTOR_COLORS: Record<string, string> = {
 export default function PortfolioPage() {
   const { holdings, addHolding, removeHolding } = useStore();
 
+  const [stocks, setStocks] = useState<any[]>([]);
+  const [news, setNews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [formStockId, setFormStockId] = useState("");
   const [formQuantity, setFormQuantity] = useState("");
   const [formAvgPrice, setFormAvgPrice] = useState("");
 
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [stockRes, newsRes] = await Promise.all([
+          stockApi.getAll(),
+          newsApi.getLatest(),
+        ]);
+        setStocks(stockRes.data ?? []);
+        const newsData = Array.isArray(newsRes.data) ? newsRes.data : newsRes.data?.content ?? [];
+        setNews(newsData);
+      } catch {
+        // 데이터 로딩 실패 시 빈 배열 유지
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   /** 섹터별 비중 계산 */
   const sectorData = Object.entries(
     holdings.reduce<Record<string, number>>((acc, h) => {
-      const stock = stocks.find((s) => s.id === h.stockId);
+      const stock = stocks.find((s: any) => s.id === h.stockId);
       const value = (stock?.price ?? h.avgPrice) * h.quantity;
       acc[h.sector] = (acc[h.sector] || 0) + value;
       return acc;
@@ -46,16 +69,16 @@ export default function PortfolioPage() {
   }));
 
   const totalValue = holdings.reduce((sum, h) => {
-    const stock = stocks.find((s) => s.id === h.stockId);
+    const stock = stocks.find((s: any) => s.id === h.stockId);
     return sum + (stock?.price ?? h.avgPrice) * h.quantity;
   }, 0);
 
-  const impactNews = news.filter((n) =>
-    n.relatedStocks.some((sid) => holdings.some((h) => h.stockId === sid))
+  const impactNews = news.filter((n: any) =>
+    (n.relatedStocks || []).some((sid: string) => holdings.some((h) => h.stockId === sid))
   );
 
   const handleAdd = () => {
-    const stock = stocks.find((s) => s.id === formStockId);
+    const stock = stocks.find((s: any) => s.id === formStockId);
     if (!stock || !formQuantity || !formAvgPrice) return;
 
     addHolding({
@@ -71,6 +94,16 @@ export default function PortfolioPage() {
     setFormAvgPrice("");
     setShowForm(false);
   };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center py-20">
+          <p className="text-muted-foreground">데이터를 불러오는 중...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -103,8 +136,8 @@ export default function PortfolioPage() {
                   >
                     <option value="">선택</option>
                     {stocks
-                      .filter((s) => !holdings.some((h) => h.stockId === s.id))
-                      .map((s) => (
+                      .filter((s: any) => !holdings.some((h) => h.stockId === s.id))
+                      .map((s: any) => (
                         <option key={s.id} value={s.id}>{s.name}</option>
                       ))}
                   </select>
@@ -152,7 +185,7 @@ export default function PortfolioPage() {
             </div>
 
             {holdings.map((h) => {
-              const stock = stocks.find((s) => s.id === h.stockId);
+              const stock = stocks.find((s: any) => s.id === h.stockId);
               const currentPrice = stock?.price ?? h.avgPrice;
               const evalValue = currentPrice * h.quantity;
               const profitRate = ((currentPrice - h.avgPrice) / h.avgPrice) * 100;
@@ -201,7 +234,7 @@ export default function PortfolioPage() {
           <div className="flex items-center justify-between mt-3 px-5 py-4 bg-card rounded-2xl" style={{ boxShadow: 'var(--shadow-card)' }}>
             <span className="text-sm font-medium text-muted-foreground">총 평가금액</span>
             <span className="font-data text-xl font-bold text-foreground">
-              ₩{totalValue.toLocaleString()}
+              {totalValue.toLocaleString()}
             </span>
           </div>
         </div>
@@ -238,7 +271,7 @@ export default function PortfolioPage() {
                       color: "hsl(222, 47%, 11%)",
                       boxShadow: "var(--shadow-elevated)",
                     }}
-                    formatter={(value: number) => [`₩${value.toLocaleString()}`, "평가금액"]}
+                    formatter={(value: number) => [`${value.toLocaleString()}`, "평가금액"]}
                   />
                   <Legend
                     wrapperStyle={{ fontSize: "12px", color: "hsl(220, 9%, 46%)" }}
@@ -255,7 +288,7 @@ export default function PortfolioPage() {
             </h2>
             <div className="bg-card rounded-2xl divide-y divide-border/50" style={{ boxShadow: 'var(--shadow-card)' }}>
               {impactNews.length > 0 ? (
-                impactNews.map((n) => (
+                impactNews.map((n: any) => (
                   <div key={n.id} className="px-5 py-4">
                     <div className="flex items-start gap-2.5">
                       {n.impact === "positive" ? (

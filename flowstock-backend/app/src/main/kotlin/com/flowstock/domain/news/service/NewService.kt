@@ -6,8 +6,7 @@ import com.flowstock.domain.news.entity.RelationType
 import com.flowstock.domain.news.entity.Sentiment
 import com.flowstock.domain.news.repository.NewsRepository
 import com.flowstock.domain.stock.repository.StockRepository
-import com.flowstock.infra.claude.ClaudeClient
-import com.flowstock.domain.news.dto.NewsAnalysisResult
+import com.flowstock.infra.ai.AiServiceClient
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import org.springframework.stereotype.Service
@@ -19,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional
 class NewsService(
     private val newsRepository: NewsRepository,
     private val stockRepository: StockRepository,
-    private val claudeClient: ClaudeClient,
+    private val aiServiceClient: AiServiceClient,
 ) {
 
     // 최신 뉴스 목록
@@ -84,20 +83,20 @@ class NewsService(
             )
         }
 
-    // Claude API로 뉴스 분석 + 종목 연결관계 추출
+    // AI 서비스로 뉴스 분석 + 종목 연결관계 추출
     @Transactional
     suspend fun analyzeNewsWithAI(newsId: Long): News = coroutineScope {
         val news = newsRepository.findById(newsId).orElseThrow()
 
-        // Claude API 호출 — 감성분석 + 관련종목 + 영향도 한번에
+        // AI 서비스 호출 — 감성분석 + 관련종목 + 영향도 한번에
         val analysisDeferred = async {
-            claudeClient.analyzeNews(
+            aiServiceClient.analyzeNews(
                 title   = news.title,
                 content = news.content ?: "",
             )
         }
 
-        val analysis: NewsAnalysisResult = analysisDeferred.await()
+        val analysis = analysisDeferred.await()
 
         // 감성 분석 결과 저장
         news.sentiment = Sentiment.valueOf(analysis.sentiment)
@@ -106,7 +105,7 @@ class NewsService(
 
         // 관련 종목 연결관계 저장
         analysis.relatedStocks.forEach { related ->
-            val stock = stockRepository.findByCode(related.code) ?: return@forEach
+            val stock = stockRepository.findByCode(related.stockCode) ?: return@forEach
 
             val relation = NewsStockRelation(
                 news         = news,

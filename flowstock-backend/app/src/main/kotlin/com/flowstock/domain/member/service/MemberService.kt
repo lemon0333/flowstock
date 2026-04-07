@@ -1,7 +1,5 @@
 package com.flowstock.domain.member.service
 
-import com.flowstock.domain.member.dto.LoginRequest
-import com.flowstock.domain.member.dto.SignupRequest
 import com.flowstock.domain.member.entity.Member
 import com.flowstock.domain.member.entity.Role
 import com.flowstock.domain.member.repository.MemberRepository
@@ -9,7 +7,6 @@ import com.flowstock.global.exception.BusinessException
 import com.flowstock.global.exception.ErrorCode
 import com.flowstock.global.security.JwtService
 import org.slf4j.LoggerFactory
-import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -20,46 +17,8 @@ class MemberService(
     private val jwtService: JwtService,
     private val googleOAuthService: GoogleOAuthService,
     private val naverOAuthService: NaverOAuthService,
-    private val passwordEncoder: PasswordEncoder,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
-
-    fun signup(request: SignupRequest): SignupResult {
-        if (memberRepository.existsByEmail(request.email)) {
-            throw BusinessException(ErrorCode.USER_EMAIL_DUPLICATED)
-        }
-
-        val hashedPassword = passwordEncoder.encode(request.password)
-        val member = Member.createForSignup(
-            email = request.email,
-            password = hashedPassword,
-            nickname = request.nickname,
-            role = request.role,
-        )
-
-        val saved = memberRepository.save(member)
-        val accessToken = jwtService.generateAccessToken(saved.id, saved.role)
-        val refreshToken = jwtService.generateRefreshToken(saved.id, saved.role)
-
-        return SignupResult(member = saved, accessToken = accessToken, refreshToken = refreshToken)
-    }
-
-    fun login(request: LoginRequest): LoginResult {
-        val member = memberRepository.findByEmail(request.email)
-            ?: throw BusinessException(ErrorCode.USER_INVALID_CREDENTIAL)
-
-        member.verifyPassword(request.password, passwordEncoder)
-
-        val accessToken = jwtService.generateAccessToken(member.id, member.role)
-        val refreshToken = jwtService.generateRefreshToken(member.id, member.role)
-
-        return LoginResult(
-            accessToken = accessToken,
-            refreshToken = refreshToken,
-            memberId = member.id,
-            nickname = member.nickname,
-        )
-    }
 
     fun refreshToken(refreshToken: String): TokenPair {
         if (!jwtService.validateToken(refreshToken)) {

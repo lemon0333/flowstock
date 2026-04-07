@@ -3,28 +3,65 @@
  * 종목 상세 페이지 (/stock/:id)
  * - TradingView Lightweight Charts 캔들스틱 차트
  * - ReactFlow 뉴스-기업 관계 네트워크 그래프
- * - AI 공시 요약 (목업)
+ * - AI 공시 요약
  * - 토스 스타일: 부드러운 카드 + 라운딩
  * ============================================================
  */
 
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Bot, FileText, TrendingUp, TrendingDown } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import StockChart from "@/components/stock/StockChart";
 import NetworkGraph from "@/components/stock/NetworkGraph";
-import { stocks, news, disclosures, generateOHLCData } from "@/mocks/data";
+import { stockApi } from "@/services/api";
 
 export default function StockDetail() {
   const { id } = useParams<{ id: string }>();
+  const [stock, setStock] = useState<any>(null);
+  const [relatedNews, setRelatedNews] = useState<any[]>([]);
+  const [relatedDisclosures, setRelatedDisclosures] = useState<any[]>([]);
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // ── 종목 데이터 조회 ──
-  const stock = stocks.find((s) => s.id === id);
-  if (!stock) {
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchData = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const res = await stockApi.getById(id);
+        const data = res.data ?? res;
+        setStock(data);
+        setRelatedNews(data.relatedNews ?? []);
+        setRelatedDisclosures(data.disclosures ?? []);
+        setChartData(data.chartData ?? []);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : '종목 데이터를 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center py-20">
+          <p className="text-muted-foreground">데이터를 불러오는 중...</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error || !stock) {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center py-20">
-          <p className="text-muted-foreground">종목을 찾을 수 없습니다.</p>
+          <p className="text-muted-foreground">{error || '종목을 찾을 수 없습니다.'}</p>
           <Link to="/" className="text-primary text-sm mt-2 hover:underline font-medium">
             홈으로 돌아가기
           </Link>
@@ -34,9 +71,6 @@ export default function StockDetail() {
   }
 
   const isPositive = stock.changePercent >= 0;
-  const relatedNews = news.filter((n) => n.relatedStocks.includes(stock.id));
-  const relatedDisclosures = disclosures.filter((d) => d.stockId === stock.id);
-  const chartData = generateOHLCData(90);
 
   return (
     <Layout>
@@ -53,13 +87,13 @@ export default function StockDetail() {
           </div>
           <div className="flex items-center gap-3 mt-1">
             <span className="font-data text-2xl font-bold text-foreground">
-              {stock.price.toLocaleString()}원
+              {stock.price?.toLocaleString()}원
             </span>
             <span className={`font-data text-sm font-semibold flex items-center gap-1 px-2.5 py-1 rounded-full ${
               isPositive ? "text-positive bg-positive/10" : "text-negative bg-negative/10"
             }`}>
               {isPositive ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-              {isPositive ? "+" : ""}{stock.change.toLocaleString()} ({isPositive ? "+" : ""}{stock.changePercent.toFixed(2)}%)
+              {isPositive ? "+" : ""}{stock.change?.toLocaleString()} ({isPositive ? "+" : ""}{stock.changePercent?.toFixed(2)}%)
             </span>
           </div>
         </div>
@@ -70,7 +104,13 @@ export default function StockDetail() {
         <h2 className="text-base font-bold text-foreground mb-3">
           주가 차트 (90일)
         </h2>
-        <StockChart data={chartData} height={350} />
+        {chartData.length > 0 ? (
+          <StockChart data={chartData} height={350} />
+        ) : (
+          <div className="h-[350px] bg-card border border-border rounded-2xl flex items-center justify-center text-sm text-muted-foreground">
+            차트 데이터가 없습니다
+          </div>
+        )}
       </section>
 
       {/* ── 네트워크 그래프 + AI 공시 요약 ── */}
@@ -81,7 +121,7 @@ export default function StockDetail() {
             뉴스 연결 관계
           </h2>
           {relatedNews.length > 0 ? (
-            <NetworkGraph newsItems={relatedNews} height={300} />
+            <NetworkGraph newsItems={relatedNews} stocks={stock ? [stock] : []} height={300} />
           ) : (
             <div className="h-[300px] bg-card border border-border rounded-2xl flex items-center justify-center text-sm text-muted-foreground">
               관련 뉴스가 없습니다
@@ -89,7 +129,7 @@ export default function StockDetail() {
           )}
         </div>
 
-        {/* AI 공시 요약 (목업) */}
+        {/* AI 공시 요약 */}
         <div>
           <h2 className="text-base font-bold text-foreground mb-3 flex items-center gap-1.5">
             <Bot className="h-4 w-4 text-primary" />
@@ -98,7 +138,7 @@ export default function StockDetail() {
           <div className="bg-card border border-border rounded-2xl p-5 h-[300px] overflow-y-auto" style={{ boxShadow: 'var(--shadow-card)' }}>
             {relatedDisclosures.length > 0 ? (
               <div className="space-y-4">
-                {relatedDisclosures.map((disc) => (
+                {relatedDisclosures.map((disc: any) => (
                   <div key={disc.id} className="border-l-3 border-primary pl-4 py-1">
                     <div className="flex items-center gap-2 mb-1.5">
                       <FileText className="h-3.5 w-3.5 text-muted-foreground" />

@@ -7,18 +7,75 @@
  * ============================================================
  */
 
+import { useState, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
 import MarketIndexCard from "@/components/home/MarketIndexCard";
 import TopMovers from "@/components/home/TopMovers";
 import NewsSummary from "@/components/home/NewsSummary";
-import { marketIndices, topGainers, topLosers, news, disclosures } from "@/mocks/data";
+import { marketApi, stockApi, newsApi } from "@/services/api";
 
 export default function Index() {
+  const [marketIndices, setMarketIndices] = useState<any[]>([]);
+  const [stocks, setStocks] = useState<any[]>([]);
+  const [news, setNews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const [marketRes, stockRes, newsRes] = await Promise.all([
+          marketApi.getIndices(),
+          stockApi.getAll(),
+          newsApi.getLatest(),
+        ]);
+        setMarketIndices(marketRes.data ?? []);
+        setStocks(stockRes.data ?? []);
+        setNews(Array.isArray(newsRes.data) ? newsRes.data : newsRes.data?.content ?? []);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : '데이터를 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const topGainers = stocks
+    .filter((s: any) => s.changePercent > 0)
+    .sort((a: any, b: any) => b.changePercent - a.changePercent);
+
+  const topLosers = stocks
+    .filter((s: any) => s.changePercent < 0)
+    .sort((a: any, b: any) => a.changePercent - b.changePercent);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center py-20">
+          <p className="text-muted-foreground">데이터를 불러오는 중...</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center py-20">
+          <p className="text-negative">{error}</p>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       {/* ── 시장 지수 카드 ── */}
       <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        {marketIndices.map((idx) => (
+        {marketIndices.map((idx: any) => (
           <MarketIndexCard key={idx.id} index={idx} />
         ))}
       </section>
@@ -32,7 +89,7 @@ export default function Index() {
 
         {/* 우측: 뉴스 + 공시 */}
         <div className="lg:col-span-2">
-          <NewsSummary news={news} disclosures={disclosures} />
+          <NewsSummary news={news} disclosures={[]} />
         </div>
       </section>
     </Layout>

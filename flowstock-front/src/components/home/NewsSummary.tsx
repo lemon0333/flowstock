@@ -9,7 +9,6 @@
 
 import { Link } from "react-router-dom";
 import { Clock, ExternalLink } from "lucide-react";
-import { stocks } from "@/mocks/data";
 
 interface NewsItem {
   id: string;
@@ -31,9 +30,16 @@ interface DisclosureItem {
   type: string;
 }
 
+interface StockItem {
+  id: string;
+  name: string;
+  [key: string]: any;
+}
+
 interface Props {
   news: NewsItem[];
   disclosures: DisclosureItem[];
+  stocks?: StockItem[];
 }
 
 /** 영향도에 따른 인디케이터 색상 */
@@ -46,10 +52,10 @@ function ImpactDot({ impact }: { impact: string }) {
   return <span className={`inline-block w-2 h-2 rounded-full ${colorClass}`} />;
 }
 
-export default function NewsSummary({ news: newsItems, disclosures }: Props) {
+export default function NewsSummary({ news: newsItems, disclosures, stocks = [] }: Props) {
   /** stockId로 종목명 찾기 */
   const getStockName = (id: string) =>
-    stocks.find((s) => s.id === id)?.name ?? id;
+    stocks.find((s: StockItem) => s.id === id)?.name ?? id;
 
   return (
     <div className="space-y-4">

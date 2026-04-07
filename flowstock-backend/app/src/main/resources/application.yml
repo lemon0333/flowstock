@@ -52,9 +52,9 @@ oauth:
     client-id: ${NAVER_CLIENT_ID:}
     client-secret: ${NAVER_CLIENT_SECRET:}
 
-# ── Claude API ──
-claude:
-  api-key: ${CLAUDE_API_KEY:}
+# ── AI Service (Python FastAPI) ──
+ai-service:
+  url: ${AI_SERVICE_URL:http://localhost:8000}
 
 # ── AWS ──
 cloud:

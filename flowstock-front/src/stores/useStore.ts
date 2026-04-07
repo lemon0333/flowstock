@@ -1,9 +1,8 @@
 /**
  * ============================================================
  * Zustand 글로벌 스토어
- * - 인증 상태 관리
+ * - 인증 상태 관리 (localStorage 연동)
  * - 포트폴리오 (보유 종목) 관리
- * - 나중에 실제 API 연동 시 persist 미들웨어 추가 가능
  * ============================================================
  */
 
@@ -42,27 +41,27 @@ interface AppState {
 }
 
 export const useStore = create<AppState>((set) => ({
-  // ── 인증 초기 상태 ──
-  user: null,
-  token: null,
-  isAuthenticated: false,
+  // ── 인증 초기 상태 (localStorage에서 복원) ──
+  user: JSON.parse(localStorage.getItem('user') || 'null'),
+  token: localStorage.getItem('token'),
+  isAuthenticated: !!localStorage.getItem('token'),
 
   /** 로그인 처리 */
-  login: (user, token) =>
-    set({ user, token, isAuthenticated: true }),
+  login: (user, token) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    set({ user, token, isAuthenticated: true });
+  },
 
   /** 로그아웃 처리 */
-  logout: () =>
-    set({ user: null, token: null, isAuthenticated: false }),
+  logout: () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    set({ user: null, token: null, isAuthenticated: false });
+  },
 
-  // ── 포트폴리오 초기 상태 (데모용 기본 데이터) ──
-  holdings: [
-    { stockId: "005930", stockName: "삼성전자", quantity: 100, avgPrice: 71000, sector: "반도체" },
-    { stockId: "000660", stockName: "SK하이닉스", quantity: 20, avgPrice: 170000, sector: "반도체" },
-    { stockId: "006400", stockName: "삼성SDI", quantity: 10, avgPrice: 380000, sector: "2차전지" },
-    { stockId: "035420", stockName: "NAVER", quantity: 30, avgPrice: 220000, sector: "IT/플랫폼" },
-    { stockId: "068270", stockName: "셀트리온", quantity: 15, avgPrice: 175000, sector: "바이오" },
-  ],
+  // ── 포트폴리오 초기 상태 ──
+  holdings: [],
 
   /** 종목 추가 */
   addHolding: (holding) =>

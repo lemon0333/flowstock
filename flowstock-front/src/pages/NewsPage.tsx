@@ -6,17 +6,42 @@
  * ============================================================
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Clock, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import NetworkGraph from "@/components/stock/NetworkGraph";
-import { news, stocks } from "@/mocks/data";
+import { newsApi, stockApi } from "@/services/api";
 
 export default function NewsPage() {
-  const [selectedIds, setSelectedIds] = useState<string[]>(
-    news.slice(0, 3).map((n) => n.id)
-  );
+  const [news, setNews] = useState<any[]>([]);
+  const [stocks, setStocks] = useState<any[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const [newsRes, stockRes] = await Promise.all([
+          newsApi.getLatest(),
+          stockApi.getAll(),
+        ]);
+        const newsData = Array.isArray(newsRes.data) ? newsRes.data : newsRes.data?.content ?? [];
+        const stockData = stockRes.data ?? [];
+        setNews(newsData);
+        setStocks(stockData);
+        setSelectedIds(newsData.slice(0, 3).map((n: any) => n.id));
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : '데이터를 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const toggleNews = (id: string) => {
     setSelectedIds((prev) =>
@@ -24,15 +49,35 @@ export default function NewsPage() {
     );
   };
 
-  const selectedNews = news.filter((n) => selectedIds.includes(n.id));
-  const affectedStockIds = [...new Set(selectedNews.flatMap((n) => n.relatedStocks))];
-  const affectedStocks = stocks.filter((s) => affectedStockIds.includes(s.id));
+  const selectedNews = news.filter((n: any) => selectedIds.includes(n.id));
+  const affectedStockIds = [...new Set(selectedNews.flatMap((n: any) => n.relatedStocks || []))];
+  const affectedStocks = stocks.filter((s: any) => affectedStockIds.includes(s.id));
 
   const ImpactIcon = ({ impact }: { impact: string }) => {
     if (impact === "positive") return <TrendingUp className="h-4 w-4 text-positive" />;
     if (impact === "negative") return <TrendingDown className="h-4 w-4 text-negative" />;
     return <Minus className="h-4 w-4 text-muted-foreground" />;
   };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center py-20">
+          <p className="text-muted-foreground">데이터를 불러오는 중...</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center py-20">
+          <p className="text-negative">{error}</p>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -43,7 +88,7 @@ export default function NewsPage() {
             뉴스 선택
           </h2>
           <div className="bg-card rounded-2xl overflow-hidden max-h-[600px] overflow-y-auto" style={{ boxShadow: 'var(--shadow-card)' }}>
-            {news.map((item) => {
+            {news.map((item: any) => {
               const isSelected = selectedIds.includes(item.id);
               return (
                 <button
@@ -83,7 +128,7 @@ export default function NewsPage() {
               뉴스-기업 관계 네트워크
             </h2>
             {selectedNews.length > 0 ? (
-              <NetworkGraph newsItems={selectedNews} height={350} />
+              <NetworkGraph newsItems={selectedNews} stocks={stocks} height={350} />
             ) : (
               <div className="h-[350px] bg-card border border-border rounded-2xl flex items-center justify-center text-sm text-muted-foreground">
                 뉴스를 선택하면 관계 그래프가 표시됩니다
@@ -104,7 +149,7 @@ export default function NewsPage() {
                     <span className="w-20 text-right">등락률</span>
                     <span className="w-20 text-right">섹터</span>
                   </div>
-                  {affectedStocks.map((s) => (
+                  {affectedStocks.map((s: any) => (
                     <Link
                       key={s.id}
                       to={`/stock/${s.id}`}
@@ -115,12 +160,12 @@ export default function NewsPage() {
                         <span className="ticker-tag">{s.id}</span>
                       </div>
                       <span className="w-24 text-right font-data text-sm font-medium text-foreground">
-                        {s.price.toLocaleString()}
+                        {s.price?.toLocaleString()}
                       </span>
                       <span className={`w-20 text-right font-data text-sm font-semibold ${
                         s.changePercent >= 0 ? "text-positive" : "text-negative"
                       }`}>
-                        {s.changePercent >= 0 ? "+" : ""}{s.changePercent.toFixed(2)}%
+                        {s.changePercent >= 0 ? "+" : ""}{s.changePercent?.toFixed(2)}%
                       </span>
                       <span className="w-20 text-right text-xs text-muted-foreground">
                         {s.sector}
