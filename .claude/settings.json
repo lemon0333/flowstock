@@ -1,0 +1,45 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import sys,json; print(json.load(sys.stdin).get('file_path',''))\" 2>/dev/null); if echo \"$FILE\" | grep -qE '\\.(env|env\\..*)$|secrets\\.yaml$|credentials'; then echo '🚫 BLOCKED: 민감한 파일 수정 차단됨 (.env / secrets / credentials)' >&2; exit 2; fi"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import sys,json; print(json.load(sys.stdin).get('file_path',''))\" 2>/dev/null); if echo \"$FILE\" | grep -qE '\\.(ts|tsx|js|jsx|json|css)$'; then cd \"$CLAUDE_PROJECT_DIR/flowstock-front\" 2>/dev/null && npx prettier --write \"$FILE\" 2>/dev/null; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import sys,json; print(json.load(sys.stdin).get('file_path',''))\" 2>/dev/null); if echo \"$FILE\" | grep -qE '\\.(py)$'; then cd \"$CLAUDE_PROJECT_DIR\" && python3 -m black \"$FILE\" --quiet 2>/dev/null; fi"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Claude Code에서 입력을 기다리고 있습니다\" with title \"FlowStock\"' 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}

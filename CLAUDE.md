@@ -225,6 +225,41 @@ flowstock-ai/
 - 프론트 컴포넌트: shadcn/ui 기반, `cn()` 유틸로 클래스 병합
 - 인증: OAuth Only (Google/Naver), 이메일 가입/로그인 없음
 
+## 하네스 엔지니어링 (자동화 워크플로우)
+
+### 사용 가능한 슬래시 커맨드
+| 커맨드 | 설명 |
+|--------|------|
+| `/deploy-k3s [대상]` | k3s 배포 (all/backend/ai/infra) |
+| `/deploy-front` | 프론트 빌드 → S3 → CloudFront 무효화 |
+| `/test-front` | 타입체크 + ESLint + Vitest |
+| `/test-backend` | Gradle 테스트 |
+| `/test-ai` | pytest + 헬스체크 |
+| `/review-code` | git diff 기반 보안/품질 리뷰 |
+| `/full-review` | **4개 에이전트 병렬** 전체 코드베이스 리뷰 |
+
+### 자동 실행 훅 (settings.json)
+- **파일 수정 시**: TS/JS → Prettier 자동 포맷, Python → Black 자동 포맷
+- **민감 파일 차단**: `.env`, `secrets.yaml`, `credentials` 파일 수정 시 자동 차단
+- **알림**: Claude가 입력 대기 시 macOS 알림 발송
+
+### 전문 에이전트 (병렬 리뷰용)
+| 에이전트 | 담당 | 핵심 체크 |
+|---------|------|----------|
+| `frontend-auditor` | React/TS | XSS, 접근성, 타입안전성, 성능 |
+| `backend-reviewer` | Kotlin/Spring | Security, JPA N+1, 트랜잭션, API 일관성 |
+| `ai-reviewer` | Python/FastAPI | API키 노출, 프롬프트 인젝션, LangChain 품질 |
+| `infra-validator` | Terraform/k8s | 시크릿 하드코딩, RBAC, 리소스 사이징 |
+
+### 일반적인 작업 흐름
+```
+1. 코드 작성 → 자동 포맷팅 (훅)
+2. /review-code → 변경사항 리뷰
+3. /test-front 또는 /test-backend → 테스트
+4. /deploy-k3s 또는 /deploy-front → 배포
+5. 큰 변경 시 /full-review → 4개 에이전트 동시 리뷰
+```
+
 ## 주의사항
 - Terraform apply 시 기존 리소스가 있으면 반드시 `terraform import` 먼저 실행
 - 프론트 빌드 시 `@/` 경로 alias 확인
