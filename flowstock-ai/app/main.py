@@ -4,7 +4,7 @@ from fastapi import FastAPI
 
 from app.config import settings
 from app.database import Base, engine
-from app.routers import chart, graph, news
+from app.routers import chart, graph, news, stock
 
 logging.basicConfig(
     level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
@@ -22,6 +22,7 @@ app = FastAPI(
 app.include_router(news.router)
 app.include_router(chart.router)
 app.include_router(graph.router)
+app.include_router(stock.router)
 
 
 @app.on_event("startup")

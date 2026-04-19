@@ -26,7 +26,8 @@ Frontend (React :3000)
             └→ Python AI Service (FastAPI :8000)
                  ├── /api/ai/news/analyze (뉴스 감성분석)
                  ├── /api/ai/chart/analyze (차트 기술적 분석)
-                 └── /api/ai/graph/generate (네트워크 그래프)
+                 ├── /api/ai/graph/generate (네트워크 그래프)
+                 └── /api/ai/stock/** (주식 데이터 조회)
 ```
 
 ## Frontend (`flowstock-front/`)
@@ -135,7 +136,7 @@ com.flowstock
 
 ### 스택
 - Python 3.12 + FastAPI
-- LangChain + langchain-anthropic (Claude claude-sonnet-4-20250514)
+- claude-code-sdk (Claude 구독 토큰)
 - Pydantic v2 (스키마 검증)
 - SQLAlchemy 2.0 + PyMySQL (MySQL 연결)
 - Alembic (DB 마이그레이션)
@@ -153,17 +154,19 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000  # 로컬 실행
 flowstock-ai/
 ├── app/
 │   ├── main.py              # FastAPI 엔트리포인트 + /health
-│   ├── config.py            # Settings (CLAUDE_API_KEY 등)
+│   ├── config.py            # Settings (Claude Code SDK 인증, DB 등)
 │   ├── agents/
 │   │   ├── news_analyzer.py # 뉴스 감성분석 + 종목 연관도 추출
 │   │   ├── chart_agent.py   # OHLCV 기술적 분석
-│   │   └── graph_agent.py   # 뉴스-종목 네트워크 그래프 생성
+│   │   ├── graph_agent.py   # 뉴스-종목 네트워크 그래프 생성
+│   │   └── stock_data.py    # pykrx 주식 데이터 수집
 │   ├── models/
 │   │   └── schemas.py       # Pydantic 요청/응답 모델
 │   └── routers/
 │       ├── news.py          # POST /api/ai/news/analyze
 │       ├── chart.py         # POST /api/ai/chart/analyze
-│       └── graph.py         # POST /api/ai/graph/generate
+│       ├── graph.py         # POST /api/ai/graph/generate
+│       └── stock.py         # /api/ai/stock/** (주식 데이터 조회)
 ├── requirements.txt
 └── Dockerfile
 ```
@@ -175,8 +178,9 @@ flowstock-ai/
 | ChartAgent | `POST /api/ai/chart/analyze` | OHLCV 패턴 분석, 추세, 지지/저항선 |
 | GraphAgent | `POST /api/ai/graph/generate` | ReactFlow 호환 노드/엣지 그래프 데이터 생성 |
 
-### AI 환경변수
-- `CLAUDE_API_KEY` — Anthropic API 키 (필수)
+### AI 환경변수 / 인증
+- Claude Code SDK는 API 키 대신 Claude Code 구독 인증을 사용합니다.
+- 서버에서 `claude login`을 실행하여 로그인 필요
 - `APP_PORT` — 서버 포트 (기본: 8000)
 - `LOG_LEVEL` — 로그 레벨 (기본: INFO)
 - `MYSQL_HOST` — MySQL 호스트 (기본: localhost)
@@ -220,7 +224,7 @@ flowstock-ai/
 ## 환경 변수 (시크릿)
 - `JWT_SECRET`, `DB_PASSWORD`, `REDIS_PASSWORD`, `MYSQL_PASSWORD`
 - `KIS_APP_KEY`, `KIS_APP_SECRET`
-- `DART_API_KEY`, `CLAUDE_API_KEY`
+- `DART_API_KEY` (CLAUDE_API_KEY는 제거됨 — Claude Code SDK 구독 인증 사용)
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
 - OAuth: `GOOGLE_CLIENT_ID`, `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`
 - 백엔드: `AI_SERVICE_URL` (Python 서비스 주소)

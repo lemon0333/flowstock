@@ -21,11 +21,6 @@ spec:
           ports:
             - containerPort: 8000
           env:
-            - name: CLAUDE_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: flowstock-secrets
-                  key: CLAUDE_API_KEY
             - name: LOG_LEVEL
               value: "INFO"
             - name: MYSQL_HOST

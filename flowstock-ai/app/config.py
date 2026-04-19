@@ -2,7 +2,8 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    CLAUDE_API_KEY: str
+    # Claude Code SDK는 API 키 대신 Claude Code 로그인 인증을 사용합니다.
+    # 서버에서 `claude login`을 실행하여 로그인하세요.
     APP_PORT: int = 8000
     LOG_LEVEL: str = "INFO"
 

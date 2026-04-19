@@ -1,11 +1,10 @@
+import json
 import logging
 import uuid
 
-from langchain_anthropic import ChatAnthropic
-from langchain_core.prompts import ChatPromptTemplate
+from claude_code_sdk import ClaudeCodeOptions, query
 from pydantic import BaseModel
 
-from app.config import settings
 from app.models.schemas import (
     GraphEdge,
     GraphGenerateRequest,
@@ -26,7 +25,19 @@ For each related stock, determine:
 
 Also determine the news sentiment: POSITIVE, NEGATIVE, or NEUTRAL.
 
-Return the data as a structured list of related stocks. I will convert this into graph nodes and edges."""
+You MUST respond with ONLY a valid JSON object (no markdown, no explanation) matching this exact schema:
+{
+  "sentiment": "POSITIVE" | "NEGATIVE" | "NEUTRAL",
+  "related_stocks": [
+    {
+      "stock_code": "string",
+      "stock_name": "string",
+      "relation_type": "DIRECT" | "INDIRECT" | "COMPETITOR",
+      "impact_score": number,
+      "reason": "string"
+    }
+  ]
+}"""
 
 
 class _StockItem(BaseModel):
@@ -42,28 +53,31 @@ class _GraphExtractionResult(BaseModel):
     related_stocks: list[_StockItem]
 
 
-llm = ChatAnthropic(
-    model="claude-sonnet-4-20250514",
-    api_key=settings.CLAUDE_API_KEY,
-    max_tokens=4096,
-    temperature=0,
-)
+def _extract_json_text(messages: list) -> str:
+    """Extract text content from Claude Code SDK messages."""
+    result_parts = []
+    for msg in messages:
+        if msg.type == "result":
+            if hasattr(msg, "subtype") and msg.subtype == "result":
+                result_parts.append(msg.result if hasattr(msg, "result") else "")
+            elif hasattr(msg, "result"):
+                result_parts.append(msg.result)
+    if result_parts:
+        return "\n".join(str(p) for p in result_parts)
+    for msg in messages:
+        if hasattr(msg, "content") and isinstance(msg.content, str):
+            result_parts.append(msg.content)
+    return "\n".join(result_parts)
 
-structured_llm = llm.with_structured_output(_GraphExtractionResult)
 
-prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", SYSTEM_PROMPT),
-        (
-            "human",
-            "다음 뉴스 기사에서 관련 종목을 추출하고 네트워크 그래프를 생성해주세요.\n\n"
-            "제목: {title}\n\n"
-            "본문:\n{content}",
-        ),
-    ]
-)
-
-chain = prompt | structured_llm
+def _parse_json_response(text: str) -> dict:
+    """Parse JSON from response text, stripping markdown fences if present."""
+    text = text.strip()
+    if text.startswith("```"):
+        lines = text.split("\n")
+        lines = [l for l in lines if not l.strip().startswith("```")]
+        text = "\n".join(lines).strip()
+    return json.loads(text)
 
 
 def _build_graph(
@@ -126,12 +140,27 @@ async def generate_graph(
 ) -> GraphGenerateResponse:
     """Generate a news-stock network graph from a news article."""
     logger.info("Generating graph for news: %s", request.news_title[:50])
-    extraction = await chain.ainvoke(
-        {
-            "title": request.news_title,
-            "content": request.news_content,
-        }
+
+    user_prompt = (
+        "다음 뉴스 기사에서 관련 종목을 추출하고 네트워크 그래프를 생성해주세요.\n\n"
+        f"제목: {request.news_title}\n\n"
+        f"본문:\n{request.news_content}"
     )
+
+    messages = []
+    async for message in query(
+        prompt=user_prompt,
+        options=ClaudeCodeOptions(
+            system_prompt=SYSTEM_PROMPT,
+            max_turns=1,
+        ),
+    ):
+        messages.append(message)
+
+    response_text = _extract_json_text(messages)
+    parsed = _parse_json_response(response_text)
+    extraction = _GraphExtractionResult(**parsed)
+
     result = _build_graph(request, extraction)
     logger.info(
         "Graph generated: %d nodes, %d edges",

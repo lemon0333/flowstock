@@ -75,11 +75,6 @@ spec:
                 secretKeyRef:
                   name: flowstock-secrets
                   key: DART_API_KEY
-            - name: CLAUDE_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: flowstock-secrets
-                  key: CLAUDE_API_KEY
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:

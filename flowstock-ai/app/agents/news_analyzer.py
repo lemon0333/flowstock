@@ -1,9 +1,8 @@
+import json
 import logging
 
-from langchain_anthropic import ChatAnthropic
-from langchain_core.prompts import ChatPromptTemplate
+from claude_code_sdk import ClaudeCodeOptions, query
 
-from app.config import settings
 from app.models.schemas import NewsAnalysisResponse
 
 logger = logging.getLogger(__name__)
@@ -21,34 +20,74 @@ Analyze the given news article and extract the following information:
    - impact_score: A score from -100 (very negative) to +100 (very positive) indicating the expected impact
    - impact_reason: A brief explanation in Korean of why this stock is affected
 
-Be thorough in identifying related stocks. Consider supply chains, competitors, and sector effects."""
+Be thorough in identifying related stocks. Consider supply chains, competitors, and sector effects.
 
-llm = ChatAnthropic(
-    model="claude-sonnet-4-20250514",
-    api_key=settings.CLAUDE_API_KEY,
-    max_tokens=4096,
-    temperature=0,
-)
+You MUST respond with ONLY a valid JSON object (no markdown, no explanation) matching this exact schema:
+{
+  "sentiment": "POSITIVE" | "NEGATIVE" | "NEUTRAL",
+  "summary": "string",
+  "importance": number,
+  "related_stocks": [
+    {
+      "stock_code": "string",
+      "stock_name": "string",
+      "relation_type": "DIRECT" | "INDIRECT" | "COMPETITOR",
+      "impact_score": number,
+      "impact_reason": "string"
+    }
+  ]
+}"""
 
-structured_llm = llm.with_structured_output(NewsAnalysisResponse)
 
-prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", SYSTEM_PROMPT),
-        (
-            "human",
-            "다음 뉴스 기사를 분석해주세요.\n\n제목: {title}\n\n본문:\n{content}",
-        ),
-    ]
-)
+def _extract_json_text(messages: list) -> str:
+    """Extract text content from Claude Code SDK messages."""
+    result_parts = []
+    for msg in messages:
+        if msg.type == "result":
+            if hasattr(msg, "subtype") and msg.subtype == "result":
+                result_parts.append(msg.result if hasattr(msg, "result") else "")
+            elif hasattr(msg, "result"):
+                result_parts.append(msg.result)
+    if result_parts:
+        return "\n".join(str(p) for p in result_parts)
+    # Fallback: collect all text messages
+    for msg in messages:
+        if hasattr(msg, "content") and isinstance(msg.content, str):
+            result_parts.append(msg.content)
+    return "\n".join(result_parts)
 
-chain = prompt | structured_llm
+
+def _parse_json_response(text: str) -> dict:
+    """Parse JSON from response text, stripping markdown fences if present."""
+    text = text.strip()
+    if text.startswith("```"):
+        # Remove markdown code fences
+        lines = text.split("\n")
+        lines = [l for l in lines if not l.strip().startswith("```")]
+        text = "\n".join(lines).strip()
+    return json.loads(text)
 
 
 async def analyze_news(title: str, content: str) -> NewsAnalysisResponse:
     """Analyze a news article and return sentiment, summary, importance, and related stocks."""
     logger.info("Analyzing news: %s", title[:50])
-    result = await chain.ainvoke({"title": title, "content": content})
+
+    user_prompt = f"다음 뉴스 기사를 분석해주세요.\n\n제목: {title}\n\n본문:\n{content}"
+
+    messages = []
+    async for message in query(
+        prompt=user_prompt,
+        options=ClaudeCodeOptions(
+            system_prompt=SYSTEM_PROMPT,
+            max_turns=1,
+        ),
+    ):
+        messages.append(message)
+
+    response_text = _extract_json_text(messages)
+    parsed = _parse_json_response(response_text)
+    result = NewsAnalysisResponse(**parsed)
+
     logger.info(
         "Analysis complete: sentiment=%s, importance=%d, stocks=%d",
         result.sentiment,
