@@ -1,0 +1,43 @@
+# Git
+.git
+.gitignore
+
+# Gradle build cache
+.gradle
+build/
+app/build/
+utils/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test results
+**/test-results/
+**/reports/
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Environment & secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Documentation
+README.md
+docs/

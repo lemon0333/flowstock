@@ -1,0 +1,50 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+.venv/
+venv/
+env/
+.Python
+pip-log.txt
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment & secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Testing & coverage
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Documentation
+README.md
+docs/
+
+# Alembic migrations cache
+alembic/versions/__pycache__/
