@@ -8,7 +8,8 @@
 - **프론트엔드**: React 18 + Vite → AWS S3 + CloudFront CDN
 - **백엔드 (Kotlin)**: Spring Boot 3.2 — 인증, CRUD, DB 접근, API Gateway
 - **AI 서비스 (Python)**: FastAPI + LangChain — 뉴스 분석, 차트 분석, 그래프 생성
-- **DB**: PostgreSQL 16 (k3s StatefulSet, 20Gi)
+- **DB (Backend)**: PostgreSQL 16 (k3s StatefulSet, 20Gi) — Kotlin 백엔드용
+- **DB (AI)**: MySQL 8 — Python AI 서비스용 (분석 결과 캐싱, 요청 이력)
 - **캐시**: Redis 7 (k3s StatefulSet, 5Gi)
 - **모니터링**: Prometheus + Grafana + Jaeger
 - **인프라**: 온프레미스 k3s + Cloudflare Tunnel, AWS (S3/CloudFront/Route53)
@@ -136,6 +137,8 @@ com.flowstock
 - Python 3.12 + FastAPI
 - LangChain + langchain-anthropic (Claude claude-sonnet-4-20250514)
 - Pydantic v2 (스키마 검증)
+- SQLAlchemy 2.0 + PyMySQL (MySQL 연결)
+- Alembic (DB 마이그레이션)
 - 향후: LangGraph (에이전트 오케스트레이션), LangSmith (트레이싱)
 
 ### 명령어
@@ -176,6 +179,11 @@ flowstock-ai/
 - `CLAUDE_API_KEY` — Anthropic API 키 (필수)
 - `APP_PORT` — 서버 포트 (기본: 8000)
 - `LOG_LEVEL` — 로그 레벨 (기본: INFO)
+- `MYSQL_HOST` — MySQL 호스트 (기본: localhost)
+- `MYSQL_PORT` — MySQL 포트 (기본: 3306)
+- `MYSQL_USER` — MySQL 사용자 (기본: flowstock)
+- `MYSQL_PASSWORD` — MySQL 비밀번호 (기본: flowstock)
+- `MYSQL_DATABASE` — MySQL DB명 (기본: flowstock_ai)
 
 ## Infrastructure (`flowstock-infra/`)
 
@@ -210,7 +218,7 @@ flowstock-ai/
 4. 프론트엔드: S3 업로드 + CloudFront 캐시 무효화
 
 ## 환경 변수 (시크릿)
-- `JWT_SECRET`, `DB_PASSWORD`, `REDIS_PASSWORD`
+- `JWT_SECRET`, `DB_PASSWORD`, `REDIS_PASSWORD`, `MYSQL_PASSWORD`
 - `KIS_APP_KEY`, `KIS_APP_SECRET`
 - `DART_API_KEY`, `CLAUDE_API_KEY`
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
