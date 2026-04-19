@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: ai-service
-          image: ghcr.io/YOUR_GITHUB_ORG/flowstock-ai:latest
+          image: ghcr.io/lemon0333/flowstock-ai:latest
           ports:
             - containerPort: 8000
           env:
@@ -28,6 +28,19 @@ spec:
                   key: CLAUDE_API_KEY
             - name: LOG_LEVEL
               value: "INFO"
+            - name: MYSQL_HOST
+              value: "mysql.flowstock.svc.cluster.local"
+            - name: MYSQL_PORT
+              value: "3306"
+            - name: MYSQL_USER
+              value: "flowstock"
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: flowstock-secrets
+                  key: MYSQL_PASSWORD
+            - name: MYSQL_DATABASE
+              value: "flowstock_ai"
           resources:
             requests:
               memory: "512Mi"

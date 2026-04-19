@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
         - name: flowstock-backend
-          image: ghcr.io/YOUR_GITHUB_ORG/flowstock-backend:latest
+          image: ghcr.io/lemon0333/flowstock-backend:latest
           ports:
             - containerPort: 8080
           env:
