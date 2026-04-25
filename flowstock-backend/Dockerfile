@@ -1,24 +1,16 @@
 FROM eclipse-temurin:17-jdk-alpine AS build
 
-WORKDIR /app
-
-COPY gradlew .
-COPY gradle gradle
-COPY build.gradle.kts .
-COPY settings.gradle.kts .
-COPY app/build.gradle.kts app/build.gradle.kts
-
-RUN chmod +x gradlew && ./gradlew dependencies --no-daemon || true
+WORKDIR /src
 
 COPY . .
 
-RUN ./gradlew :app:bootJar --no-daemon
+RUN chmod +x gradlew && ./gradlew :app:bootJar --no-daemon
 
 FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-COPY --from=build /app/app/build/libs/*.jar app.jar
+COPY --from=build /src/app/build/libs/*.jar app.jar
 
 EXPOSE 8080
 
