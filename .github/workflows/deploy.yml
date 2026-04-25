@@ -3,6 +3,7 @@ name: Deploy FlowStock
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
@@ -79,71 +80,66 @@ jobs:
             ${{ env.AI_IMAGE }}:latest
             ${{ env.AI_IMAGE }}:${{ github.sha }}
 
-  deploy-frontend:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: flowstock-front/package-lock.json
-
-      - name: Install dependencies
-        working-directory: flowstock-front
-        run: npm ci
-
-      - name: Build
-        working-directory: flowstock-front
-        run: npm run build
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
-
-      - name: Sync to S3
-        working-directory: flowstock-front
-        run: aws s3 sync dist/ s3://flowstock-frontend --delete
-
-      - name: Invalidate CloudFront cache
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/*"
-
   deploy-k8s:
     runs-on: ubuntu-latest
     needs: [build-backend, build-ai]
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Tailscale connect
+        uses: tailscale/github-action@v3
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          version: latest
+
+      - name: Add mini PC to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.MINI_PC_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
       - name: Deploy to k3s via SSH
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.MINI_PC_HOST }}
-          username: ubuntu
+          username: lemon
           key: ${{ secrets.MINI_PC_SSH_KEY }}
           script: |
-            # Pull latest images
-            sudo crictl pull ${{ env.BACKEND_IMAGE }}:latest
-            sudo crictl pull ${{ env.AI_IMAGE }}:latest
+            set -e
+            export KUBECONFIG=$HOME/.kube/config
+            cd /opt/flowstock
+            git pull origin main
 
-            # Rolling update backend
-            kubectl set image deployment/flowstock-backend \
+            cd flowstock-infra
+
+            # 1) namespace + secrets
+            k3s kubectl apply -f k8s/namespace/namespaces.yaml
+            bash scripts/generate-secrets.sh
+
+            # 2) DBs (idempotent)
+            k3s kubectl apply -f k8s/postgresql/postgresql.yaml
+            k3s kubectl apply -f k8s/mysql/mysql.yaml
+            k3s kubectl apply -f k8s/redis/redis.yaml
+
+            # 3) Cloudflared (envsubst with .env)
+            set -a; source .env; set +a
+            envsubst < k8s/cloudflared/cloudflared.yaml | k3s kubectl apply -f -
+
+            # 4) AI + Backend
+            k3s kubectl apply -f k8s/ai-service/deployment.yaml
+            k3s kubectl apply -f k8s/backend/deployment.yaml
+
+            # 4) Rolling update with this commit's SHA tag
+            k3s kubectl set image deployment/flowstock-backend \
               flowstock-backend=${{ env.BACKEND_IMAGE }}:${{ github.sha }} \
               -n flowstock
-
-            # Rolling update AI service
-            kubectl set image deployment/ai-service \
+            k3s kubectl set image deployment/ai-service \
               ai-service=${{ env.AI_IMAGE }}:${{ github.sha }} \
               -n flowstock
 
-            # Wait for rollout
-            kubectl rollout status deployment/flowstock-backend -n flowstock --timeout=120s
-            kubectl rollout status deployment/ai-service -n flowstock --timeout=120s
+            # 5) Wait for rollout
+            k3s kubectl rollout status deployment/flowstock-backend -n flowstock --timeout=300s
+            k3s kubectl rollout status deployment/ai-service -n flowstock --timeout=300s
+
+            # 6) Status
+            k3s kubectl get pods -n flowstock

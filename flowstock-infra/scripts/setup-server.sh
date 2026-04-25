@@ -56,7 +56,7 @@ apt-get install -y \
     lsb-release \
     software-properties-common \
     apt-transport-https \
-    envsubst \
+    gettext-base \
     htop \
     net-tools
 

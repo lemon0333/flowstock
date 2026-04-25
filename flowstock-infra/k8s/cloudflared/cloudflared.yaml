@@ -13,8 +13,6 @@ data:
     ingress:
       - hostname: api.flowstock.info
         service: http://flowstock-backend.flowstock.svc.cluster.local:80
-      - hostname: flowstock.info
-        service: http://flowstock-backend.flowstock.svc.cluster.local:80
       - service: http_status:404
 ---
 apiVersion: v1
