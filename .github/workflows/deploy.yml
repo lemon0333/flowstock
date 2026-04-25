@@ -131,6 +131,19 @@ jobs:
           authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
           version: latest
 
+      - name: Tailscale diagnostics
+        run: |
+          echo "=== tailscale status ==="
+          tailscale status || echo "(tailscale status failed)"
+          echo
+          echo "=== reaching mini PC (TCP 22) ==="
+          timeout 10 bash -c "</dev/tcp/${{ secrets.MINI_PC_HOST }}/22" \
+            && echo "[OK] TCP 22 reachable" \
+            || echo "[FAIL] cannot reach mini PC on port 22"
+          echo
+          echo "=== ping mini PC ==="
+          ping -c 3 -W 2 ${{ secrets.MINI_PC_HOST }} || echo "(ping failed — could be ICMP blocked, not necessarily fatal)"
+
       - name: Add mini PC to known_hosts
         run: |
           mkdir -p ~/.ssh
