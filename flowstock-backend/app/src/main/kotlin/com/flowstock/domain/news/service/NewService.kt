@@ -5,6 +5,7 @@ import com.flowstock.domain.news.entity.NewsStockRelation
 import com.flowstock.domain.news.entity.RelationType
 import com.flowstock.domain.news.entity.Sentiment
 import com.flowstock.domain.news.repository.NewsRepository
+import com.flowstock.domain.news.repository.findLatestNews
 import com.flowstock.domain.stock.repository.StockRepository
 import com.flowstock.infra.ai.AiServiceClient
 import kotlinx.coroutines.async
