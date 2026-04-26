@@ -42,8 +42,12 @@ export default function LoginPage() {
           setError('');
           try {
             const res = await authApi.oauthLogin('google', accessToken);
-            if (res.data) {
-              login(res.data.member, res.data.accessToken);
+            if (res.data?.accessToken) {
+              const d = res.data as { accessToken: string; memberId?: string | number; nickname?: string };
+              login(
+                { id: String(d.memberId ?? ''), email: '', name: d.nickname ?? '' },
+                d.accessToken,
+              );
               navigate('/', { replace: true });
             }
           } catch {
@@ -73,8 +77,12 @@ export default function LoginPage() {
         setError('');
         try {
           const res = await authApi.naverCallback(code, state);
-          if (res.data) {
-            login(res.data.member, res.data.accessToken);
+          if (res.data?.accessToken) {
+            const d = res.data as { accessToken: string; memberId?: string | number; nickname?: string };
+            login(
+              { id: String(d.memberId ?? ''), email: '', name: d.nickname ?? '' },
+              d.accessToken,
+            );
             navigate('/', { replace: true });
           }
         } catch {
