@@ -40,10 +40,14 @@ class MarketController(
         val today = LocalDate.now(ZoneId.of("Asia/Seoul"))
         return fetchIndex(today).map { data ->
             val mapped = data.map {
+                val close = it["close"]
                 mapOf(
                     "name" to it["name"],
-                    "value" to it["close"],
-                    "close" to it["close"],
+                    "value" to close,
+                    "close" to close,
+                    "open" to (it["open"] ?: close),
+                    "high" to (it["high"] ?: close),
+                    "low" to (it["low"] ?: close),
                     "change" to it["change"],
                     "changePercent" to it["change_rate"],
                     "volume" to it["volume"],
