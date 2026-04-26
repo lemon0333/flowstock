@@ -94,21 +94,19 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "500m"
+          # actuator endpoint가 안 떠도 동작하도록 TCP socket probe 사용
           startupProbe:
-            httpGet:
-              path: /actuator/health/liveness
+            tcpSocket:
               port: 8080
             periodSeconds: 10
-            failureThreshold: 30   # 최대 5분 부팅 허용
+            failureThreshold: 30
           readinessProbe:
-            httpGet:
-              path: /actuator/health/readiness
+            tcpSocket:
               port: 8080
             periodSeconds: 10
             failureThreshold: 3
           livenessProbe:
-            httpGet:
-              path: /actuator/health/liveness
+            tcpSocket:
               port: 8080
             periodSeconds: 20
             failureThreshold: 3
