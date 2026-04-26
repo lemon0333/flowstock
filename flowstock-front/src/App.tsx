@@ -33,16 +33,12 @@ const App = () => (
           {/* ── 인증 ── */}
           <Route path="/login" element={<LoginPage />} />
 
-          {/* ── 메인 페이지 ── */}
-          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+          {/* ── 메인 / 시세 / 뉴스: 비로그인도 열람 가능 ── */}
+          <Route path="/" element={<Index />} />
+          <Route path="/stock/:id" element={<StockDetail />} />
+          <Route path="/news" element={<NewsPage />} />
 
-          {/* ── 종목 상세 ── */}
-          <Route path="/stock/:id" element={<ProtectedRoute><StockDetail /></ProtectedRoute>} />
-
-          {/* ── 뉴스 시각화 ── */}
-          <Route path="/news" element={<ProtectedRoute><NewsPage /></ProtectedRoute>} />
-
-          {/* ── 포트폴리오 ── */}
+          {/* ── 포트폴리오 (개인 기능): 로그인 필요 ── */}
           <Route path="/portfolio" element={<ProtectedRoute><PortfolioPage /></ProtectedRoute>} />
 
           {/* ── 404 ── */}

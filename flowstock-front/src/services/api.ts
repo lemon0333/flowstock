@@ -35,9 +35,14 @@ class ApiClient {
     });
 
     if (response.status === 401) {
+      // 토큰을 갖고 있다가 만료 등으로 401이면 로그인 페이지로 이동
+      // 비로그인 사용자가 보호된 API에 접근한 경우는 호출 측이 처리하도록 throw만
+      const hadToken = !!localStorage.getItem('token');
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      if (hadToken) {
+        window.location.href = '/login';
+      }
       throw new Error('Unauthorized');
     }
 
