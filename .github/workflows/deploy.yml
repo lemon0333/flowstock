@@ -159,7 +159,8 @@ jobs:
             set -e
             export KUBECONFIG=$HOME/.kube/config
             cd /opt/flowstock
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
 
             cd flowstock-infra
 
