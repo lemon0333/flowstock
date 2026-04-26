@@ -94,18 +94,22 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "500m"
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 30   # 최대 5분 부팅 허용
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
               port: 8080
-            initialDelaySeconds: 30
             periodSeconds: 10
             failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8080
-            initialDelaySeconds: 60
             periodSeconds: 20
             failureThreshold: 3
 ---
