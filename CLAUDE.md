@@ -129,7 +129,7 @@ com.flowstock
 
 ### 외부 연동
 - **Python AI Service**: 뉴스 감성분석, 차트 분석, 그래프 생성 (`ai-service.url` 설정)
-- **KIS (한국투자증권)**: 주가 데이터
+- **주가 데이터**: pykrx 라이브러리 (KRX/네이버 공개 데이터, API 키 불필요) — KIS는 사용하지 않음
 - **DART**: 전자공시 (미구현)
 
 ## AI Service (`flowstock-ai/`)
@@ -222,12 +222,13 @@ flowstock-ai/
 4. 프론트엔드: S3 업로드 + CloudFront 캐시 무효화
 
 ## 환경 변수 (시크릿)
-- `JWT_SECRET`, `DB_PASSWORD`, `REDIS_PASSWORD`, `MYSQL_PASSWORD`
-- `KIS_APP_KEY`, `KIS_APP_SECRET`
+- `JWT_SECRET`, `DB_PASSWORD`, `REDIS_PASSWORD`, `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD`
 - `DART_API_KEY` (CLAUDE_API_KEY는 제거됨 — Claude Code SDK 구독 인증 사용)
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
 - OAuth: `GOOGLE_CLIENT_ID`, `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`
 - 백엔드: `AI_SERVICE_URL` (Python 서비스 주소)
+- Cloudflare Tunnel: `CLOUDFLARE_ACCOUNT_TAG`, `CLOUDFLARE_TUNNEL_ID`, `CLOUDFLARE_TUNNEL_SECRET`
+- KIS는 사용하지 않음 (pykrx로 대체) — `.env`에 KIS_APP_KEY/KIS_APP_SECRET이 남아있다면 무시 가능
 
 ## 컨벤션
 - 커밋 메시지: `add : 설명` / `fix : 설명` 형식 (한국어)
