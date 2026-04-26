@@ -99,6 +99,11 @@ jobs:
 
       - name: Build
         working-directory: flowstock-front
+        env:
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          VITE_NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          VITE_NAVER_CALLBACK_URL: https://flowstock.info/login
+          VITE_API_URL: https://api.flowstock.info
         run: npm run build
 
       - name: Ensure Cloudflare Pages project exists
