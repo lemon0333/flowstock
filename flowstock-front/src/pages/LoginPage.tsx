@@ -46,8 +46,8 @@ export default function LoginPage() {
               login(res.data.member, res.data.accessToken);
               navigate('/', { replace: true });
             }
-          } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : 'Google 로그인에 실패했습니다.');
+          } catch {
+            setError('Google 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.');
           } finally {
             setLoading(false);
             // URL에서 hash 제거
@@ -77,8 +77,8 @@ export default function LoginPage() {
             login(res.data.member, res.data.accessToken);
             navigate('/', { replace: true });
           }
-        } catch (err: unknown) {
-          setError(err instanceof Error ? err.message : '네이버 로그인에 실패했습니다.');
+        } catch {
+          setError('네이버 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.');
         } finally {
           setLoading(false);
           // URL에서 params 제거
