@@ -84,7 +84,6 @@ class NewsStockRelation(
     @Column(nullable = false, length = 50)
     val relationType: RelationType,
 
-    @Column(precision = 5, scale = 2)
     var impactScore: Double? = null,  // -100 ~ +100
 
     @Column(columnDefinition = "TEXT")
