@@ -18,6 +18,7 @@ import Index from "./pages/Index";
 import StockDetail from "./pages/StockDetail";
 import NewsPage from "./pages/NewsPage";
 import PortfolioPage from "./pages/PortfolioPage";
+import EconomyPage from "./pages/EconomyPage";
 import LoginPage from "./pages/LoginPage";
 import NotFound from "./pages/NotFound";
 
@@ -33,10 +34,11 @@ const App = () => (
           {/* ── 인증 ── */}
           <Route path="/login" element={<LoginPage />} />
 
-          {/* ── 메인 / 시세 / 뉴스: 비로그인도 열람 가능 ── */}
+          {/* ── 메인 / 시세 / 뉴스 / 경제지표: 비로그인도 열람 가능 ── */}
           <Route path="/" element={<Index />} />
           <Route path="/stock/:id" element={<StockDetail />} />
           <Route path="/news" element={<NewsPage />} />
+          <Route path="/economy" element={<EconomyPage />} />
 
           {/* ── 포트폴리오 (개인 기능): 로그인 필요 ── */}
           <Route path="/portfolio" element={<ProtectedRoute><PortfolioPage /></ProtectedRoute>} />

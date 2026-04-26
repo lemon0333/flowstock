@@ -186,5 +186,106 @@ class StockDataService:
         return records
 
 
+    # ── 경제 대시보드 (맨큐 거시/미시 관점) ───────────────
+    def get_economy_dashboard(self) -> dict:
+        """KOSPI/KOSDAQ 통합 정보 + 매매주체별 동향 + 시장폭 + 52주 고저 + 시계열."""
+        result: dict = {
+            "indices": [],
+            "deal_trend": {},        # 외국인/기관/개인 매매 동향
+            "up_down": {},           # 상승/하락/보합 종목 수
+            "fifty_two_week": {},    # 52주 고/저 대비 현재가
+            "series": {},            # KOSPI/KOSDAQ 일별 시계열
+        }
+        for code, name in self.INDEX_CODES:
+            try:
+                data = _get_json(
+                    f"https://m.stock.naver.com/api/index/{code}/integration"
+                )
+            except Exception as e:
+                logger.warning("Naver integration %s 실패: %s", code, e)
+                continue
+
+            # totalInfos에서 시가/고가/저가/52주
+            info_map: dict = {}
+            for info in data.get("totalInfos") or []:
+                k = info.get("key")
+                v = info.get("value")
+                if k:
+                    info_map[k] = v
+
+            # dealTrendInfo
+            dt = data.get("dealTrendInfo") or {}
+            result["deal_trend"][code] = {
+                "name": name,
+                "personal": _to_int(dt.get("personalValue")),
+                "foreign": _to_int(dt.get("foreignValue")),
+                "institutional": _to_int(dt.get("institutionalValue")),
+                "bizdate": dt.get("bizdate"),
+            }
+
+            # upDownStockInfo
+            ud = data.get("upDownStockInfo") or {}
+            result["up_down"][code] = {
+                "name": name,
+                "upper": _to_int(ud.get("upperCount")),  # 상한가
+                "rise": _to_int(ud.get("riseCount")),    # 상승
+                "steady": _to_int(ud.get("steadyCount")),
+                "fall": _to_int(ud.get("fallCount")),
+                "lower": _to_int(ud.get("lowerCount")),  # 하한가
+            }
+
+            # 52주 고/저
+            high52 = _to_float(info_map.get("52주 최고"))
+            low52 = _to_float(info_map.get("52주 최저"))
+
+            # 시계열 (chart endpoint, ~1년)
+            close_now = None
+            try:
+                chart = _get_json(
+                    f"https://api.stock.naver.com/chart/domestic/index/{code}?periodType=dayCandle"
+                )
+                infos = chart.get("priceInfos") or []
+                series = [
+                    {
+                        "date": str(p.get("localDate") or ""),
+                        "close": _to_float(p.get("closePrice")),
+                        "volume": _to_int(p.get("accumulatedTradingVolume")),
+                    }
+                    for p in infos
+                ]
+                result["series"][code] = series
+                if series:
+                    close_now = series[-1]["close"]
+            except Exception as e:
+                logger.warning("chart %s 실패: %s", code, e)
+
+            result["fifty_two_week"][code] = {
+                "name": name,
+                "high_52w": high52,
+                "low_52w": low52,
+                "close": close_now or _to_float(info_map.get("시가")),
+                "ratio": (
+                    round((close_now - low52) / (high52 - low52) * 100, 2)
+                    if close_now and high52 and low52 and high52 > low52
+                    else None
+                ),
+            }
+
+            result["indices"].append(
+                {
+                    "code": code,
+                    "name": name,
+                    "close": close_now,
+                    "open": _to_float(info_map.get("시가")),
+                    "high": _to_float(info_map.get("고가")),
+                    "low": _to_float(info_map.get("저가")),
+                    "high_52w": high52,
+                    "low_52w": low52,
+                }
+            )
+
+        return result
+
+
 # 싱글턴 인스턴스
 stock_data_service = StockDataService()

@@ -8,12 +8,13 @@
  */
 
 import { Link, useLocation } from "react-router-dom";
-import { TrendingUp, Newspaper, Briefcase, LogIn, LogOut, BarChart3 } from "lucide-react";
+import { TrendingUp, Newspaper, Briefcase, LogIn, LogOut, BarChart3, LineChart } from "lucide-react";
 import { useStore } from "@/stores/useStore";
 
 /** 네비게이션 링크 정의 */
 const navItems = [
   { path: "/", label: "홈", icon: BarChart3 },
+  { path: "/economy", label: "경제지표", icon: LineChart },
   { path: "/news", label: "뉴스", icon: Newspaper },
   { path: "/portfolio", label: "포트폴리오", icon: Briefcase },
 ];

@@ -117,6 +117,11 @@ export const marketApi = {
   getIndices: () => api.get<ApiResponse<any[]>>('/market'),
 };
 
+// Economy APIs (경제 대시보드)
+export const economyApi = {
+  getDashboard: () => api.get<ApiResponse<any>>('/economy/dashboard'),
+};
+
 // Portfolio APIs
 export const portfolioApi = {
   getHoldings: () => api.get<ApiResponse<any[]>>('/portfolio'),
