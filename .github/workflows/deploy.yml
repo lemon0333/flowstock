@@ -194,9 +194,9 @@ jobs:
               ai-service=${{ env.AI_IMAGE }}:${{ github.sha }} \
               -n flowstock
 
-            # 5) Wait for rollout
-            k3s kubectl rollout status deployment/flowstock-backend -n flowstock --timeout=300s
-            k3s kubectl rollout status deployment/ai-service -n flowstock --timeout=300s
+            # 5) Wait for rollout (Spring 부팅 ~90s + rolling update 여유까지 10분 잡음)
+            k3s kubectl rollout status deployment/flowstock-backend -n flowstock --timeout=600s
+            k3s kubectl rollout status deployment/ai-service -n flowstock --timeout=600s
 
             # 6) Status
             k3s kubectl get pods -n flowstock
