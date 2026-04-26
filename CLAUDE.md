@@ -132,6 +132,18 @@ com.flowstock
 - **주가 데이터**: pykrx 라이브러리 (KRX/네이버 공개 데이터, API 키 불필요) — KIS는 사용하지 않음
 - **DART**: 전자공시 (미구현)
 
+### Backend 도메인별 컨트롤러
+- **MemberController** (`/api/members/**`): OAuth 로그인(Google/Naver), 토큰 갱신, /me — 자체 로직
+- **StockController** (`/api/stocks`): ai-service `/api/ai/stock/market` proxy → 거래량 top 100 반환
+- **MarketController** (`/api/market`): ai-service `/api/ai/stock/index` proxy → 코스피/코스닥 지수
+- **NewsController** (`/api/news`): 현재는 빈 list 반환. DART 공시/뉴스 크롤러 연동은 추후
+- 휴일/주말로 ai-service 응답이 비면 backend가 최대 -7일까지 retry
+
+### 비로그인 정책
+- `/api/stocks/**`, `/api/news/**`, `/api/market/**` GET은 비로그인 허용 (read-only 둘러보기용)
+- `/api/portfolio/**` 등 개인 데이터는 인증 필수
+- 회원가입 별도 페이지 없음 — OAuth 첫 로그인이 자동 가입 (`SocialLoginResponse.isNewMember`로 신규 구분)
+
 ## AI Service (`flowstock-ai/`)
 
 ### 스택
