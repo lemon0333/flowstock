@@ -122,6 +122,10 @@ export const marketApi = {
 // Economy APIs (경제 대시보드)
 export const economyApi = {
   getDashboard: () => api.get<ApiResponse<any>>('/economy/dashboard'),
+  getCorrelation: (market = 'KOSPI', top = 10, days = 60) =>
+    api.get<ApiResponse<{ tickers: string[]; names: string[]; matrix: number[][] }>>(
+      `/economy/correlation?market=${market}&top=${top}&days=${days}`,
+    ),
 };
 
 // Portfolio APIs

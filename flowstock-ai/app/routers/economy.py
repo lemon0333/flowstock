@@ -9,8 +9,9 @@
 
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
+from app.services.correlation import get_correlation_matrix
 from app.services.stock_data import stock_data_service
 
 logger = logging.getLogger(__name__)
@@ -25,3 +26,17 @@ async def dashboard():
     except Exception as e:
         logger.error("economy dashboard 실패: %s", e)
         raise HTTPException(status_code=500, detail=f"economy dashboard 실패: {e}")
+
+
+@router.get("/correlation")
+async def correlation(
+    market: str = Query("KOSPI"),
+    top: int = Query(10, ge=2, le=30),
+    days: int = Query(60, ge=20, le=365),
+):
+    """시가총액 top 종목의 일별 수익률 상관계수 행렬."""
+    try:
+        return {"data": get_correlation_matrix(market=market, top=top, days=days)}
+    except Exception as e:
+        logger.error("correlation 실패: %s", e)
+        return {"data": {"tickers": [], "names": [], "matrix": []}}

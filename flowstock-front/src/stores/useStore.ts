@@ -37,6 +37,15 @@ interface Trade {
   at: string; // ISO timestamp
 }
 
+/** 알림 관심 종목 */
+export interface WatchlistItem {
+  ticker: string;
+  name: string;
+  basePrice: number;          // 등록 시 기준가
+  threshold: number;          // ±% 임계 (예: 3 = ±3%)
+  lastNotifiedAt?: string;    // ISO
+}
+
 interface BuyInput {
   stockId: string;
   stockName: string;
@@ -71,6 +80,12 @@ interface AppState {
   buyStock: (input: BuyInput) => TradeResult;
   sellStock: (input: SellInput) => TradeResult;
   resetSimulation: () => void;
+
+  // ── 알림 관심 종목 ──
+  watchlist: WatchlistItem[];
+  addWatch: (item: Omit<WatchlistItem, "lastNotifiedAt">) => void;
+  removeWatch: (ticker: string) => void;
+  updateWatch: (ticker: string, updates: Partial<WatchlistItem>) => void;
 
   // ── deprecated, 호환용 ──
   addHolding: (holding: Holding) => void;
@@ -187,6 +202,22 @@ export const useStore = create<AppState>()(
       resetSimulation: () =>
         set({ cash: INITIAL_CASH, holdings: [], trades: [] }),
 
+      // ── 알림 관심 종목 ──
+      watchlist: [],
+      addWatch: (item) =>
+        set((state) => {
+          if (state.watchlist.some((w) => w.ticker === item.ticker)) return state;
+          return { watchlist: [...state.watchlist, item] };
+        }),
+      removeWatch: (ticker) =>
+        set((state) => ({ watchlist: state.watchlist.filter((w) => w.ticker !== ticker) })),
+      updateWatch: (ticker, updates) =>
+        set((state) => ({
+          watchlist: state.watchlist.map((w) =>
+            w.ticker === ticker ? { ...w, ...updates } : w,
+          ),
+        })),
+
       // ── deprecated 호환 메서드 ──
       addHolding: (holding) =>
         set((state) => ({ holdings: [...state.holdings, holding] })),
@@ -207,6 +238,7 @@ export const useStore = create<AppState>()(
         cash: state.cash,
         holdings: state.holdings,
         trades: state.trades,
+        watchlist: state.watchlist,
       }),
     },
   ),

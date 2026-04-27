@@ -20,6 +20,7 @@ import NewsPage from "./pages/NewsPage";
 import PortfolioPage from "./pages/PortfolioPage";
 import EconomyPage from "./pages/EconomyPage";
 import InvestGamePage from "./pages/InvestGamePage";
+import AlertsPage from "./pages/AlertsPage";
 import LoginPage from "./pages/LoginPage";
 import NotFound from "./pages/NotFound";
 
@@ -44,6 +45,9 @@ const App = () => (
           {/* ── 모의투자 (가상 잔고, 클라이언트 영속): 로그인 없이도 사용 가능 ── */}
           <Route path="/portfolio" element={<PortfolioPage />} />
           <Route path="/portfolio/game" element={<InvestGamePage />} />
+
+          {/* ── 관심 종목 알림 ── */}
+          <Route path="/alerts" element={<AlertsPage />} />
 
           {/* ── 404 ── */}
           <Route path="*" element={<NotFound />} />

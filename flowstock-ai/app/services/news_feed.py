@@ -25,6 +25,28 @@ SOURCES: list[tuple[str, str]] = [
 _HTML_TAG = re.compile(r"<[^>]+>")
 _WS = re.compile(r"\s+")
 
+# 비용 큰 LLM 호출 없이 키워드 기반 감성 점수 (Claude 호출은 단건 endpoint에서)
+_POS_KW = (
+    "상승", "급등", "호조", "강세", "최고가", "신고가", "흑자", "수주", "성장",
+    "확대", "증가", "역대", "돌파", "기대", "회복", "긍정",
+)
+_NEG_KW = (
+    "하락", "급락", "약세", "최저가", "신저가", "적자", "감소", "축소", "리스크",
+    "둔화", "위기", "부진", "철회", "지연", "충격", "부정", "우려",
+)
+
+
+def _heuristic_sentiment(text: str) -> str:
+    if not text:
+        return "neutral"
+    pos = sum(1 for k in _POS_KW if k in text)
+    neg = sum(1 for k in _NEG_KW if k in text)
+    if pos - neg >= 2:
+        return "positive"
+    if neg - pos >= 2:
+        return "negative"
+    return "neutral"
+
 
 def _strip(text: str | None) -> str:
     if not text:
@@ -56,14 +78,17 @@ def get_latest_news(limit: int = 30) -> list[dict]:
             continue
         for e in (feed.entries or [])[: limit]:
             link = e.get("link") or ""
+            title = _strip(e.get("title"))
+            summary = _strip(e.get("summary"))[:300]
             items.append(
                 {
                     "id": e.get("id") or link,
-                    "title": _strip(e.get("title")),
-                    "summary": _strip(e.get("summary"))[:300],
+                    "title": title,
+                    "summary": summary,
                     "link": link,
                     "source": name,
                     "publishedAt": _parse_dt(e.get("published")) or _parse_dt(e.get("updated")),
+                    "sentiment": _heuristic_sentiment(f"{title} {summary}"),
                 }
             )
     # 최신순 정렬

@@ -76,6 +76,23 @@ interface DashboardData {
   fear_greed?: FearGreed;
 }
 
+interface CorrelationData {
+  tickers: string[];
+  names: string[];
+  matrix: number[][];
+}
+
+function corrColor(v: number): string {
+  // -1(파란) ~ 0(중립) ~ +1(빨간) 그라데이션
+  if (Number.isNaN(v)) return "#e5e7eb";
+  if (v >= 0) {
+    const a = Math.min(1, v);
+    return `rgba(220, 38, 38, ${0.15 + a * 0.7})`;
+  }
+  const a = Math.min(1, Math.abs(v));
+  return `rgba(59, 130, 246, ${0.15 + a * 0.7})`;
+}
+
 const MOOD_COLOR: Record<FearGreed["mood"], string> = {
   extreme_fear: "#1E40AF",
   fear: "#3B82F6",
@@ -89,6 +106,7 @@ const COLORS_UPDOWN = ["#DC2626", "#EF4444", "#9CA3AF", "#10B981", "#059669"];
 
 export default function EconomyPage() {
   const [data, setData] = useState<DashboardData>({});
+  const [corr, setCorr] = useState<CorrelationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -103,6 +121,13 @@ export default function EconomyPage() {
         setLoading(false);
       }
     })();
+  }, []);
+
+  useEffect(() => {
+    economyApi
+      .getCorrelation("KOSPI", 10, 60)
+      .then((res) => setCorr(res.data ?? null))
+      .catch(() => setCorr(null));
   }, []);
 
   if (loading) {
@@ -300,6 +325,49 @@ export default function EconomyPage() {
             </BarChart>
           </ResponsiveContainer>
         </section>
+
+        {/* 5. 종목 상관관계 히트맵 */}
+        {corr && corr.tickers.length > 0 && (
+          <section className="bg-card border border-border rounded-2xl p-5 overflow-x-auto">
+            <h2 className="font-semibold mb-2">시가총액 Top 10 상관관계 (60일 일별 수익률)</h2>
+            <p className="text-xs text-muted-foreground mb-4">
+              빨강일수록 함께 움직임(높은 상관), 파랑일수록 반대로 움직임 — 분산투자 효과 가늠
+            </p>
+            <table className="text-xs font-data border-collapse">
+              <thead>
+                <tr>
+                  <th className="p-1"></th>
+                  {corr.names.map((n, i) => (
+                    <th key={i} className="p-1 text-left whitespace-nowrap" style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}>
+                      {n}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {corr.matrix.map((row, r) => (
+                  <tr key={r}>
+                    <td className="p-1 pr-2 whitespace-nowrap font-medium">{corr.names[r]}</td>
+                    {row.map((v, c) => (
+                      <td
+                        key={c}
+                        className="p-1 text-center"
+                        style={{
+                          backgroundColor: corrColor(v),
+                          minWidth: 36,
+                          color: Math.abs(v) > 0.7 ? "white" : "inherit",
+                        }}
+                        title={`${corr.names[r]} ↔ ${corr.names[c]}: ${v.toFixed(2)}`}
+                      >
+                        {v.toFixed(2)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        )}
 
         {/* 4. KOSPI/KOSDAQ 시계열 (정규화) */}
         <section className="bg-card border border-border rounded-2xl p-5">

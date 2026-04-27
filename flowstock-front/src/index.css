@@ -83,6 +83,54 @@
     --font-sans: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     --font-mono: 'SF Mono', 'Fira Code', monospace;
   }
+
+  /* ── Dark mode tokens ── */
+  .dark {
+    --background: 222 22% 9%;
+    --foreground: 210 20% 96%;
+
+    --card: 222 22% 12%;
+    --card-foreground: 210 20% 96%;
+
+    --popover: 222 22% 12%;
+    --popover-foreground: 210 20% 96%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 22% 9%;
+
+    --secondary: 222 14% 18%;
+    --secondary-foreground: 210 20% 96%;
+
+    --muted: 222 14% 18%;
+    --muted-foreground: 220 9% 65%;
+
+    --accent: 222 14% 18%;
+    --accent-foreground: 210 20% 96%;
+
+    --positive: 142 71% 50%;
+    --negative: 0 75% 60%;
+    --warning: 38 92% 55%;
+    --info: 210 80% 60%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 210 20% 96%;
+
+    --border: 222 14% 22%;
+    --input: 222 14% 22%;
+    --ring: 217 91% 60%;
+
+    --sidebar-background: 222 22% 12%;
+    --sidebar-foreground: 210 20% 96%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 222 22% 9%;
+    --sidebar-accent: 222 14% 18%;
+    --sidebar-accent-foreground: 210 20% 96%;
+    --sidebar-border: 222 14% 22%;
+    --sidebar-ring: 217 91% 60%;
+
+    --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.3), 0 1px 2px hsl(0 0% 0% / 0.4);
+    --shadow-elevated: 0 4px 24px hsl(0 0% 0% / 0.5);
+  }
 }
 
 @layer base {

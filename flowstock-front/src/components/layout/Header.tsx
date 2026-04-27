@@ -8,8 +8,9 @@
  */
 
 import { Link, useLocation } from "react-router-dom";
-import { TrendingUp, Newspaper, Briefcase, LogIn, LogOut, BarChart3, LineChart, Gamepad2 } from "lucide-react";
+import { TrendingUp, Newspaper, Briefcase, LogIn, LogOut, BarChart3, LineChart, Gamepad2, Bell, Sun, Moon } from "lucide-react";
 import { useStore } from "@/stores/useStore";
+import { useTheme } from "@/components/theme-provider";
 
 /** 네비게이션 링크 정의 */
 const navItems = [
@@ -18,11 +19,13 @@ const navItems = [
   { path: "/news", label: "뉴스", icon: Newspaper },
   { path: "/portfolio", label: "모의투자", icon: Briefcase },
   { path: "/portfolio/game", label: "투자게임", icon: Gamepad2 },
+  { path: "/alerts", label: "알림", icon: Bell },
 ];
 
 export default function Header() {
   const location = useLocation();
   const { isAuthenticated, user, logout } = useStore();
+  const { resolved, setTheme } = useTheme();
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur-md">
@@ -59,8 +62,15 @@ export default function Header() {
           })}
         </nav>
 
-        {/* 우측: 로그인/로그아웃 */}
+        {/* 우측: 테마 토글 + 로그인/로그아웃 */}
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setTheme(resolved === "dark" ? "light" : "dark")}
+            aria-label="테마 토글"
+            className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          >
+            {resolved === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
           {isAuthenticated ? (
             <>
               <span className="text-sm text-muted-foreground">
