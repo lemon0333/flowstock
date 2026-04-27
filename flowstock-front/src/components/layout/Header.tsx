@@ -16,7 +16,7 @@ const navItems = [
   { path: "/", label: "홈", icon: BarChart3 },
   { path: "/economy", label: "경제지표", icon: LineChart },
   { path: "/news", label: "뉴스", icon: Newspaper },
-  { path: "/portfolio", label: "포트폴리오", icon: Briefcase },
+  { path: "/portfolio", label: "모의투자", icon: Briefcase },
 ];
 
 export default function Header() {

@@ -40,8 +40,8 @@ const App = () => (
           <Route path="/news" element={<NewsPage />} />
           <Route path="/economy" element={<EconomyPage />} />
 
-          {/* ── 포트폴리오 (개인 기능): 로그인 필요 ── */}
-          <Route path="/portfolio" element={<ProtectedRoute><PortfolioPage /></ProtectedRoute>} />
+          {/* ── 모의투자 (가상 잔고, 클라이언트 영속): 로그인 없이도 사용 가능 ── */}
+          <Route path="/portfolio" element={<PortfolioPage />} />
 
           {/* ── 404 ── */}
           <Route path="*" element={<NotFound />} />
