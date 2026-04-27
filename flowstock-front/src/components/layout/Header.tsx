@@ -8,7 +8,7 @@
  */
 
 import { Link, useLocation } from "react-router-dom";
-import { TrendingUp, Newspaper, Briefcase, LogIn, LogOut, BarChart3, LineChart } from "lucide-react";
+import { TrendingUp, Newspaper, Briefcase, LogIn, LogOut, BarChart3, LineChart, Gamepad2 } from "lucide-react";
 import { useStore } from "@/stores/useStore";
 
 /** 네비게이션 링크 정의 */
@@ -17,6 +17,7 @@ const navItems = [
   { path: "/economy", label: "경제지표", icon: LineChart },
   { path: "/news", label: "뉴스", icon: Newspaper },
   { path: "/portfolio", label: "모의투자", icon: Briefcase },
+  { path: "/portfolio/game", label: "투자게임", icon: Gamepad2 },
 ];
 
 export default function Header() {

@@ -69,4 +69,23 @@ class StockController(
     @GetMapping("/{id}")
     fun detail(@PathVariable id: String): ApiResponse<Map<String, Any?>> =
         ApiResponse.success(mapOf("id" to id, "ticker" to id))
+
+    @GetMapping("/{id}/ohlcv")
+    fun ohlcv(
+        @PathVariable id: String,
+        @RequestParam(defaultValue = "180") days: Int,
+    ): Mono<ApiResponse<List<Map<String, Any?>>>> {
+        val end = LocalDate.now(ZoneId.of("Asia/Seoul")).format(seoulFmt)
+        val start = LocalDate.now(ZoneId.of("Asia/Seoul")).minusDays(days.toLong()).format(seoulFmt)
+        return client.get()
+            .uri("$aiUrl/api/ai/stock/ohlcv?ticker=$id&start=$start&end=$end")
+            .retrieve()
+            .bodyToMono(Map::class.java)
+            .map { resp ->
+                @Suppress("UNCHECKED_CAST")
+                val data = (resp["data"] as? List<Map<String, Any?>>) ?: emptyList()
+                ApiResponse.success(data)
+            }
+            .onErrorReturn(ApiResponse.success(emptyList()))
+    }
 }

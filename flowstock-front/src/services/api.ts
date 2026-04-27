@@ -102,6 +102,8 @@ export const authApi = {
 export const stockApi = {
   getAll: () => api.get<ApiResponse<any[]>>('/stocks'),
   getById: (id: string) => api.get<ApiResponse<any>>(`/stocks/${id}`),
+  getOhlcv: (id: string, days = 180) =>
+    api.get<ApiResponse<any[]>>(`/stocks/${id}/ohlcv?days=${days}`),
 };
 
 // News APIs
