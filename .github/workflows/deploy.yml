@@ -160,6 +160,7 @@ jobs:
           host: ${{ secrets.MINI_PC_HOST }}
           username: lemon
           key: ${{ secrets.MINI_PC_SSH_KEY }}
+          command_timeout: 30m
           script: |
             set -e
             export KUBECONFIG=$HOME/.kube/config
