@@ -65,8 +65,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [theme]);
 
   const setTheme = (t: Theme) => {
-    localStorage.setItem(STORAGE_KEY, t);
+    try {
+      localStorage.setItem(STORAGE_KEY, t);
+    } catch {
+      // ignore
+    }
     setThemeState(t);
+    // 즉시 DOM 반영 (useEffect 사이클 기다리지 않음)
+    const r = t === "system" ? getSystem() : t;
+    setResolved(r);
+    applyTheme(r);
   };
 
   return (

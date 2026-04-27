@@ -33,6 +33,28 @@ class NewsController(
             .onErrorReturn(ApiResponse.success(emptyList()))
     }
 
+    @GetMapping("/search")
+    fun search(
+        @RequestParam keyword: String,
+        @RequestParam(name = "from", required = false) dateFrom: String?,
+        @RequestParam(name = "to", required = false) dateTo: String?,
+        @RequestParam(defaultValue = "10") limit: Int,
+    ): Mono<ApiResponse<List<Map<String, Any?>>>> {
+        val params = mutableListOf("keyword=${java.net.URLEncoder.encode(keyword, "UTF-8")}", "limit=$limit")
+        if (!dateFrom.isNullOrBlank()) params.add("date_from=$dateFrom")
+        if (!dateTo.isNullOrBlank()) params.add("date_to=$dateTo")
+        return client.get()
+            .uri("$aiUrl/api/ai/news/search?${params.joinToString("&")}")
+            .retrieve()
+            .bodyToMono(Map::class.java)
+            .map { resp ->
+                @Suppress("UNCHECKED_CAST")
+                val data = (resp["data"] as? List<Map<String, Any?>>) ?: emptyList()
+                ApiResponse.success(data)
+            }
+            .onErrorReturn(ApiResponse.success(emptyList()))
+    }
+
     @GetMapping("/{id}/graph")
     fun graph(@PathVariable id: String): ApiResponse<Map<String, List<Any>>> =
         ApiResponse.success(mapOf("nodes" to emptyList(), "edges" to emptyList()))

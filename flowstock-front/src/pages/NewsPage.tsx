@@ -88,36 +88,59 @@ export default function NewsPage() {
             뉴스 선택
           </h2>
           <div className="bg-card rounded-2xl overflow-hidden max-h-[600px] overflow-y-auto" style={{ boxShadow: 'var(--shadow-card)' }}>
-            {news.map((item: any) => {
-              const isSelected = selectedIds.includes(item.id);
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => toggleNews(item.id)}
-                  className={`w-full text-left px-5 py-4 transition-all border-b border-border/50 last:border-0 ${
-                    isSelected ? "bg-primary/5 border-l-3 border-l-primary" : "hover:bg-accent/40 border-l-3 border-l-transparent"
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <ImpactIcon impact={item.impact} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground leading-snug line-clamp-2">
-                        {item.title}
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                        {item.summary}
-                      </p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {item.source} · {item.date}
-                        </span>
+            {news.length === 0 ? (
+              <div className="py-12 text-center text-sm text-muted-foreground px-4">
+                불러올 뉴스가 없습니다.
+                <div className="text-xs mt-1">잠시 후 새로고침해주세요.</div>
+              </div>
+            ) : (
+              news.map((item: any) => {
+                const isSelected = selectedIds.includes(item.id);
+                const sentiment = item.sentiment || item.impact;
+                const dateStr = item.publishedAt
+                  ? new Date(item.publishedAt).toLocaleDateString("ko-KR")
+                  : item.date || "";
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => toggleNews(item.id)}
+                    className={`w-full text-left px-5 py-4 transition-all border-b border-border/50 last:border-0 ${
+                      isSelected ? "bg-primary/5 border-l-3 border-l-primary" : "hover:bg-accent/40 border-l-3 border-l-transparent"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <ImpactIcon impact={sentiment} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground leading-snug line-clamp-2">
+                          {item.title}
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                          {item.summary}
+                        </p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {item.source}
+                            {dateStr ? ` · ${dateStr}` : ""}
+                          </span>
+                          {item.link && (
+                            <a
+                              href={item.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-xs text-primary hover:underline"
+                            >
+                              원문
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </button>
-              );
-            })}
+                  </button>
+                );
+              })
+            )}
           </div>
         </div>
 

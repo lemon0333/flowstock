@@ -9,9 +9,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ArrowRight, Play, RefreshCw } from "lucide-react";
+import { ArrowRight, Newspaper, Play, RefreshCw } from "lucide-react";
 import Layout from "@/components/layout/Layout";
-import { stockApi } from "@/services/api";
+import { newsApi, stockApi } from "@/services/api";
 
 interface OHLCV {
   date: string;
@@ -45,6 +45,13 @@ export default function InvestGamePage() {
   const [shares, setShares] = useState(0);
   const [costBasis, setCostBasis] = useState(0); // 평균 매입가
   const [log, setLog] = useState<Array<{ at: string; action: string; price: number; qty?: number }>>([]);
+  const [news, setNews] = useState<Array<{ id?: string; title: string; summary?: string; link?: string; source?: string; publishedAt?: string; sentiment?: string }>>([]);
+  const [newsLoading, setNewsLoading] = useState(false);
+
+  const stockName = useMemo(
+    () => stocks.find((s) => (s.ticker || s.id) === selectedTicker)?.name || selectedTicker,
+    [stocks, selectedTicker],
+  );
 
   useEffect(() => {
     (async () => {
@@ -91,6 +98,34 @@ export default function InvestGamePage() {
   const visible = useMemo(() => series.slice(0, cursor + 1), [series, cursor]);
   const today = series[cursor];
   const finished = cursor >= series.length - 1;
+
+  // 현재 일자 ±3일 범위 종목 뉴스 fetch (cursor 진행할 때마다)
+  useEffect(() => {
+    if (!started || !today || !stockName) return;
+    let cancelled = false;
+    const d = today.date;
+    if (!d || d.length < 10) return;
+    // d 포맷: YYYY-MM-DD 또는 YYYYMMDD
+    const iso = d.includes("-") ? d : `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
+    const dt = new Date(iso);
+    const fromDt = new Date(dt);
+    fromDt.setDate(fromDt.getDate() - 3);
+    const toDt = new Date(dt);
+    toDt.setDate(toDt.getDate() + 1);
+    const fmt = (x: Date) => x.toISOString().slice(0, 10);
+    setNewsLoading(true);
+    newsApi
+      .search(stockName, fmt(fromDt), fmt(toDt), 6)
+      .then((res) => {
+        if (cancelled) return;
+        setNews(res.data ?? []);
+      })
+      .catch(() => !cancelled && setNews([]))
+      .finally(() => !cancelled && setNewsLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [started, today, stockName]);
 
   // 매수 (현재 잔고 100% 또는 일부)
   const buyAll = () => {
@@ -217,17 +252,64 @@ export default function InvestGamePage() {
               </div>
             </div>
 
-            {/* 차트 (cursor까지만) */}
-            <div className="bg-card border border-border rounded-2xl p-4">
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={visible}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="date" minTickGap={40} />
-                  <YAxis domain={["auto", "auto"]} />
-                  <Tooltip formatter={(v: number) => v.toLocaleString()} />
-                  <Line type="monotone" dataKey="close" stroke="#3B82F6" dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
+            {/* 차트 + 뉴스 사이드 패널 */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-4">
+                <ResponsiveContainer width="100%" height={320}>
+                  <LineChart data={visible}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" minTickGap={40} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis domain={["auto", "auto"]} stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip formatter={(v: number) => v.toLocaleString()} />
+                    <Line type="monotone" dataKey="close" stroke="hsl(var(--primary))" dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="bg-card border border-border rounded-2xl overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-border text-sm font-semibold flex items-center gap-2">
+                  <Newspaper className="h-4 w-4" />
+                  {today?.date} {stockName} 뉴스
+                </div>
+                <div className="max-h-[320px] overflow-y-auto">
+                  {newsLoading ? (
+                    <div className="py-8 text-center text-xs text-muted-foreground">불러오는 중…</div>
+                  ) : news.length === 0 ? (
+                    <div className="py-8 text-center text-xs text-muted-foreground">
+                      이 시점 관련 뉴스 없음
+                    </div>
+                  ) : (
+                    news.map((n, i) => (
+                      <a
+                        key={n.id || i}
+                        href={n.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block px-4 py-3 border-b border-border/40 last:border-0 hover:bg-accent/30"
+                      >
+                        <div className="flex items-start gap-2">
+                          <span
+                            className={`mt-1 h-1.5 w-1.5 rounded-full shrink-0 ${
+                              n.sentiment === "positive"
+                                ? "bg-green-500"
+                                : n.sentiment === "negative"
+                                  ? "bg-red-500"
+                                  : "bg-gray-400"
+                            }`}
+                          />
+                          <div className="min-w-0">
+                            <div className="text-xs font-medium leading-snug line-clamp-2">{n.title}</div>
+                            <div className="text-[10px] text-muted-foreground mt-0.5">
+                              {n.source}
+                              {n.publishedAt ? ` · ${new Date(n.publishedAt).toLocaleDateString("ko-KR")}` : ""}
+                            </div>
+                          </div>
+                        </div>
+                      </a>
+                    ))
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* 컨트롤 */}

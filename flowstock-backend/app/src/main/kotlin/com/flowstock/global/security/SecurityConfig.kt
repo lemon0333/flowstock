@@ -37,6 +37,7 @@ class SecurityConfig(
                     // 비로그인 사용자도 둘러볼 수 있는 read-only 데이터
                     .requestMatchers(HttpMethod.GET, "/api/stocks/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/news/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/news/search").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/market/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/economy/**").permitAll()
                     // 개인 기능(포트폴리오, /me, 로그아웃 등)은 인증 필요

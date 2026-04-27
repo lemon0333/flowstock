@@ -108,10 +108,16 @@ export const stockApi = {
 
 // News APIs
 export const newsApi = {
-  getLatest: (page = 0, size = 10) =>
-    api.get<ApiResponse<any>>(`/news?page=${page}&size=${size}`),
+  getLatest: (limit = 30) =>
+    api.get<ApiResponse<any>>(`/news?limit=${limit}`),
   getGraph: (newsId: string) =>
     api.get<ApiResponse<any>>(`/news/${newsId}/graph`),
+  search: (keyword: string, from?: string, to?: string, limit = 10) => {
+    const p = new URLSearchParams({ keyword, limit: String(limit) });
+    if (from) p.set("from", from);
+    if (to) p.set("to", to);
+    return api.get<ApiResponse<any[]>>(`/news/search?${p.toString()}`);
+  },
 };
 
 // Market APIs

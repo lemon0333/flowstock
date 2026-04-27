@@ -36,6 +36,41 @@ _NEG_KW = (
 )
 
 
+def get_stock_news(keyword: str, date_from: str | None = None, date_to: str | None = None, limit: int = 10) -> list[dict]:
+    """Google News RSS로 종목/키워드 + 기간 뉴스 검색.
+
+    date_from/date_to 형식: yyyy-mm-dd. 둘 중 하나만 있어도 동작.
+    """
+    q_parts = [keyword]
+    if date_from:
+        q_parts.append(f"after:{date_from}")
+    if date_to:
+        q_parts.append(f"before:{date_to}")
+    q = urllib.parse.quote_plus(" ".join(q_parts)) if False else "%20".join(urllib.parse.quote(p) for p in q_parts)
+    url = f"https://news.google.com/rss/search?q={q}&hl=ko&gl=KR&ceid=KR:ko"
+    try:
+        feed = feedparser.parse(url)
+    except Exception as e:
+        logger.warning("google news rss 실패 (%s): %s", keyword, e)
+        return []
+    items: list[dict] = []
+    for e in (feed.entries or [])[:limit]:
+        link = e.get("link") or ""
+        title = _strip(e.get("title"))
+        items.append(
+            {
+                "id": e.get("id") or link,
+                "title": title,
+                "summary": _strip(e.get("summary"))[:200],
+                "link": link,
+                "source": _strip(e.get("source", {}).get("title")) if isinstance(e.get("source"), dict) else "Google News",
+                "publishedAt": _parse_dt(e.get("published")),
+                "sentiment": _heuristic_sentiment(title),
+            }
+        )
+    return items
+
+
 def _heuristic_sentiment(text: str) -> str:
     if not text:
         return "neutral"
