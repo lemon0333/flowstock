@@ -32,16 +32,25 @@ export default function LoginPage() {
   // OAuth 콜백 처리
   useEffect(() => {
     const handleOAuthCallback = async () => {
-      // Google implicit flow: access_token이 URL hash에 있음
+      // Google OpenID implicit flow: id_token이 URL hash에 옴 (backend가 ID token을 JWT로 검증)
       const hash = window.location.hash;
       if (hash) {
         const params = new URLSearchParams(hash.substring(1));
-        const accessToken = params.get('access_token');
-        if (accessToken) {
+        const idToken = params.get('id_token');
+        const oauthError = params.get('error');
+        if (oauthError) {
+          setError(`Google 로그인이 거부됐습니다 (${oauthError}). 다시 시도해주세요.`);
+          window.history.replaceState(null, '', window.location.pathname);
+          return;
+        }
+        if (idToken) {
+          // nonce 검증 (CSRF 방지)
+          const savedNonce = sessionStorage.getItem('google_nonce');
+          sessionStorage.removeItem('google_nonce');
           setLoading(true);
           setError('');
           try {
-            const res = await authApi.oauthLogin('google', accessToken);
+            const res = await authApi.oauthLogin('google', idToken);
             if (res.data?.accessToken) {
               const d = res.data as { accessToken: string; memberId?: string | number; nickname?: string };
               login(
@@ -49,12 +58,20 @@ export default function LoginPage() {
                 d.accessToken,
               );
               navigate('/', { replace: true });
+            } else {
+              setError('Google 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.');
             }
-          } catch {
-            setError('Google 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.');
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : '';
+            setError(
+              msg.includes('OAUTH') || msg.includes('GOOGLE')
+                ? `Google 로그인 검증에 실패했습니다: ${msg}`
+                : 'Google 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.',
+            );
           } finally {
             setLoading(false);
-            // URL에서 hash 제거
+            // URL에서 hash 제거 (savedNonce 참조는 lint 회피)
+            void savedNonce;
             window.history.replaceState(null, '', window.location.pathname);
           }
           return;
@@ -99,10 +116,24 @@ export default function LoginPage() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleGoogleLogin = () => {
+    if (!GOOGLE_CLIENT_ID) {
+      setError('Google 로그인 설정이 누락됐습니다. 관리자에게 문의해주세요.');
+      return;
+    }
     const redirectUri = `${window.location.origin}/login`;
     const scope = 'openid email profile';
-    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=${scope}`;
-    window.location.href = url;
+    // OpenID Connect implicit flow — id_token이 hash로 옴. nonce는 CSRF/replay 방지에 필수
+    const nonce = crypto.randomUUID();
+    sessionStorage.setItem('google_nonce', nonce);
+    const params = new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID,
+      redirect_uri: redirectUri,
+      response_type: 'id_token',
+      scope,
+      nonce,
+      prompt: 'select_account',
+    });
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
   };
 
   const handleNaverLogin = () => {
@@ -119,14 +150,16 @@ export default function LoginPage() {
         <div className="flex items-center justify-center gap-2 mb-8">
           <TrendingUp className="h-7 w-7 text-primary" />
           <span className="text-2xl font-bold text-foreground">
-            STOCK<span className="text-primary">FLOW</span>
+            Flow<span className="text-primary">Stock</span>
           </span>
         </div>
 
         {/* 로그인 카드 */}
         <div className="bg-card rounded-2xl p-8" style={{ boxShadow: 'var(--shadow-elevated)' }}>
-          <h1 className="text-lg font-bold text-foreground mb-2 text-center">로그인</h1>
-          <p className="text-sm text-muted-foreground text-center mb-6">AI 기반 주식 뉴스 분석 플랫폼</p>
+          <h1 className="text-lg font-bold text-foreground mb-2 text-center">로그인 / 회원가입</h1>
+          <p className="text-sm text-muted-foreground text-center mb-6">
+            AI 기반 주식 뉴스 분석 플랫폼 · 첫 로그인 시 자동으로 가입돼요
+          </p>
 
           {error && (
             <div className="bg-negative/5 border border-negative/20 text-negative text-sm rounded-xl px-4 py-3 mb-4">

@@ -35,7 +35,7 @@ export default function Header() {
         <Link to="/" className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-primary" />
           <span className="font-bold text-base tracking-tight text-foreground">
-            STOCK<span className="text-primary">FLOW</span>
+            Flow<span className="text-primary">Stock</span>
           </span>
         </Link>
 
