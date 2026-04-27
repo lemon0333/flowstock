@@ -56,13 +56,33 @@ interface SeriesPoint {
   volume: number;
 }
 
+interface FearGreed {
+  score: number;
+  label: string;
+  mood: "extreme_fear" | "fear" | "neutral" | "greed" | "extreme_greed";
+  components: {
+    momentum_52w: number;
+    market_breadth: number;
+    smart_money: number;
+  };
+}
+
 interface DashboardData {
   indices?: Array<{ code: string; name: string; close: number }>;
   deal_trend?: Record<string, DealTrendItem>;
   up_down?: Record<string, UpDownItem>;
   fifty_two_week?: Record<string, FiftyTwoWeekItem>;
   series?: Record<string, SeriesPoint[]>;
+  fear_greed?: FearGreed;
 }
+
+const MOOD_COLOR: Record<FearGreed["mood"], string> = {
+  extreme_fear: "#1E40AF",
+  fear: "#3B82F6",
+  neutral: "#9CA3AF",
+  greed: "#F59E0B",
+  extreme_greed: "#DC2626",
+};
 
 const COLORS_DEAL = ["#3B82F6", "#10B981", "#F59E0B"];
 const COLORS_UPDOWN = ["#DC2626", "#EF4444", "#9CA3AF", "#10B981", "#059669"];
@@ -95,10 +115,28 @@ export default function EconomyPage() {
   if (error) {
     return (
       <Layout>
-        <div className="text-center py-20 text-red-500">{error}</div>
+        <div className="text-center py-20 text-red-500">
+          데이터를 불러오지 못했습니다.
+          <div className="text-xs text-muted-foreground mt-2">잠시 후 다시 시도해주세요.</div>
+        </div>
       </Layout>
     );
   }
+  const hasNoData =
+    !data.fear_greed &&
+    !(data.indices && data.indices.length) &&
+    !(data.deal_trend && Object.keys(data.deal_trend).length);
+  if (hasNoData) {
+    return (
+      <Layout>
+        <div className="text-center py-20 text-muted-foreground">
+          아직 시장 데이터를 받지 못했습니다.
+          <div className="text-xs mt-2">서비스가 준비되는 동안 잠시 기다려주세요.</div>
+        </div>
+      </Layout>
+    );
+  }
+  const fg = data.fear_greed;
 
   // ── 매매주체 동향 (개인/외국인/기관) ──
   const dealTrendBars = Object.values(data.deal_trend ?? {}).flatMap((d) => [
@@ -162,6 +200,38 @@ export default function EconomyPage() {
             매매주체별 동향, 시장 폭(market breadth), 52주 모멘텀, 지수 추세 — 거시/미시 관점에서의 시장 상태
           </p>
         </div>
+
+        {/* 0. Fear & Greed Index */}
+        {fg && (
+          <section
+            className="rounded-2xl p-6 text-white"
+            style={{ background: `linear-gradient(135deg, ${MOOD_COLOR[fg.mood]} 0%, ${MOOD_COLOR[fg.mood]}cc 100%)` }}
+          >
+            <div className="flex items-start justify-between flex-wrap gap-3">
+              <div>
+                <div className="text-xs opacity-80 uppercase tracking-wide">Fear &amp; Greed Index</div>
+                <div className="text-3xl font-extrabold mt-1">{fg.score} — {fg.label}</div>
+                <p className="text-xs opacity-80 mt-1">
+                  52주 모멘텀 / 시장 폭 / 매매주체 흐름 가중평균 (KOSPI 기준)
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-3 text-xs">
+                <div className="bg-white/15 rounded-xl px-3 py-2 text-center min-w-[90px]">
+                  <div className="opacity-80">52주 위치</div>
+                  <div className="text-lg font-bold mt-0.5">{fg.components.momentum_52w}%</div>
+                </div>
+                <div className="bg-white/15 rounded-xl px-3 py-2 text-center min-w-[90px]">
+                  <div className="opacity-80">시장 폭</div>
+                  <div className="text-lg font-bold mt-0.5">{fg.components.market_breadth}%</div>
+                </div>
+                <div className="bg-white/15 rounded-xl px-3 py-2 text-center min-w-[90px]">
+                  <div className="opacity-80">스마트머니</div>
+                  <div className="text-lg font-bold mt-0.5">{fg.components.smart_money}</div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* 1. 매매주체별 동향 */}
         <section className="bg-card border border-border rounded-2xl p-5">

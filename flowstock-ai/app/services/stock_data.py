@@ -16,15 +16,25 @@ import urllib.parse
 import urllib.request
 from datetime import datetime
 
+from cachetools import TTLCache
+
 logger = logging.getLogger(__name__)
 
 NAVER_UA = {"User-Agent": "Mozilla/5.0"}
 
+# 60초 TTL 메모리 캐시 — 외부 API 호출 부하/지연 감소
+_NAVER_CACHE: TTLCache = TTLCache(maxsize=128, ttl=60)
+
 
 def _get_json(url: str, timeout: int = 15) -> dict:
+    cached = _NAVER_CACHE.get(url)
+    if cached is not None:
+        return cached
     req = urllib.request.Request(url, headers=NAVER_UA)
     raw = urllib.request.urlopen(req, timeout=timeout).read().decode()
-    return json.loads(raw)
+    data = json.loads(raw)
+    _NAVER_CACHE[url] = data
+    return data
 
 
 def _to_int(value) -> int:
@@ -283,6 +293,53 @@ class StockDataService:
                     "low_52w": low52,
                 }
             )
+
+        # ── Fear & Greed Index 합성 ─────────────────────────
+        # 0(극도 공포) ~ 100(극도 탐욕). KOSPI 기준.
+        try:
+            ratio = (result["fifty_two_week"].get("KOSPI") or {}).get("ratio") or 50.0
+        except Exception:
+            ratio = 50.0
+        try:
+            ud = result["up_down"].get("KOSPI") or {}
+            rise = ud.get("rise", 0) + ud.get("upper", 0)
+            fall = ud.get("fall", 0) + ud.get("lower", 0)
+            total = rise + fall
+            breadth = (rise / total * 100) if total > 0 else 50.0
+        except Exception:
+            breadth = 50.0
+        try:
+            dt = result["deal_trend"].get("KOSPI") or {}
+            net = (dt.get("foreign", 0) + dt.get("institutional", 0)) - dt.get("personal", 0)
+            # tanh 같은 normalize 없이 단순 clamp
+            scale = 50_000  # 기관/외인 순매수 5만(억) 정도면 max로 간주
+            deal_score = max(0.0, min(100.0, 50.0 + (net / scale) * 50.0))
+        except Exception:
+            deal_score = 50.0
+
+        # 가중 평균
+        score = round(ratio * 0.4 + breadth * 0.3 + deal_score * 0.3, 1)
+        if score < 25:
+            label, mood = "극도 공포", "extreme_fear"
+        elif score < 45:
+            label, mood = "공포", "fear"
+        elif score < 55:
+            label, mood = "중립", "neutral"
+        elif score < 75:
+            label, mood = "탐욕", "greed"
+        else:
+            label, mood = "극도 탐욕", "extreme_greed"
+
+        result["fear_greed"] = {
+            "score": score,
+            "label": label,
+            "mood": mood,
+            "components": {
+                "momentum_52w": round(ratio, 1),       # 52주 위치
+                "market_breadth": round(breadth, 1),    # 상승/하락 비율
+                "smart_money": round(deal_score, 1),    # 외국인+기관 vs 개인
+            },
+        }
 
         return result
 
