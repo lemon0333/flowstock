@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1E3A8A"/>
+      <stop offset="100%" stop-color="#0F766E"/>
+    </linearGradient>
+    <linearGradient id="logo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#60A5FA"/>
+      <stop offset="100%" stop-color="#34D399"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- 차트 라인 배경 (장식) -->
+  <polyline points="0,500 150,460 300,490 450,400 600,420 750,330 900,360 1050,260 1200,290"
+            fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="3"/>
+  <polyline points="0,540 150,510 300,480 450,470 600,430 750,420 900,380 1050,360 1200,330"
+            fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="3"/>
+
+  <!-- 로고 박스 -->
+  <rect x="100" y="180" width="160" height="160" rx="36" fill="url(#logo)"/>
+  <polyline points="130,300 175,260 200,275 230,225"
+            fill="none" stroke="white" stroke-width="14"
+            stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="210,225 230,225 230,245"
+            fill="none" stroke="white" stroke-width="14"
+            stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- 텍스트 -->
+  <text x="300" y="240" font-family="-apple-system, system-ui, sans-serif" font-size="84" font-weight="800" fill="white">FlowStock</text>
+  <text x="300" y="300" font-family="-apple-system, system-ui, sans-serif" font-size="34" font-weight="400" fill="rgba(255,255,255,0.85)">
+    한국 주식 시세 · 경제 지표 · 모의투자
+  </text>
+
+  <text x="100" y="490" font-family="-apple-system, system-ui, sans-serif" font-size="28" font-weight="500" fill="rgba(255,255,255,0.7)">
+    KOSPI · KOSDAQ · 매매주체 동향 · 52주 모멘텀
+  </text>
+  <text x="100" y="540" font-family="-apple-system, system-ui, sans-serif" font-size="28" font-weight="500" fill="rgba(255,255,255,0.7)">
+    1,000만원 가상 잔고 모의투자 · 백테스트 게임
+  </text>
+</svg>
