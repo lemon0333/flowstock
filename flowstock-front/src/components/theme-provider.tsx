@@ -23,18 +23,30 @@ function getSystem(): "light" | "dark" {
 }
 
 function applyTheme(t: "light" | "dark") {
-  const root = document.documentElement;
-  root.classList.toggle("dark", t === "dark");
+  if (typeof document === "undefined") return;
+  try {
+    document.documentElement.classList.toggle("dark", t === "dark");
+  } catch {
+    // ignore
+  }
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === "undefined") return "system";
-    return ((localStorage.getItem(STORAGE_KEY) as Theme) || "system");
+    try {
+      if (typeof window === "undefined") return "system";
+      return ((localStorage.getItem(STORAGE_KEY) as Theme) || "system");
+    } catch {
+      return "system";
+    }
   });
-  const [resolved, setResolved] = useState<"light" | "dark">(() =>
-    theme === "system" ? getSystem() : theme,
-  );
+  const [resolved, setResolved] = useState<"light" | "dark">(() => {
+    try {
+      return theme === "system" ? getSystem() : theme;
+    } catch {
+      return "light";
+    }
+  });
 
   useEffect(() => {
     const r = theme === "system" ? getSystem() : theme;
@@ -66,6 +78,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 export function useTheme() {
   const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error("useTheme must be used within ThemeProvider");
+  // Provider 밖에서 호출돼도 깨지지 않도록 fallback
+  if (!ctx) {
+    return {
+      theme: "system" as Theme,
+      resolved: "light" as const,
+      setTheme: () => {},
+    };
+  }
   return ctx;
 }

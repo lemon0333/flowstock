@@ -234,11 +234,25 @@ export const useStore = create<AppState>()(
     }),
     {
       name: "flowstock-simulation", // localStorage key
+      version: 2,
       partialize: (state) => ({
         cash: state.cash,
         holdings: state.holdings,
         trades: state.trades,
         watchlist: state.watchlist,
+      }),
+      // 옛 스키마(holdings/trades/cash 만 저장)에서 hydrate될 때 watchlist 등 누락 방어
+      merge: (persisted, current) => ({
+        ...current,
+        ...(persisted as object),
+        watchlist:
+          (persisted as { watchlist?: WatchlistItem[] } | undefined)?.watchlist ?? current.watchlist,
+        holdings:
+          (persisted as { holdings?: Holding[] } | undefined)?.holdings ?? current.holdings,
+        trades:
+          (persisted as { trades?: Trade[] } | undefined)?.trades ?? current.trades,
+        cash:
+          (persisted as { cash?: number } | undefined)?.cash ?? current.cash,
       }),
     },
   ),

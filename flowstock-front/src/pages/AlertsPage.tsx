@@ -22,7 +22,11 @@ interface StockRow {
 }
 
 export default function AlertsPage() {
-  const { watchlist, addWatch, removeWatch, updateWatch } = useStore();
+  const watchlistRaw = useStore((s) => s.watchlist);
+  const watchlist: WatchlistItem[] = watchlistRaw ?? [];
+  const addWatch = useStore((s) => s.addWatch);
+  const removeWatch = useStore((s) => s.removeWatch);
+  const updateWatch = useStore((s) => s.updateWatch);
   const [stocks, setStocks] = useState<StockRow[]>([]);
   const [perm, setPerm] = useState<NotificationPermission>(
     typeof Notification !== "undefined" ? Notification.permission : "default",
