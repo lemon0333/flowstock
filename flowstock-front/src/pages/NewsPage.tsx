@@ -12,6 +12,7 @@ import { Clock, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import NetworkGraph from "@/components/stock/NetworkGraph";
 import { newsApi, stockApi } from "@/services/api";
+import { newsItemSchema, safeArray, stockSchema } from "@/services/schemas";
 
 export default function NewsPage() {
   const [news, setNews] = useState<any[]>([]);
@@ -29,11 +30,14 @@ export default function NewsPage() {
           newsApi.getLatest(),
           stockApi.getAll(),
         ]);
-        const newsData = Array.isArray(newsRes.data) ? newsRes.data : newsRes.data?.content ?? [];
-        const stockData = stockRes.data ?? [];
+        const rawNews = Array.isArray(newsRes.data)
+          ? newsRes.data
+          : (newsRes.data as { content?: unknown[] } | undefined)?.content ?? [];
+        const newsData = safeArray(newsItemSchema, rawNews);
+        const stockData = safeArray(stockSchema, stockRes.data);
         setNews(newsData);
         setStocks(stockData);
-        setSelectedIds(newsData.slice(0, 3).map((n: any) => n.id));
+        setSelectedIds(newsData.slice(0, 3).map((n) => n.id));
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : '데이터를 불러오는데 실패했습니다.');
       } finally {

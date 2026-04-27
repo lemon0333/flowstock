@@ -21,13 +21,16 @@ interface Stock {
 }
 
 interface Props {
-  gainers: Stock[];
-  losers: Stock[];
+  gainers?: Stock[];
+  losers?: Stock[];
 }
 
 export default function TopMovers({ gainers, losers }: Props) {
   const [tab, setTab] = useState<"gainers" | "losers">("gainers");
-  const list = tab === "gainers" ? gainers : losers;
+  // 응답이 늦거나 비정상이어도 안전 — 빈 배열로 폴백
+  const safeGainers = Array.isArray(gainers) ? gainers : [];
+  const safeLosers = Array.isArray(losers) ? losers : [];
+  const list = tab === "gainers" ? safeGainers : safeLosers;
 
   return (
     <div className="bg-card rounded-2xl overflow-hidden" style={{ boxShadow: 'var(--shadow-card)' }}>
@@ -59,28 +62,38 @@ export default function TopMovers({ gainers, losers }: Props) {
 
       {/* 종목 리스트 */}
       <div className="p-2">
-        {list.slice(0, 6).map((stock, i) => (
-          <Link
-            key={stock.id}
-            to={`/stock/${stock.id}`}
-            className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-accent/60 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground font-medium w-5 text-center">{i + 1}</span>
-              <span className="text-sm font-semibold text-foreground">{stock.name}</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="font-data text-sm font-medium text-foreground">
-                {stock.price.toLocaleString()}원
-              </span>
-              <span className={`font-data text-sm font-semibold min-w-[70px] text-right ${
-                stock.changePercent > 0 ? "text-positive" : "text-negative"
-              }`}>
-                {stock.changePercent > 0 ? "+" : ""}{stock.changePercent.toFixed(2)}%
-              </span>
-            </div>
-          </Link>
-        ))}
+        {list.length === 0 ? (
+          <div className="px-4 py-10 text-center text-sm text-muted-foreground">
+            데이터 준비 중
+          </div>
+        ) : (
+          list.slice(0, 6).map((stock, i) => {
+            const price = Number.isFinite(stock?.price) ? stock.price : 0;
+            const changePct = Number.isFinite(stock?.changePercent) ? stock.changePercent : 0;
+            return (
+              <Link
+                key={stock.id}
+                to={`/stock/${stock.id}`}
+                className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-accent/60 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-muted-foreground font-medium w-5 text-center">{i + 1}</span>
+                  <span className="text-sm font-semibold text-foreground">{stock.name}</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="font-data text-sm font-medium text-foreground">
+                    {price.toLocaleString()}원
+                  </span>
+                  <span className={`font-data text-sm font-semibold min-w-[70px] text-right ${
+                    changePct > 0 ? "text-positive" : "text-negative"
+                  }`}>
+                    {changePct > 0 ? "+" : ""}{changePct.toFixed(2)}%
+                  </span>
+                </div>
+              </Link>
+            );
+          })
+        )}
       </div>
     </div>
   );

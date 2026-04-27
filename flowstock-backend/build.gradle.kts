@@ -75,6 +75,12 @@ project(":app") {
         }
     }
 
+    // Java compile도 17로 맞춰 kapt와 JVM 타겟 충돌 회피
+    tasks.withType<JavaCompile> {
+        sourceCompatibility = "17"
+        targetCompatibility = "17"
+    }
+
     tasks.withType<Test> {
         useJUnitPlatform()
     }

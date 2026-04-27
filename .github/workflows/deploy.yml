@@ -42,9 +42,13 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('flowstock-backend/**/*.gradle.kts') }}
           restore-keys: ${{ runner.os }}-gradle-
 
+      - name: Test (JUnit5)
+        working-directory: flowstock-backend
+        run: chmod +x gradlew && ./gradlew :app:test --no-daemon
+
       - name: Build with Gradle
         working-directory: flowstock-backend
-        run: chmod +x gradlew && ./gradlew :app:bootJar --no-daemon
+        run: ./gradlew :app:bootJar --no-daemon
 
       - name: Build & push Docker image
         uses: docker/build-push-action@v5

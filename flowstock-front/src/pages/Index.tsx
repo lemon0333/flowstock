@@ -13,6 +13,12 @@ import MarketIndexCard from "@/components/home/MarketIndexCard";
 import TopMovers from "@/components/home/TopMovers";
 import NewsSummary from "@/components/home/NewsSummary";
 import { marketApi, stockApi, newsApi } from "@/services/api";
+import {
+  marketIndexSchema,
+  newsItemSchema,
+  safeArray,
+  stockSchema,
+} from "@/services/schemas";
 
 export default function Index() {
   const [marketIndices, setMarketIndices] = useState<any[]>([]);
@@ -31,9 +37,12 @@ export default function Index() {
           stockApi.getAll(),
           newsApi.getLatest(),
         ]);
-        setMarketIndices(marketRes.data ?? []);
-        setStocks(stockRes.data ?? []);
-        setNews(Array.isArray(newsRes.data) ? newsRes.data : newsRes.data?.content ?? []);
+        setMarketIndices(safeArray(marketIndexSchema, marketRes.data));
+        setStocks(safeArray(stockSchema, stockRes.data));
+        const rawNews = Array.isArray(newsRes.data)
+          ? newsRes.data
+          : (newsRes.data as { content?: unknown[] } | undefined)?.content ?? [];
+        setNews(safeArray(newsItemSchema, rawNews));
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : '데이터를 불러오는데 실패했습니다.');
       } finally {
@@ -44,12 +53,12 @@ export default function Index() {
   }, []);
 
   const topGainers = stocks
-    .filter((s: any) => s.changePercent > 0)
-    .sort((a: any, b: any) => b.changePercent - a.changePercent);
+    .filter((s: any) => (s.changePercent ?? 0) > 0)
+    .sort((a: any, b: any) => (b.changePercent ?? 0) - (a.changePercent ?? 0));
 
   const topLosers = stocks
-    .filter((s: any) => s.changePercent < 0)
-    .sort((a: any, b: any) => a.changePercent - b.changePercent);
+    .filter((s: any) => (s.changePercent ?? 0) < 0)
+    .sort((a: any, b: any) => (a.changePercent ?? 0) - (b.changePercent ?? 0));
 
   if (loading) {
     return (

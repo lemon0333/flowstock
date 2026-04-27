@@ -12,3 +12,18 @@
 
 # OS 관련 파일
 .DS_Store
+
+# Python venv (테스트용)
+.venv/
+.venv-test/
+__pycache__/
+.pytest_cache/
+
+# Node
+node_modules/
+flowstock-front/dist/
+
+# Gradle
+flowstock-backend/.gradle/
+flowstock-backend/build/
+flowstock-backend/*/build/

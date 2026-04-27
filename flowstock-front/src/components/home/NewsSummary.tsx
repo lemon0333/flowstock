@@ -13,12 +13,15 @@ import { Clock, ExternalLink } from "lucide-react";
 interface NewsItem {
   id: string;
   title: string;
-  summary: string;
-  source: string;
-  date: string;
-  category: string;
-  relatedStocks: string[];
-  impact: "positive" | "negative" | "neutral";
+  summary?: string;
+  source?: string;
+  date?: string;
+  category?: string;
+  relatedStocks?: string[];
+  impact?: "positive" | "negative" | "neutral";
+  sentiment?: "positive" | "negative" | "neutral";
+  publishedAt?: string;
+  link?: string;
 }
 
 interface DisclosureItem {
@@ -37,8 +40,8 @@ interface StockItem {
 }
 
 interface Props {
-  news: NewsItem[];
-  disclosures: DisclosureItem[];
+  news?: NewsItem[];
+  disclosures?: DisclosureItem[];
   stocks?: StockItem[];
 }
 
@@ -52,7 +55,11 @@ function ImpactDot({ impact }: { impact: string }) {
   return <span className={`inline-block w-2 h-2 rounded-full ${colorClass}`} />;
 }
 
-export default function NewsSummary({ news: newsItems, disclosures, stocks = [] }: Props) {
+export default function NewsSummary({ news, disclosures, stocks = [] }: Props) {
+  // 백엔드에서 빈 배열/undefined가 와도 화면이 깨지지 않도록 방어
+  const newsItems: NewsItem[] = Array.isArray(news) ? news : [];
+  const discList: DisclosureItem[] = Array.isArray(disclosures) ? disclosures : [];
+
   /** stockId로 종목명 찾기 */
   const getStockName = (id: string) =>
     stocks.find((s: StockItem) => s.id === id)?.name ?? id;
@@ -71,37 +78,54 @@ export default function NewsSummary({ news: newsItems, disclosures, stocks = [] 
         </div>
 
         <div className="divide-y divide-border/50">
-          {newsItems.slice(0, 4).map((item) => (
-            <Link
-              key={item.id}
-              to="/news"
-              className="block px-5 py-4 hover:bg-accent/40 transition-colors"
-            >
-              <div className="flex items-start gap-3">
-                <ImpactDot impact={item.impact} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground leading-snug line-clamp-1">
-                    {item.title}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
-                    {item.summary}
-                  </p>
-                  <div className="flex items-center gap-2 mt-2.5">
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {item.source} · {item.date}
-                    </span>
-                    {/* 관련 종목 태그 */}
-                    {item.relatedStocks.slice(0, 3).map((sid) => (
-                      <span key={sid} className="ticker-tag">
-                        {getStockName(sid)}
-                      </span>
-                    ))}
+          {newsItems.length === 0 ? (
+            <div className="py-10 text-center text-sm text-muted-foreground">
+              불러올 뉴스가 없습니다
+            </div>
+          ) : (
+            newsItems.slice(0, 4).map((item) => {
+              const sentiment = item.sentiment ?? item.impact ?? "neutral";
+              const dateStr = item.publishedAt
+                ? new Date(item.publishedAt).toLocaleDateString("ko-KR")
+                : item.date ?? "";
+              const relatedStocks = Array.isArray(item.relatedStocks)
+                ? item.relatedStocks.slice(0, 3)
+                : [];
+              return (
+                <Link
+                  key={item.id}
+                  to="/news"
+                  className="block px-5 py-4 hover:bg-accent/40 transition-colors"
+                >
+                  <div className="flex items-start gap-3">
+                    <ImpactDot impact={sentiment} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground leading-snug line-clamp-1">
+                        {item.title}
+                      </p>
+                      {item.summary && (
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
+                          {item.summary}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {item.source ?? ""}
+                          {dateStr ? ` · ${dateStr}` : ""}
+                        </span>
+                        {relatedStocks.map((sid) => (
+                          <span key={sid} className="ticker-tag">
+                            {getStockName(sid)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </Link>
-          ))}
+                </Link>
+              );
+            })
+          )}
         </div>
       </div>
 
@@ -114,26 +138,32 @@ export default function NewsSummary({ news: newsItems, disclosures, stocks = [] 
         </div>
 
         <div className="divide-y divide-border/50">
-          {disclosures.slice(0, 4).map((disc) => (
-            <Link
-              key={disc.id}
-              to={`/stock/${disc.stockId}`}
-              className="flex items-center justify-between px-5 py-3.5 hover:bg-accent/40 transition-colors"
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                  disc.type === "주요" ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"
-                }`}>
-                  {disc.type}
+          {discList.length === 0 ? (
+            <div className="py-10 text-center text-sm text-muted-foreground">
+              최근 공시가 없습니다
+            </div>
+          ) : (
+            discList.slice(0, 4).map((disc) => (
+              <Link
+                key={disc.id}
+                to={`/stock/${disc.stockId}`}
+                className="flex items-center justify-between px-5 py-3.5 hover:bg-accent/40 transition-colors"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                    disc.type === "주요" ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"
+                  }`}>
+                    {disc.type}
+                  </span>
+                  <span className="ticker-tag">{disc.stockName}</span>
+                  <span className="text-sm text-foreground truncate">{disc.title}</span>
+                </div>
+                <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
+                  {disc.date}
                 </span>
-                <span className="ticker-tag">{disc.stockName}</span>
-                <span className="text-sm text-foreground truncate">{disc.title}</span>
-              </div>
-              <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
-                {disc.date}
-              </span>
-            </Link>
-          ))}
+              </Link>
+            ))
+          )}
         </div>
       </div>
     </div>
