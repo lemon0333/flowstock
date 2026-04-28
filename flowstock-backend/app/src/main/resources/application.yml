@@ -99,7 +99,7 @@ management:
       probability: 1.0
   otlp:
     tracing:
-      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://jaeger-collector.monitoring:4318/v1/traces}
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://jaeger-collector.flowstock-monitoring:4318/v1/traces}
 
 # ── Logging ──
 logging:
