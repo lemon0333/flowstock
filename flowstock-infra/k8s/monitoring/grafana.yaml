@@ -1,4 +1,18 @@
 ---
+# Grafana dashboards/세팅 영속화 — k3s 기본 local-path provisioner 사용
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-pvc
+  namespace: flowstock-monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: local-path
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -75,7 +89,8 @@ spec:
           configMap:
             name: grafana-datasources
         - name: storage
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: grafana-pvc
 ---
 apiVersion: v1
 kind: Service
