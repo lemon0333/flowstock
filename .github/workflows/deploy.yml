@@ -183,9 +183,15 @@ jobs:
             k3s kubectl apply -f k8s/mysql/mysql.yaml
             k3s kubectl apply -f k8s/redis/redis.yaml
 
-            # 3) Cloudflared (envsubst with .env)
+            # 3) Cloudflared (envsubst with .env) — ingress rule 변경 즉시 반영 위해 rollout restart
             set -a; source .env; set +a
+            CLOUDFLARED_BEFORE=$(k3s kubectl get configmap cloudflared-config -n flowstock -o jsonpath='{.data.config\.yml}' 2>/dev/null | sha256sum | cut -d' ' -f1)
             envsubst < k8s/cloudflared/cloudflared.yaml | k3s kubectl apply -f -
+            CLOUDFLARED_AFTER=$(k3s kubectl get configmap cloudflared-config -n flowstock -o jsonpath='{.data.config\.yml}' 2>/dev/null | sha256sum | cut -d' ' -f1)
+            if [ "$CLOUDFLARED_BEFORE" != "$CLOUDFLARED_AFTER" ]; then
+              echo "Cloudflared config changed — rollout restart"
+              k3s kubectl rollout restart deployment/cloudflared -n flowstock
+            fi
 
             # 4) Observability — Prometheus / Grafana / kube-state-metrics / node-exporter / Jaeger
             k3s kubectl apply -f k8s/monitoring/kube-state-metrics.yaml || true
