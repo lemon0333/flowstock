@@ -309,3 +309,29 @@ flowstock-ai/
 - AI 서비스는 k8s 내부에서 `http://ai-service.flowstock.svc.cluster.local:8000`으로 호출
 - **CLAUDE.md 즉시 갱신 원칙** — 프로젝트 결정 변경 시 같은 턴에 갱신, 작업 시작 전 먼저 읽기
 - 코드 작업 시 `flowstock-infra/k8s/` 안에 있는 기존 매니페스트 먼저 확인 (중복 방지)
+
+## Mini PC SSH 접속 (k3s 운영용)
+
+`~/.ssh/config`에 두 호스트 등록되어 있음:
+- `flowstock-mini` — Tailscale IP `100.83.152.23` (외부에서 접속, 보통 이거 사용 — 단 Tailscale 안 켜져있으면 timeout)
+- `flowstock-mini-lan` — LAN IP `192.168.219.115` (집 내부 네트워크일 때만)
+
+User: `lemon`, Key: `~/.ssh/id_rsa`. 비밀번호 sudo 안 됨 → **sudo 없이 사용자 권한으로** k3s 실행:
+
+```bash
+ssh flowstock-mini-lan "export KUBECONFIG=\$HOME/.kube/config && k3s kubectl get pods -n flowstock"
+```
+
+핵심 운영 명령:
+```bash
+# pod 상태
+ssh flowstock-mini-lan "export KUBECONFIG=\$HOME/.kube/config && k3s kubectl get pods -n flowstock -n flowstock-monitoring"
+
+# cloudflared config 변경 후 재시작 (ingress rule 추가/변경 시)
+ssh flowstock-mini-lan "export KUBECONFIG=\$HOME/.kube/config && k3s kubectl rollout restart deployment/cloudflared -n flowstock"
+
+# 로그 보기
+ssh flowstock-mini-lan "export KUBECONFIG=\$HOME/.kube/config && k3s kubectl logs -n flowstock deployment/flowstock-backend --tail=100"
+```
+
+deploy.yml의 GitHub Actions는 같은 host(`secrets.MINI_PC_HOST`로 등록)로 SSH 접속해 동일 명령 실행.
