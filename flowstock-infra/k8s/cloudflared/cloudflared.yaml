@@ -13,6 +13,12 @@ data:
     ingress:
       - hostname: api.flowstock.info
         service: http://flowstock-backend.flowstock.svc.cluster.local:80
+      - hostname: grafana.flowstock.info
+        service: http://grafana.flowstock-monitoring.svc.cluster.local:3000
+      - hostname: jaeger.flowstock.info
+        service: http://jaeger-query.flowstock-monitoring.svc.cluster.local:16686
+      - hostname: prometheus.flowstock.info
+        service: http://prometheus.flowstock-monitoring.svc.cluster.local:9090
       - service: http_status:404
 ---
 apiVersion: v1

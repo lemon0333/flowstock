@@ -32,8 +32,10 @@ class SecurityConfig(
                     .requestMatchers(HttpMethod.POST, "/api/members/oauth/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/members/oauth/naver/callback").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/members/token/refresh").permitAll()
-                    // Actuator (k3s health check)
+                    // Actuator (k3s health check + Prometheus scrape)
                     .requestMatchers("/actuator/**").permitAll()
+                    // Swagger UI / OpenAPI
+                    .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                     // 비로그인 사용자도 둘러볼 수 있는 read-only 데이터
                     .requestMatchers(HttpMethod.GET, "/api/stocks/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/news/**").permitAll()

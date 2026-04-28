@@ -8,9 +8,9 @@
  * ============================================================
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { Plus, RefreshCw, Trash2, TrendingDown, TrendingUp } from "lucide-react";
+import { Download, Plus, RefreshCw, Search, TrendingDown, TrendingUp } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { useStore } from "@/stores/useStore";
 import { stockApi } from "@/services/api";
@@ -28,10 +28,13 @@ interface StockRow {
   changePercent?: number;
 }
 
+const POLL_INTERVAL_MS = 30_000;
+
 export default function PortfolioPage() {
   const { cash, holdings, trades, buyStock, sellStock, resetSimulation } = useStore();
   const [stocks, setStocks] = useState<StockRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // 매수/매도 폼
   const [showForm, setShowForm] = useState(false);
@@ -39,18 +42,35 @@ export default function PortfolioPage() {
   const [formQuantity, setFormQuantity] = useState("");
   const [formAction, setFormAction] = useState<"buy" | "sell">("buy");
   const [formError, setFormError] = useState("");
+  const [search, setSearch] = useState("");
 
+  // 30초마다 시세 polling — 탭이 hidden이면 멈춤
   useEffect(() => {
-    (async () => {
+    let active = true;
+    const fetchOnce = async () => {
+      if (document.visibilityState === "hidden") return;
       try {
         const res = await stockApi.getAll();
+        if (!active) return;
         setStocks((res.data ?? []) as StockRow[]);
+        setLastUpdated(new Date());
       } catch {
-        setStocks([]);
+        // ignore — 직전 시세 유지
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
-    })();
+    };
+    fetchOnce();
+    const id = window.setInterval(fetchOnce, POLL_INTERVAL_MS);
+    const onVis = () => {
+      if (document.visibilityState === "visible") fetchOnce();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      active = false;
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, []);
 
   const stockMap = useMemo(() => {
@@ -62,11 +82,23 @@ export default function PortfolioPage() {
     return m;
   }, [stocks]);
 
-  // 종목 list (보유 종목은 매도 폼에서 따로)
-  const buySelectable = stocks;
+  // 매수 — 검색어 필터 적용
+  const buySelectable = useMemo(() => {
+    if (!search.trim()) return stocks.slice(0, 50);
+    const q = search.trim().toLowerCase();
+    return stocks
+      .filter((s) =>
+        (s.name?.toLowerCase().includes(q) ?? false) ||
+        (s.id?.toLowerCase().includes(q) ?? false) ||
+        (s.ticker?.toLowerCase().includes(q) ?? false),
+      )
+      .slice(0, 50);
+  }, [stocks, search]);
+
+  // 매도 — 보유한 종목만 + 보유 수량 표기
   const sellSelectable = holdings.map((h) => ({
     id: h.stockId,
-    name: h.stockName,
+    name: `${h.stockName} (${h.quantity}주 보유)`,
     price: stockMap[h.stockId]?.price ?? h.avgPrice,
   }));
 
@@ -79,6 +111,36 @@ export default function PortfolioPage() {
   const totalAsset = totalEval + cash;
   const profit = totalEval - totalCost;
   const profitRate = totalCost > 0 ? (profit / totalCost) * 100 : 0;
+
+  // 평가손익 변동 시 카드 flash
+  const prevProfit = useRef(profit);
+  const [flash, setFlash] = useState<"up" | "down" | null>(null);
+  useEffect(() => {
+    if (prevProfit.current !== profit) {
+      const dir = profit > prevProfit.current ? "up" : "down";
+      setFlash(dir);
+      const t = window.setTimeout(() => setFlash(null), 600);
+      prevProfit.current = profit;
+      return () => window.clearTimeout(t);
+    }
+  }, [profit]);
+
+  const exportTradesCsv = () => {
+    if (!trades.length) return;
+    const header = "id,type,stockId,stockName,quantity,price,total,at";
+    const rows = trades.map((t) =>
+      [t.id, t.type, t.stockId, JSON.stringify(t.stockName), t.quantity, t.price, t.total, t.at].join(","),
+    );
+    const blob = new Blob([header + "\n" + rows.join("\n")], {
+      type: "text/csv;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `flowstock-trades-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   // 종목별 비중
   const allocation = holdings.map((h, i) => {
@@ -137,8 +199,17 @@ export default function PortfolioPage() {
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">모의투자</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              1,000만원 가상 잔고로 매수/매도를 연습 — 실제 시장가는 KOSPI 시세 기준
+            <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
+              1,000만원 가상 잔고 · 실시간 KOSPI 시세 기준
+              <span className="inline-flex items-center gap-1 text-xs">
+                <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                30초마다 갱신
+                {lastUpdated && (
+                  <span className="text-muted-foreground/70">
+                    · {lastUpdated.toLocaleTimeString("ko-KR")}
+                  </span>
+                )}
+              </span>
             </p>
           </div>
           <button
@@ -173,7 +244,11 @@ export default function PortfolioPage() {
               {totalEval.toLocaleString()}원
             </div>
           </div>
-          <div className="bg-card border border-border rounded-2xl p-4">
+          <div
+            className={`bg-card border border-border rounded-2xl p-4 transition-colors ${
+              flash === "up" ? "ring-2 ring-green-400/60" : flash === "down" ? "ring-2 ring-red-400/60" : ""
+            }`}
+          >
             <div className="text-xs text-muted-foreground">평가손익</div>
             <div
               className={`font-data text-xl font-bold mt-1 ${
@@ -221,12 +296,23 @@ export default function PortfolioPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">종목</label>
+                  {formAction === "buy" && (
+                    <div className="relative mb-2">
+                      <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      <input
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="종목명/티커 검색"
+                        className="w-full bg-accent border border-border rounded-xl pl-8 pr-3 py-2 text-sm"
+                      />
+                    </div>
+                  )}
                   <select
                     value={formStockId}
                     onChange={(e) => setFormStockId(e.target.value)}
                     className="w-full bg-accent border border-border rounded-xl px-3 py-2.5 text-sm"
                   >
-                    <option value="">선택</option>
+                    <option value="">선택 ({(formAction === "buy" ? buySelectable : sellSelectable).length}개)</option>
                     {(formAction === "buy" ? buySelectable : sellSelectable).map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name} ({s.price.toLocaleString()}원)
@@ -352,8 +438,16 @@ export default function PortfolioPage() {
 
         {/* 거래 내역 */}
         <div className="bg-card border border-border rounded-2xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-border text-sm font-semibold">
-            거래 내역 (최근 {trades.length})
+          <div className="px-5 py-3 border-b border-border text-sm font-semibold flex items-center justify-between">
+            <span>거래 내역 (최근 {trades.length})</span>
+            {trades.length > 0 && (
+              <button
+                onClick={exportTradesCsv}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <Download className="h-3.5 w-3.5" /> CSV
+              </button>
+            )}
           </div>
           {trades.length === 0 ? (
             <div className="py-12 text-center text-sm text-muted-foreground">

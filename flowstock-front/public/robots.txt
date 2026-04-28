@@ -1,5 +1,6 @@
+# Sitemap을 가장 위에 — 일부 크롤러가 첫 라인 위주로 읽는 케이스 대응
+Sitemap: https://flowstock.info/sitemap.xml
+
 User-agent: *
 Allow: /
 Disallow: /login
-
-Sitemap: https://flowstock.info/sitemap.xml

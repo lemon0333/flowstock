@@ -69,17 +69,37 @@ cloud:
     stack:
       auto: false
 
-# ── Actuator (k3s health/readiness probe) ──
+# ── Springdoc OpenAPI / Swagger UI ──
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+    display-request-duration: true
+  api-docs:
+    path: /v3/api-docs
+  show-actuator: false
+
+# ── Actuator (k3s probe + Prometheus scrape) ──
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus,metrics
   endpoint:
     health:
       show-details: when-authorized
       probes:
         enabled: true
+  metrics:
+    tags:
+      application: flowstock-backend
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://jaeger-collector.monitoring:4318/v1/traces}
 
 # ── Logging ──
 logging:

@@ -38,6 +38,14 @@ project(":app") {
         "implementation"("org.springframework.boot:spring-boot-starter-validation")
         "implementation"("org.springframework.boot:spring-boot-starter-actuator")
 
+        // OpenAPI / Swagger UI
+        "implementation"("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+
+        // Observability — Prometheus + OpenTelemetry tracing (Jaeger OTLP)
+        "implementation"("io.micrometer:micrometer-registry-prometheus")
+        "implementation"("io.micrometer:micrometer-tracing-bridge-otel")
+        "implementation"("io.opentelemetry:opentelemetry-exporter-otlp")
+
         // WebFlux (WebClient)
         "implementation"("org.springframework.boot:spring-boot-starter-webflux")
 

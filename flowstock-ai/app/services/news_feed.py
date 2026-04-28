@@ -12,6 +12,8 @@ from email.utils import parsedate_to_datetime
 
 import feedparser
 
+from app.services.news_stock_match import extract_related_many
+
 logger = logging.getLogger(__name__)
 
 # (출처 이름, RSS URL)
@@ -124,6 +126,7 @@ def get_latest_news(limit: int = 30) -> list[dict]:
                     "source": name,
                     "publishedAt": _parse_dt(e.get("published")) or _parse_dt(e.get("updated")),
                     "sentiment": _heuristic_sentiment(f"{title} {summary}"),
+                    "relatedStocks": extract_related_many([title, summary]),
                 }
             )
     # 최신순 정렬
