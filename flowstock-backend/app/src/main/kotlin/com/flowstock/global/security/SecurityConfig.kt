@@ -42,6 +42,9 @@ class SecurityConfig(
                     .requestMatchers(HttpMethod.GET, "/api/news/search").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/market/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/economy/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/dart/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/sectors/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/macro/**").permitAll()
                     // 개인 기능(포트폴리오, /me, 로그아웃 등)은 인증 필요
                     .anyRequest().authenticated()
             }

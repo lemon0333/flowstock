@@ -11,6 +11,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   TrendingUp, Newspaper, Briefcase, LogIn, LogOut, BarChart3,
   LineChart, Gamepad2, Bell, Sun, Moon, Menu,
+  Filter, GitCompareArrows, Grid3x3, FlaskConical, Globe, Calendar,
 } from "lucide-react";
 import { useStore } from "@/stores/useStore";
 import { useTheme } from "@/components/theme-provider";
@@ -18,10 +19,16 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const navItems = [
   { path: "/", label: "홈", icon: BarChart3 },
+  { path: "/screener", label: "스크리너", icon: Filter },
+  { path: "/compare", label: "비교", icon: GitCompareArrows },
+  { path: "/sectors", label: "섹터", icon: Grid3x3 },
   { path: "/economy", label: "경제지표", icon: LineChart },
+  { path: "/macro", label: "거시", icon: Globe },
+  { path: "/backtest", label: "백테스트", icon: FlaskConical },
+  { path: "/earnings", label: "실적", icon: Calendar },
   { path: "/news", label: "뉴스", icon: Newspaper },
   { path: "/portfolio", label: "모의투자", icon: Briefcase },
-  { path: "/portfolio/game", label: "투자게임", icon: Gamepad2 },
+  { path: "/portfolio/game", label: "게임", icon: Gamepad2 },
   { path: "/alerts", label: "알림", icon: Bell },
 ];
 

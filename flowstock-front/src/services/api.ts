@@ -141,3 +141,66 @@ export const portfolioApi = {
   removeHolding: (stockId: string) => api.delete<ApiResponse<void>>(`/portfolio/${stockId}`),
   getSectors: () => api.get<ApiResponse<any[]>>('/portfolio/sectors'),
 };
+
+// DART (재무제표/밸류에이션)
+export interface FinancialStatement {
+  year: number;
+  revenue: number;
+  operatingProfit: number;
+  netIncome: number;
+}
+export interface ValuationItem {
+  year: number;
+  per: number | null;
+  pbr: number | null;
+}
+export interface SegmentItem {
+  name: string;
+  revenue: number;
+}
+export interface FinancialResponse {
+  ticker: string;
+  source: 'dart' | 'mock';
+  statements: FinancialStatement[];
+  valuation: ValuationItem[];
+  segments: SegmentItem[];
+  sharesOutstanding?: number;
+}
+export interface EarningsEvent {
+  ticker: string;
+  name: string;
+  date: string;
+  type: '잠정실적' | '확정실적' | '예정';
+  quarter: string;
+}
+export const dartApi = {
+  getFinancials: (ticker: string) =>
+    api.get<ApiResponse<FinancialResponse>>(`/dart/financials/${ticker}`),
+  getEarningsCalendar: (year: number, quarter: number) =>
+    api.get<ApiResponse<EarningsEvent[]>>(`/dart/earnings?year=${year}&quarter=${quarter}`),
+};
+
+// Sector (섹터 등락률)
+export interface SectorRow {
+  code: string;
+  name: string;
+  changeRate: number;
+  count: number;
+  topStocks?: Array<{ ticker: string; name: string; changeRate: number }>;
+}
+export const sectorApi = {
+  getSectors: (market = 'KOSPI') =>
+    api.get<ApiResponse<SectorRow[]>>(`/sectors?market=${market}`),
+};
+
+// Macro (ECOS 거시지표)
+export interface MacroSeries {
+  code: string;
+  name: string;
+  unit: string;
+  series: Array<{ date: string; value: number }>;
+}
+export const macroApi = {
+  getDashboard: () =>
+    api.get<ApiResponse<{ source: 'ecos' | 'mock'; series: MacroSeries[] }>>(`/macro/dashboard`),
+};

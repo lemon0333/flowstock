@@ -56,6 +56,14 @@ oauth:
 ai-service:
   url: ${AI_SERVICE_URL:http://localhost:8000}
 
+# ── DART Open API (재무제표/공시) ──
+dart:
+  api-key: ${DART_API_KEY:}
+
+# ── ECOS (한국은행 거시 지표) ──
+ecos:
+  api-key: ${ECOS_API_KEY:}
+
 # ── AWS ──
 cloud:
   aws:

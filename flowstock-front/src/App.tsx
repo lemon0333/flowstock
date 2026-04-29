@@ -20,6 +20,12 @@ const InvestGamePage = lazy(() => import("./pages/InvestGamePage"));
 const AlertsPage = lazy(() => import("./pages/AlertsPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const ScreenerPage = lazy(() => import("./pages/ScreenerPage"));
+const ComparePage = lazy(() => import("./pages/ComparePage"));
+const SectorPage = lazy(() => import("./pages/SectorPage"));
+const BacktestPage = lazy(() => import("./pages/BacktestPage"));
+const MacroPage = lazy(() => import("./pages/MacroPage"));
+const EarningsPage = lazy(() => import("./pages/EarningsPage"));
 
 const queryClient = new QueryClient();
 
@@ -42,6 +48,12 @@ const App = () => (
             <Route path="/stock/:id" element={<StockDetail />} />
             <Route path="/news" element={<NewsPage />} />
             <Route path="/economy" element={<EconomyPage />} />
+            <Route path="/macro" element={<MacroPage />} />
+            <Route path="/screener" element={<ScreenerPage />} />
+            <Route path="/compare" element={<ComparePage />} />
+            <Route path="/sectors" element={<SectorPage />} />
+            <Route path="/backtest" element={<BacktestPage />} />
+            <Route path="/earnings" element={<EarningsPage />} />
             <Route path="/portfolio" element={<PortfolioPage />} />
             <Route path="/portfolio/game" element={<InvestGamePage />} />
             <Route path="/alerts" element={<AlertsPage />} />
