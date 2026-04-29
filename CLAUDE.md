@@ -268,7 +268,7 @@ flowstock-ai/
 
 ## 하네스 엔지니어링 (자동화 워크플로우)
 
-### 사용 가능한 슬래시 커맨드
+### 사용 가능한 슬래시 커맨드 (`.claude/skills/<name>/SKILL.md`)
 | 커맨드 | 설명 |
 |--------|------|
 | `/deploy-k3s [대상]` | k3s 배포 (all/backend/ai/infra) |
@@ -278,11 +278,36 @@ flowstock-ai/
 | `/test-ai` | pytest + 헬스체크 |
 | `/review-code` | git diff 기반 보안/품질 리뷰 |
 | `/full-review` | **4개 에이전트 병렬** 전체 코드베이스 리뷰 |
+| `/ci-status` | GitHub Actions 최근 run + 실패 시 잡 디테일 |
+| `/ssh-mini [cmd]` | mini PC k3s 진입 — pod/logs/restart/describe 헬퍼 |
 
-### 자동 실행 훅 (settings.json)
-- **파일 수정 시**: TS/JS → Prettier 자동 포맷, Python → Black 자동 포맷
-- **민감 파일 차단**: `.env`, `secrets.yaml`, `credentials` 파일 수정 시 자동 차단
-- **알림**: Claude가 입력 대기 시 macOS 알림 발송
+새 스킬 만들기: `.claude/skills/<name>/SKILL.md` 에 `--- name + description ---` 프론트매터 + 본문(절차/명령). 이름이 곧 슬래시 커맨드.
+
+### 권한 allowlist (`.claude/settings.json` `permissions.allow`)
+권한 프롬프트 줄이기 위해 read-only 패턴 등록됨:
+- `Bash(curl -s* *)` — 헤더/응답 GET 체크 (5종)
+- `Bash(npm run lint|test)` — 정적 검사 / vitest
+- `Bash(ssh flowstock-mini[-lan] *)` — k3s 운영 SSH (개인 미니 PC)
+업데이트하려면: `/fewer-permission-prompts` 스킬로 트랜스크립트 자동 스캔 → 우선순위 allowlist 자동 생성.
+
+### 자동 실행 훅 (settings.json `hooks`)
+| 이벤트 | 동작 |
+|--------|------|
+| `SessionStart` | 세션 시작 시 현재 브랜치 / HEAD / changed 파일 수 / 최근 CI 3개 자동 출력 |
+| `PreToolUse` (Edit\|Write) | `.env` / `secrets.yaml` / `credentials` 파일 수정 차단 |
+| `PostToolUse` (Edit\|Write) | TS/JS → Prettier, Python → Black, **Kotlin → ktlint** 자동 포맷 |
+| `SubagentStop` | 서브 에이전트 작업 완료 시 macOS 알림 (Glass 사운드) |
+| `Notification` | Claude가 입력 대기 시 macOS 알림 |
+
+ktlint는 `brew install ktlint` 필수. 미설치 시 hook이 조용히 skip.
+
+### 자동 헬스체크 (`.github/workflows/daily-health.yml`)
+매일 09:00 KST에 GitHub Actions가:
+1. 최근 24h CI 실패 run 추출
+2. `npm audit` (high+critical만) 실행
+3. 발견된 게 있으면 GitHub Issue 자동 생성/업데이트 (라벨: `health-report`)
+
+Anthropic API 비용 0원 — Claude를 호출하지 않고 GitHub Actions만으로 운영.
 
 ### 전문 에이전트 (병렬 리뷰용)
 | 에이전트 | 담당 | 핵심 체크 |
@@ -295,11 +320,13 @@ flowstock-ai/
 
 ### 일반적인 작업 흐름
 ```
-1. 코드 작성 → 자동 포맷팅 (훅)
-2. /review-code → 변경사항 리뷰
-3. /test-front 또는 /test-backend → 테스트
-4. /deploy-k3s 또는 /deploy-front → 배포
-5. 큰 변경 시 /full-review → 4개 에이전트 동시 리뷰
+1. 세션 시작 → SessionStart hook이 브랜치/CI 상태 자동 표시
+2. 코드 작성 → 자동 포맷팅 (Prettier/Black/ktlint 훅)
+3. /review-code → 변경사항 리뷰
+4. /test-front 또는 /test-backend → 테스트
+5. /deploy-k3s 또는 /deploy-front → 배포
+6. 큰 변경 시 /full-review → 4개 에이전트 동시 리뷰 (끝나면 macOS 알림)
+7. 푸시 후 /ci-status → 빌드 결과 확인. 실패 시 /ssh-mini 로 디버그
 ```
 
 ## 주의사항
