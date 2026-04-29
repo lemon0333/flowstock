@@ -45,6 +45,7 @@ class SecurityConfig(
                     .requestMatchers(HttpMethod.GET, "/api/dart/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/sectors/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/macro/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/articles", "/api/articles/*").permitAll()
                     // 개인 기능(포트폴리오, /me, 로그아웃 등)은 인증 필요
                     .anyRequest().authenticated()
             }

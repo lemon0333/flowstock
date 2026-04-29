@@ -39,7 +39,7 @@ class DartFinancialService(
         return try {
             // 실제 키가 있어도 corp_code 매핑이 별도로 필요해서 일단 mock 폴백.
             // TODO: corp_code 매핑 캐싱 후 fnlttSinglAcntAll 호출로 교체
-            mockFinancials(ticker).toMutableMap().apply { put("source", "mock") }
+            mockFinancials(ticker)
         } catch (e: Exception) {
             log.warn("DART financials 실패: {}", e.message)
             mockFinancials(ticker)
@@ -62,12 +62,12 @@ class DartFinancialService(
         val seed = abs(ticker.hashCode()).toLong()
         val baseRevenue = 50_000L * 100_000_000L + (seed % 50) * 1_000L * 100_000_000L
 
-        val statements = (2020..2024).map { year ->
+        val statements: List<Map<String, Any?>> = (2020..2024).map { year ->
             val growth = 1.0 + (((year - 2020).toDouble() * 0.05) - ((seed % 10).toDouble() * 0.005))
             val revenue = (baseRevenue * Math.pow(growth, (year - 2020).toDouble())).toLong()
             val operatingProfit = (revenue * 0.12).toLong()
             val netIncome = (revenue * 0.08).toLong()
-            mapOf(
+            mapOf<String, Any?>(
                 "year" to year,
                 "revenue" to revenue,
                 "operatingProfit" to operatingProfit,
@@ -75,19 +75,22 @@ class DartFinancialService(
             )
         }
 
-        val valuation = (2020..2024).map { year ->
+        val valuation: List<Map<String, Any?>> = (2020..2024).map { year ->
             val per = 8.0 + ((seed % 15) + (year - 2020) * 0.5)
             val pbr = 0.8 + ((seed % 8) * 0.1) + (year - 2020) * 0.05
-            mapOf("year" to year, "per" to per, "pbr" to pbr)
+            mapOf<String, Any?>("year" to year, "per" to per, "pbr" to pbr)
         }
 
         val segNames = listOf("주력 사업", "신사업", "해외 매출", "기타")
-        val segments = segNames.mapIndexed { i, name ->
+        val segments: List<Map<String, Any?>> = segNames.mapIndexed { i, name ->
             val pct = listOf(0.55, 0.20, 0.18, 0.07)[i]
-            mapOf("name" to name, "revenue" to (statements.last()["revenue"] as Long * pct).toLong())
+            mapOf<String, Any?>(
+                "name" to name,
+                "revenue" to (statements.last()["revenue"] as Long * pct).toLong(),
+            )
         }
 
-        return mapOf(
+        return mapOf<String, Any?>(
             "ticker" to ticker,
             "source" to "mock",
             "statements" to statements,
@@ -117,7 +120,7 @@ class DartFinancialService(
             val day = ((i * 3 + 5) % 25) + 1
             val month = baseMonth + (i % 3)
             val realYear = if (quarter == 4 && month <= 3) year + 1 else year
-            mapOf(
+            mapOf<String, Any?>(
                 "ticker" to ticker,
                 "name" to name,
                 "date" to "%04d-%02d-%02d".format(realYear, month, day),

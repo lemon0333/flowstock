@@ -55,14 +55,18 @@ class SectorController(
                 Triple(sector, ticker to name, cr)
             }
             val grouped = classified.groupBy { it.first }
-            val out = grouped.map { (sector, list) ->
+            val out: List<Map<String, Any?>> = grouped.map { (sector, list) ->
                 val avg = list.map { it.third }.average()
-                val top = list.sortedByDescending { abs(it.third) }
+                val top: List<Map<String, Any?>> = list.sortedByDescending { abs(it.third) }
                     .take(5)
                     .map { (_, tn, cr) ->
-                        mapOf("ticker" to tn.first, "name" to tn.second, "changeRate" to cr)
+                        mapOf<String, Any?>(
+                            "ticker" to tn.first,
+                            "name" to tn.second,
+                            "changeRate" to cr,
+                        )
                     }
-                mapOf(
+                mapOf<String, Any?>(
                     "code" to sector,
                     "name" to sector,
                     "changeRate" to avg,
@@ -71,7 +75,7 @@ class SectorController(
                 )
             }.sortedByDescending { (it["changeRate"] as Double) }
             ApiResponse.success(out)
-        }.onErrorReturn(ApiResponse.success(emptyList()))
+        }.onErrorReturn(ApiResponse.success(emptyList<Map<String, Any?>>()))
     }
 
     /**

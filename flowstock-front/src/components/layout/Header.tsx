@@ -11,7 +11,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   TrendingUp, Newspaper, Briefcase, LogIn, LogOut, BarChart3,
   LineChart, Gamepad2, Bell, Sun, Moon, Menu,
-  Filter, GitCompareArrows, Grid3x3, FlaskConical, Globe, Calendar,
+  Filter, GitCompareArrows, Grid3x3, FlaskConical, Globe, Calendar, Users,
 } from "lucide-react";
 import { useStore } from "@/stores/useStore";
 import { useTheme } from "@/components/theme-provider";
@@ -27,6 +27,7 @@ const navItems = [
   { path: "/backtest", label: "백테스트", icon: FlaskConical },
   { path: "/earnings", label: "실적", icon: Calendar },
   { path: "/news", label: "뉴스", icon: Newspaper },
+  { path: "/articles", label: "커뮤니티", icon: Users },
   { path: "/portfolio", label: "모의투자", icon: Briefcase },
   { path: "/portfolio/game", label: "게임", icon: Gamepad2 },
   { path: "/alerts", label: "알림", icon: Bell },

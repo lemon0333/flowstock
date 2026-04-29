@@ -30,18 +30,17 @@ class MacroController(
         if (apiKey.isBlank()) {
             log.debug("ECOS_API_KEY 미설정 — mock 응답")
         }
-        return ApiResponse.success(
-            mapOf(
-                "source" to source,
-                "series" to listOf(
-                    buildSeries("base_rate", "기준금리", "%", 2.5, 3.5, monthlySteps = 36),
-                    buildSeries("cpi", "소비자물가지수 (CPI)", "지수", 100.0, 115.0, monthlySteps = 36),
-                    buildSeries("m2", "M2 통화량", "조원", 3700.0, 4200.0, monthlySteps = 36),
-                    buildSeries("usdkrw", "원/달러 환율", "원", 1180.0, 1380.0, monthlySteps = 36, smooth = false),
-                    buildSeries("leading", "경기선행지수", "지수", 99.0, 105.0, monthlySteps = 36, smooth = false),
-                ),
+        val payload: Map<String, Any?> = mapOf(
+            "source" to source,
+            "series" to listOf(
+                buildSeries("base_rate", "기준금리", "%", 2.5, 3.5, monthlySteps = 36),
+                buildSeries("cpi", "소비자물가지수 (CPI)", "지수", 100.0, 115.0, monthlySteps = 36),
+                buildSeries("m2", "M2 통화량", "조원", 3700.0, 4200.0, monthlySteps = 36),
+                buildSeries("usdkrw", "원/달러 환율", "원", 1180.0, 1380.0, monthlySteps = 36, smooth = false),
+                buildSeries("leading", "경기선행지수", "지수", 99.0, 105.0, monthlySteps = 36, smooth = false),
             ),
         )
+        return ApiResponse.success(payload)
     }
 
     private fun buildSeries(
@@ -56,18 +55,18 @@ class MacroController(
         val seed = code.hashCode().toLong()
         val rng = java.util.Random(seed)
         val today = LocalDate.now()
-        val data = (0 until monthlySteps).map { i ->
+        val data: List<Map<String, Any?>> = (0 until monthlySteps).map { i ->
             val date = today.minusMonths((monthlySteps - 1 - i).toLong())
             val t = i.toDouble() / (monthlySteps - 1)
             val base = from + (to - from) * t
             val noise = (rng.nextGaussian()) * (if (smooth) (to - from) * 0.01 else (to - from) * 0.04)
             val v = base + noise
-            mapOf(
+            mapOf<String, Any?>(
                 "date" to "%04d-%02d".format(date.year, date.monthValue),
                 "value" to "%.2f".format(v).toDouble(),
             )
         }
-        return mapOf(
+        return mapOf<String, Any?>(
             "code" to code,
             "name" to name,
             "unit" to unit,

@@ -193,6 +193,71 @@ export const sectorApi = {
     api.get<ApiResponse<SectorRow[]>>(`/sectors?market=${market}`),
 };
 
+// Articles (커뮤니티)
+export type ArticleCategory = 'GENERAL' | 'ANALYSIS' | 'NEWS' | 'QUESTION' | 'REVIEW';
+
+export interface ArticleSummary {
+  id: number;
+  title: string;
+  category: ArticleCategory;
+  authorId: number;
+  authorName: string;
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+  createdAt: string;
+}
+
+export interface CommentDto {
+  id: number;
+  authorId: number;
+  authorName: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface ArticleDetail {
+  id: number;
+  title: string;
+  content: string;
+  category: ArticleCategory;
+  authorId: number;
+  authorName: string;
+  viewCount: number;
+  likeCount: number;
+  likedByMe: boolean;
+  createdAt: string;
+  updatedAt: string;
+  comments: CommentDto[];
+}
+
+export interface ArticleListResponse {
+  content: ArticleSummary[];
+  page: number;
+  size: number;
+  totalPages: number;
+  totalElements: number;
+}
+
+export const articleApi = {
+  list: (category?: ArticleCategory, page = 0, size = 20) => {
+    const p = new URLSearchParams({ page: String(page), size: String(size) });
+    if (category) p.set('category', category);
+    return api.get<ApiResponse<ArticleListResponse>>(`/articles?${p.toString()}`);
+  },
+  get: (id: number) => api.get<ApiResponse<ArticleDetail>>(`/articles/${id}`),
+  create: (body: { title: string; content: string; category: ArticleCategory }) =>
+    api.post<ApiResponse<{ id: number }>>('/articles', body),
+  update: (id: number, body: { title: string; content: string; category: ArticleCategory }) =>
+    api.put<ApiResponse<ArticleDetail>>(`/articles/${id}`, body),
+  remove: (id: number) => api.delete<ApiResponse<{ deleted: boolean }>>(`/articles/${id}`),
+  addComment: (id: number, content: string) =>
+    api.post<ApiResponse<CommentDto>>(`/articles/${id}/comments`, { content }),
+  removeComment: (commentId: number) =>
+    api.delete<ApiResponse<{ deleted: boolean }>>(`/articles/comments/${commentId}`),
+  toggleLike: (id: number) => api.post<ApiResponse<{ liked: boolean }>>(`/articles/${id}/like`),
+};
+
 // Macro (ECOS 거시지표)
 export interface MacroSeries {
   code: string;

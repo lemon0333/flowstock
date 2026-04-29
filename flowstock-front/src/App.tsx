@@ -26,6 +26,9 @@ const SectorPage = lazy(() => import("./pages/SectorPage"));
 const BacktestPage = lazy(() => import("./pages/BacktestPage"));
 const MacroPage = lazy(() => import("./pages/MacroPage"));
 const EarningsPage = lazy(() => import("./pages/EarningsPage"));
+const ArticlesPage = lazy(() => import("./pages/ArticlesPage"));
+const ArticleDetailPage = lazy(() => import("./pages/ArticleDetailPage"));
+const ArticleEditPage = lazy(() => import("./pages/ArticleEditPage"));
 
 const queryClient = new QueryClient();
 
@@ -54,6 +57,10 @@ const App = () => (
             <Route path="/sectors" element={<SectorPage />} />
             <Route path="/backtest" element={<BacktestPage />} />
             <Route path="/earnings" element={<EarningsPage />} />
+            <Route path="/articles" element={<ArticlesPage />} />
+            <Route path="/articles/new" element={<ArticleEditPage />} />
+            <Route path="/articles/:id" element={<ArticleDetailPage />} />
+            <Route path="/articles/:id/edit" element={<ArticleEditPage />} />
             <Route path="/portfolio" element={<PortfolioPage />} />
             <Route path="/portfolio/game" element={<InvestGamePage />} />
             <Route path="/alerts" element={<AlertsPage />} />
