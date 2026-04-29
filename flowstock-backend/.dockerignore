@@ -2,12 +2,15 @@
 .git
 .gitignore
 
-# Gradle build cache
+# Gradle build cache (호스트에서 미리 빌드한 jar만 통과시킴)
 .gradle
 build/
-app/build/
+app/build/*
 utils/build/
 !gradle/wrapper/gradle-wrapper.jar
+!app/build/libs
+app/build/libs/*
+!app/build/libs/*.jar
 
 # IDE files
 .idea/
