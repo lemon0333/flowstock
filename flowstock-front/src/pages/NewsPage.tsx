@@ -163,6 +163,39 @@ export default function NewsPage() {
             )}
           </div>
 
+          {/* 공유 키워드 표시 — 종목 매핑 없어도 시그널 보임 */}
+          {(() => {
+            const kwCount: Record<string, number> = {};
+            selectedNews.forEach((n) => {
+              (n.keywords || []).forEach((k: string) => {
+                kwCount[k] = (kwCount[k] ?? 0) + 1;
+              });
+            });
+            const shared = Object.entries(kwCount)
+              .filter(([, c]) => c >= 2)
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 12);
+            if (shared.length === 0) return null;
+            return (
+              <div>
+                <h2 className="text-base font-bold text-foreground mb-3">
+                  공유 키워드 ({shared.length})
+                </h2>
+                <div className="bg-card rounded-2xl px-5 py-4 flex flex-wrap gap-2" style={{ boxShadow: 'var(--shadow-card)' }}>
+                  {shared.map(([kw, n]) => (
+                    <span
+                      key={kw}
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-700 dark:text-purple-300"
+                    >
+                      {kw}
+                      <span className="text-[10px] opacity-70">×{n}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
           <div>
             <h2 className="text-base font-bold text-foreground mb-3">
               영향받는 종목 ({affectedStocks.length})
@@ -202,7 +235,10 @@ export default function NewsPage() {
                 </div>
               ) : (
                 <div className="py-10 text-center text-sm text-muted-foreground">
-                  선택된 뉴스와 관련된 종목이 없습니다
+                  선택된 뉴스에서 종목명을 직접 매칭하지 못했습니다.
+                  <div className="text-xs mt-1.5">
+                    위 공유 키워드로 뉴스끼리의 주제 클러스터를 확인할 수 있습니다.
+                  </div>
                 </div>
               )}
             </div>

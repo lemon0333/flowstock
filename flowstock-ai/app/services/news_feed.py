@@ -20,7 +20,7 @@ import feedparser
 import httpx
 from cachetools import TTLCache
 
-from app.services.news_stock_match import extract_related_many
+from app.services.news_stock_match import extract_keywords_many, extract_related_many
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +81,7 @@ async def _fetch_one(client: httpx.AsyncClient, name: str, url: str, limit: int)
                 "publishedAt": _parse_dt(e.get("published")) or _parse_dt(e.get("updated")),
                 "sentiment": _heuristic_sentiment(f"{title} {summary}"),
                 "relatedStocks": extract_related_many([title, summary]),
+                "keywords": extract_keywords_many([title, summary]),
             }
         )
     return items

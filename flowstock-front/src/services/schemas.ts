@@ -46,6 +46,7 @@ export const newsItemSchema = z
     impact: z.enum(["positive", "negative", "neutral"]).optional(),
     sentiment: z.enum(["positive", "negative", "neutral"]).optional(),
     relatedStocks: z.array(z.string()).optional().default([]),
+    keywords: z.array(z.string()).optional().default([]),
     category: z.string().optional(),
   })
   .passthrough();

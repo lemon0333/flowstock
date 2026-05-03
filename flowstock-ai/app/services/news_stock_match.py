@@ -1,7 +1,8 @@
-"""뉴스 본문에서 관련 종목(티커) 추출.
+"""뉴스 본문에서 관련 종목(티커) + 핵심 키워드 추출.
 
-비용 큰 LLM/NER 없이 종목 사전(이름/축약/티커) substring 매칭.
-중복 제거 + 빈도순 정렬.
+- 종목 추출: 사전 substring 매칭 (한자·축약 alias 포함)
+- 키워드 추출: 한글 2자+ / 영문 2자+ / 한자 1자+ 명사 추출 + 불용어 제거
+  (LLM/형태소 분석기 없이도 뉴스↔뉴스 클러스터링 시드로 충분)
 """
 
 from __future__ import annotations
@@ -20,8 +21,8 @@ STOCK_DICT: list[tuple[str, tuple[str, ...]]] = [
     ("051910", ("LG화학",)),
     ("006400", ("삼성SDI",)),
     ("000270", ("기아",)),
-    ("105560", ("KB금융",)),
-    ("055550", ("신한지주",)),
+    ("105560", ("KB금융", "국민銀", "KB銀", "국민은행")),
+    ("055550", ("신한지주", "신한銀", "신한은행")),
     ("035420", ("NAVER", "네이버")),
     ("035720", ("카카오",)),
     ("068270", ("셀트리온",)),
@@ -42,9 +43,9 @@ STOCK_DICT: list[tuple[str, tuple[str, ...]]] = [
     ("010950", ("S-Oil", "에쓰오일")),
     ("011170", ("롯데케미칼",)),
     ("009830", ("한화솔루션",)),
-    ("086790", ("하나금융지주",)),
-    ("316140", ("우리금융지주",)),
-    ("024110", ("기업은행",)),
+    ("086790", ("하나금융지주", "하나銀", "하나은행")),
+    ("316140", ("우리금융지주", "우리銀", "우리은행")),
+    ("024110", ("기업은행", "기업銀", "IBK기업은행")),
     ("033780", ("KT&G",)),
     ("251270", ("넷마블",)),
     ("036570", ("엔씨소프트", "엔씨")),
@@ -129,3 +130,103 @@ def extract_related(text: str, limit: int = 8) -> list[str]:
 def extract_related_many(texts: Iterable[str], limit: int = 8) -> list[str]:
     """여러 텍스트 합쳐 매칭 (뉴스 title + summary 같이 넣을 때 편의)."""
     return extract_related(" ".join(t for t in texts if t), limit)
+
+
+# ────────────────────────────────────────────────────────────────
+# 키워드 추출 (뉴스 ↔ 뉴스 클러스터링용)
+# ────────────────────────────────────────────────────────────────
+
+# 한자(CJK) 1자 + 한글 2자+ + 영문 2자+ 허용
+_NOUN_RE = re.compile(r"[가-힣]{2,}|[A-Z][A-Za-z]{1,}|[一-鿿]{1,3}")
+
+# 너무 일반적이라 클러스터링에 도움 안 되는 단어 (지속 추가 가능)
+_STOPWORDS: frozenset[str] = frozenset({
+    # 메타 / 기사 형식
+    "단독", "속보", "특집", "종합", "분석", "기자", "사진", "영상", "관련",
+    "뉴스", "보도", "취재", "경제", "산업", "사회", "정치", "국제",
+    # 시간/위치
+    "오늘", "내일", "어제", "최근", "현재", "당시", "이번", "이번주", "올해",
+    "한국", "국내", "해외", "전국", "서울", "지역",
+    # 한자 1자 일반어 (국가/방위)
+    "美", "中", "日", "歐", "英", "佛", "獨", "韓",
+    # 동사·서술
+    "발표", "확인", "검토", "예정", "추진", "계획", "결정", "예상", "기대",
+    "강조", "지적", "주장", "제기", "전망", "확대", "증가", "감소", "축소",
+    "있다", "없다", "한다", "된다",
+    # 보조 단어
+    "대해", "대해서", "통해", "관련", "위해", "위한", "지금", "직접", "그리고",
+    "그러나", "하지만", "이미", "아직", "사실", "여기", "저기", "이곳", "그곳",
+    "지난해", "지난달", "내년", "올초", "올말",
+    # 일반 명사 (도움 안 됨)
+    "사람", "회사", "기업", "정부", "국가", "시장", "업계", "전문가", "관계자",
+    "내용", "결과", "이유", "방안", "대책", "조사", "발견",
+})
+
+
+_PARTICLE_RE = re.compile(
+    r"(은|는|이|가|을|를|에|의|와|과|도|만|까지|부터|에서|에게|으로|이라|로서|"
+    r"로써|보다|뿐|마다|에는|에서는|이라는|이라고|에서도|이며|이고)$"
+)
+_VERB_END_RE = re.compile(
+    r"(하는|되는|있는|없는|한다|된다|있다|없다|이다|아니다|었다|됐다|했다|"
+    r"였다|이었다|어|아|며|면서|지만|돼|되어|되며|되었으며|되었다|"
+    r"한|된|돈|어가|아가|네|다)$"
+)
+
+
+def _normalize_token(w: str) -> str:
+    """한국어 조사/어미를 빠르게 trim. 한자/영문은 그대로."""
+    if not w or not "가" <= w[0] <= "힣":
+        return w
+    # 어미 → 조사 순서로 한 번씩 제거
+    for _ in range(2):
+        new = _VERB_END_RE.sub("", w)
+        if new != w and len(new) >= 2:
+            w = new
+            continue
+        new = _PARTICLE_RE.sub("", w)
+        if new != w and len(new) >= 2:
+            w = new
+        else:
+            break
+    return w
+
+
+def extract_keywords(text: str, top_n: int = 6) -> list[str]:
+    """뉴스 텍스트에서 의미 있는 명사 키워드 추출 (빈도 + 길이 가중).
+
+    - 한자 1~3자 / 영문 2자+ (대문자 시작) / 한글 2자+
+    - 한국어 조사/어미 trim (금융결제원이 → 금융결제원, 변화하는 → 변화)
+    - 불용어 제거 + 등장 빈도 기준 상위 top_n 개
+    - 같은 단어가 여러 번 나오면 가중치 ↑, 길이도 약간 가중
+    """
+    if not text:
+        return []
+    # 종목명은 별도 추출이라 제외 (중복 방지)
+    masked = text
+    for name, _ in _INDEX:
+        if name in masked:
+            masked = masked.replace(name, " ")
+
+    candidates = _NOUN_RE.findall(masked)
+    counts: dict[str, int] = {}
+    for raw in candidates:
+        w = _normalize_token(raw)
+        if w in _STOPWORDS:
+            continue
+        if len(w) < 2 and not _is_chinese_char(w):
+            continue
+        counts[w] = counts.get(w, 0) + 1
+
+    def score(w: str) -> float:
+        return counts[w] * (1.0 + 0.2 * max(0, len(w) - 2))
+
+    return sorted(counts, key=lambda w: (-score(w), -len(w), w))[:top_n]
+
+
+def extract_keywords_many(texts: Iterable[str], top_n: int = 6) -> list[str]:
+    return extract_keywords(" ".join(t for t in texts if t), top_n)
+
+
+def _is_chinese_char(s: str) -> bool:
+    return bool(s) and 0x4E00 <= ord(s[0]) <= 0x9FFF
