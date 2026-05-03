@@ -1,7 +1,10 @@
 name: Daily Health Check
 
-# 매일 오전 9시 KST(00:00 UTC)에 CI 실패 / 의존성 보안 / k3s 노드 상태 점검
-# 결과는 워크플로 로그 + 이슈로 보고. Claude API 비용 0원, 모두 GitHub Actions만 사용.
+# 매일 오전 9시 KST(00:00 UTC)에 CI 실패 / 의존성 보안 / 운영 URL probe 점검.
+# 결과는 워크플로 로그 + GitHub Issue 로 보고. Anthropic API 비용 0원, GitHub Actions 만 사용.
+#
+# NOTE: bash heredoc 안에 inline python 두지 말 것 — yaml multi-line scalar
+#       indent rule 과 충돌해 syntax error (이전 #6 run 에서 학습). 모두 jq 로 처리.
 
 on:
   schedule:
@@ -22,42 +25,29 @@ jobs:
         id: ci
         run: |
           set -e
-          # 최근 20개 run에서 24시간 내 실패만 추리기
           NOW=$(date -u +%s)
           CUTOFF=$((NOW - 86400))
           FAILS=$(curl -s "https://api.github.com/repos/${{ github.repository }}/actions/runs?per_page=20" \
-            | python3 -c "
-import json,sys,calendar,datetime
-d=json.load(sys.stdin)
-cutoff=$CUTOFF
-out=[]
-for r in d.get('workflow_runs',[]):
-    t=r.get('updated_at') or r.get('created_at')
-    if not t: continue
-    ts=calendar.timegm(datetime.datetime.fromisoformat(t.replace('Z','+00:00')).utctimetuple())
-    if ts>=cutoff and r.get('conclusion')=='failure':
-        out.append(f\"- {r['head_sha'][:7]} {r['display_title'][:60]} ({r['html_url']})\")
-print('\n'.join(out) if out else 'NONE')
-")
+            | jq -r --argjson cutoff "$CUTOFF" '
+              [
+                .workflow_runs[]
+                | select(.conclusion == "failure")
+                | select((.updated_at // .created_at | fromdateiso8601) >= $cutoff)
+                | "- \(.head_sha[0:7]) \(.display_title[0:60]) (\(.html_url))"
+              ]
+              | if length == 0 then "NONE" else join("\n") end
+            ')
           echo "fails<<EOF" >> $GITHUB_OUTPUT
-          echo "$FAILS" >> $GITHUB_OUTPUT
+          printf '%s\n' "$FAILS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
           echo "최근 24시간 CI 실패:"
           echo "$FAILS"
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: flowstock-front/package-lock.json
 
       - name: Synthetic URL probes (production)
         id: probes
         run: |
           set -u
           # (URL, expected_status, must_contain_in_body)
-          # must_contain은 "" 면 검사 안 함
           declare -a CHECKS=(
             "https://flowstock.info/|200|FlowStock"
             "https://flowstock.info/sitemap.xml|200|<urlset"
@@ -70,17 +60,14 @@ print('\n'.join(out) if out else 'NONE')
             "https://api.flowstock.info/api/macro/dashboard|200|"
             "https://api.flowstock.info/api/articles|200|"
           )
-
           FAILS=""
           for entry in "${CHECKS[@]}"; do
             IFS='|' read -r url expected must <<< "$entry"
-            # -L follow redirect, -o capture body, -w status code, --max-time 10
             BODY=$(mktemp)
             CODE=$(curl -sSL -o "$BODY" -w "%{http_code}" --max-time 10 \
               -A "Mozilla/5.0 (compatible; flowstock-healthcheck/1.0)" \
               "$url" || echo "000")
             REDIRECTS=$(curl -sIL --max-time 10 "$url" 2>/dev/null | grep -ic "^HTTP/" || echo "1")
-
             ERR=""
             if [ "$CODE" != "$expected" ]; then
               ERR="status=$CODE (expected $expected)"
@@ -97,42 +84,38 @@ print('\n'.join(out) if out else 'NONE')
             fi
             rm -f "$BODY"
           done
-
-          if [ -z "$FAILS" ]; then
-            FAILS="CLEAN"
-          fi
+          if [ -z "$FAILS" ]; then FAILS="CLEAN"; fi
           echo "probes<<EOF" >> $GITHUB_OUTPUT
           printf '%b' "$FAILS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: flowstock-front/package-lock.json
 
       - name: Frontend npm audit (high+critical only)
         id: npm_audit
         working-directory: flowstock-front
         run: |
           npm ci --no-audit --no-fund --silent
-          # high/critical만 추리기 (low/moderate은 시그널 노이즈)
           AUDIT=$(npm audit --omit=dev --audit-level=high --json 2>/dev/null \
-            | python3 -c "
-import json,sys
-try:
-    d=json.load(sys.stdin)
-    meta=d.get('metadata',{}).get('vulnerabilities',{})
-    h=meta.get('high',0); c=meta.get('critical',0)
-    if h+c>0:
-        advs=[]
-        for name,info in d.get('vulnerabilities',{}).items():
-            sev=info.get('severity','')
-            if sev in ('high','critical'):
-                advs.append(f'- {name} ({sev})')
-        print(f'{c} critical, {h} high')
-        print('\n'.join(advs[:10]))
-    else:
-        print('CLEAN')
-except Exception:
-    print('ERROR (audit parse failed)')
-")
+            | jq -r '
+              (.metadata.vulnerabilities.high // 0) as $h
+              | (.metadata.vulnerabilities.critical // 0) as $c
+              | if ($h + $c) > 0 then
+                  "\($c) critical, \($h) high\n" +
+                  ([
+                    .vulnerabilities | to_entries[]
+                    | select(.value.severity == "high" or .value.severity == "critical")
+                    | "- \(.key) (\(.value.severity))"
+                  ] | .[0:10] | join("\n"))
+                else "CLEAN" end
+            ' || echo "ERROR (audit parse failed)")
           echo "audit<<EOF" >> $GITHUB_OUTPUT
-          echo "$AUDIT" >> $GITHUB_OUTPUT
+          printf '%s\n' "$AUDIT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
           echo "npm audit:"
           echo "$AUDIT"
@@ -169,7 +152,6 @@ except Exception:
             const today = new Date().toISOString().slice(0,10);
             const title = `Health Report — ${today}`;
             const body = `${{ steps.report.outputs.report }}`;
-            // 같은 날짜 이슈가 이미 있으면 댓글, 없으면 새로 open
             const { data: open } = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
