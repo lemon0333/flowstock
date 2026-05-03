@@ -109,8 +109,9 @@ export default function NetworkGraph({ newsItems, stocks = [], height = 400 }: P
           animated: true,
           style: {
             stroke:
-              item.impact === "positive" ? "hsl(142, 71%, 45%)" :
-              item.impact === "negative" ? "hsl(0, 84%, 60%)" :
+              // 한국 컨벤션: 긍정 = 빨강, 부정 = 파랑
+              item.impact === "positive" ? "hsl(355, 80%, 56%)" :
+              item.impact === "negative" ? "hsl(217, 78%, 50%)" :
               "hsl(220, 9%, 76%)",
             strokeWidth: 2,
           },

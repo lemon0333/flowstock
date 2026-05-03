@@ -81,12 +81,13 @@ export default function TechnicalChart({ data, height = 380 }: Props) {
     });
 
     const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: "hsl(142, 71%, 45%)",
-      downColor: "hsl(0, 84%, 60%)",
-      borderUpColor: "hsl(142, 71%, 45%)",
-      borderDownColor: "hsl(0, 84%, 60%)",
-      wickUpColor: "hsl(142, 71%, 55%)",
-      wickDownColor: "hsl(0, 84%, 65%)",
+      // 한국 컨벤션: 상승 = 빨강, 하락 = 파랑 (토스 동일)
+      upColor: "hsl(355, 80%, 56%)",
+      downColor: "hsl(217, 78%, 50%)",
+      borderUpColor: "hsl(355, 80%, 56%)",
+      borderDownColor: "hsl(217, 78%, 50%)",
+      wickUpColor: "hsl(355, 80%, 62%)",
+      wickDownColor: "hsl(217, 78%, 56%)",
     });
     candleSeries.setData(
       data.map((d) => ({
@@ -141,7 +142,8 @@ export default function TechnicalChart({ data, height = 380 }: Props) {
       data.map((d) => ({
         time: d.date as Time,
         value: d.volume,
-        color: d.close >= d.open ? "rgba(16,185,129,0.5)" : "rgba(239,68,68,0.5)",
+        // 한국 컨벤션: 상승봉(close >= open) 빨강, 하락봉 파랑
+        color: d.close >= d.open ? "rgba(230, 57, 70, 0.5)" : "rgba(27, 100, 218, 0.5)",
       })),
     );
 

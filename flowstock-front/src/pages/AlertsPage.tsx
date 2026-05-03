@@ -129,14 +129,14 @@ export default function AlertsPage() {
           <div className="text-sm font-data">
             {cur ? `${cur.price.toLocaleString()}원` : "-"}
           </div>
-          <div className={`text-xs font-data ${triggered ? "font-bold" : ""} ${change >= 0 ? "text-green-600" : "text-red-600"}`}>
+          <div className={`text-xs font-data ${triggered ? "font-bold" : ""} ${change >= 0 ? "text-positive" : "text-negative"}`}>
             {cur ? `${change >= 0 ? "+" : ""}${change.toFixed(2)}%` : ""}
             {triggered && " 🔔"}
           </div>
         </div>
         <button
           onClick={() => removeWatch(w.ticker)}
-          className="ml-3 p-1.5 rounded-full text-muted-foreground hover:text-red-500 hover:bg-accent"
+          className="ml-3 p-1.5 rounded-full text-muted-foreground hover:text-negative hover:bg-accent"
         >
           <Trash2 className="h-4 w-4" />
         </button>

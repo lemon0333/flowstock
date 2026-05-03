@@ -140,7 +140,7 @@ export default function EconomyPage() {
   if (error) {
     return (
       <Layout>
-        <div className="text-center py-20 text-red-500">
+        <div className="text-center py-20 text-negative">
           데이터를 불러오지 못했습니다.
           <div className="text-xs text-muted-foreground mt-2">잠시 후 다시 시도해주세요.</div>
         </div>

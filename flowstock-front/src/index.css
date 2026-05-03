@@ -5,79 +5,73 @@
 @tailwind utilities;
 
 /* ============================================================
-   토스 스타일 증권 웹사이트 디자인 시스템
-   - 밝은 흰색 배경 기본 테마
-   - 부드러운 라운딩, 그림자, 여백
-   - 그린(상승) / 레드(하락) 액센트
-   - Pretendard 폰트 (토스 느낌의 깔끔한 서체)
-   - 모든 색상은 HSL 형식
+   FlowStock 디자인 시스템 — Toss 스타일 + 한국 금융 컨벤션
+   - 토스 brand blue (#3182F6) primary
+   - 한국 컨벤션: RED = 상승, BLUE = 하락 (서양식 green/red 거꾸로)
+   - 매우 부드러운 shadow + 16~24px 라운딩
+   - Pretendard Variable 본문 + tabular-nums 데이터
+   - HSL token 기반 → 자식 컴포넌트 자동 도미노 적용
    ============================================================ */
 
 @layer base {
   :root {
-    /* ── 기본 배경/전경 ── */
-    --background: 0 0% 97%;              /* 밝은 그레이 배경 */
-    --foreground: 222 47% 11%;           /* 거의 블랙 텍스트 */
+    /* ── 기본 배경/전경 (토스 #F9FAFB / #191F28) ── */
+    --background: 220 14% 98%;
+    --foreground: 218 25% 13%;
 
-    /* ── 카드/패널 서피스 ── */
-    --card: 0 0% 100%;                   /* 순수 화이트 카드 */
-    --card-foreground: 222 47% 11%;
-
-    /* ── 팝오버 ── */
+    /* ── 카드/팝오버 — 순수 화이트 ── */
+    --card: 0 0% 100%;
+    --card-foreground: 218 25% 13%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 218 25% 13%;
 
-    /* ── 프라이머리 (토스 블루) ── */
-    --primary: 224 76% 48%;
+    /* ── 프라이머리: Toss Blue #3182F6 ── */
+    --primary: 213 91% 58%;
     --primary-foreground: 0 0% 100%;
 
-    /* ── 세컨더리 ── */
+    /* ── 세컨더리/액센트/뮤트 — soft cool gray ── */
     --secondary: 220 14% 96%;
-    --secondary-foreground: 222 47% 11%;
-
-    /* ── 뮤트 (서브텍스트, 비활성) ── */
+    --secondary-foreground: 218 25% 13%;
     --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
-
-    /* ── 액센트 ── */
+    --muted-foreground: 214 14% 35%;          /* 토스 #4E5968 */
     --accent: 220 14% 96%;
-    --accent-foreground: 222 47% 11%;
+    --accent-foreground: 218 25% 13%;
 
-    /* ── 상승/하락 시맨틱 컬러 ── */
-    --positive: 142 71% 45%;
+    /* ── 한국 금융 컨벤션 ── */
+    --positive: 355 80% 56%;                  /* 상승 = RED (#E63946 톤) */
     --positive-foreground: 0 0% 100%;
-    --negative: 0 84% 60%;
+    --negative: 217 78% 50%;                  /* 하락 = BLUE (#1B64DA, primary와 차별화) */
     --negative-foreground: 0 0% 100%;
 
     /* ── 경고/정보 ── */
     --warning: 38 92% 50%;
-    --info: 210 80% 52%;
+    --info: 213 91% 58%;
 
-    /* ── 디스트럭티브 ── */
-    --destructive: 0 84% 60%;
+    /* ── 디스트럭티브 (삭제 등 critical action — 한국 컨벤션과 무관하게 빨강 유지) ── */
+    --destructive: 355 80% 56%;
     --destructive-foreground: 0 0% 100%;
 
-    /* ── 보더/인풋/링 ── */
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 224 76% 48%;
+    /* ── 보더/인풋/링 (토스 #E5E8EB) ── */
+    --border: 214 11% 91%;
+    --input: 214 11% 91%;
+    --ring: 213 91% 58%;
 
-    /* ── 반경 (토스 스타일 부드러운 라운딩) ── */
-    --radius: 0.75rem;
+    /* ── 반경 (토스 16~24px 라운딩) ── */
+    --radius: 1rem;
 
     /* ── 사이드바 ── */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 224 76% 48%;
+    --sidebar-foreground: 218 25% 13%;
+    --sidebar-primary: 213 91% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 224 76% 48%;
+    --sidebar-accent-foreground: 218 25% 13%;
+    --sidebar-border: 214 11% 91%;
+    --sidebar-ring: 213 91% 58%;
 
-    /* ── 그림자 (부드러운 토스 스타일) ── */
-    --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.04), 0 1px 2px hsl(0 0% 0% / 0.06);
-    --shadow-elevated: 0 4px 24px hsl(0 0% 0% / 0.08);
+    /* ── 그림자 (토스 풍 — 매우 부드럽고 멀리 퍼짐) ── */
+    --shadow-card: 0 1px 2px hsl(218 25% 13% / 0.04), 0 4px 12px hsl(218 25% 13% / 0.04);
+    --shadow-elevated: 0 8px 32px hsl(218 25% 13% / 0.10);
 
     /* ── 폰트 ── */
     --font-sans: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
@@ -86,47 +80,47 @@
 
   /* ── Dark mode tokens ── */
   .dark {
-    --background: 222 22% 9%;
-    --foreground: 210 20% 96%;
+    --background: 218 22% 9%;
+    --foreground: 220 15% 96%;
 
-    --card: 222 22% 12%;
-    --card-foreground: 210 20% 96%;
+    --card: 218 22% 12%;
+    --card-foreground: 220 15% 96%;
 
-    --popover: 222 22% 12%;
-    --popover-foreground: 210 20% 96%;
+    --popover: 218 22% 12%;
+    --popover-foreground: 220 15% 96%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 22% 9%;
+    --primary: 213 91% 62%;
+    --primary-foreground: 218 22% 9%;
 
-    --secondary: 222 14% 18%;
-    --secondary-foreground: 210 20% 96%;
+    --secondary: 218 14% 18%;
+    --secondary-foreground: 220 15% 96%;
 
-    --muted: 222 14% 18%;
-    --muted-foreground: 220 9% 65%;
+    --muted: 218 14% 18%;
+    --muted-foreground: 220 12% 65%;
 
-    --accent: 222 14% 18%;
-    --accent-foreground: 210 20% 96%;
+    --accent: 218 14% 18%;
+    --accent-foreground: 220 15% 96%;
 
-    --positive: 142 71% 50%;
-    --negative: 0 75% 60%;
+    --positive: 355 80% 62%;
+    --negative: 217 80% 60%;
     --warning: 38 92% 55%;
-    --info: 210 80% 60%;
+    --info: 213 91% 62%;
 
-    --destructive: 0 75% 55%;
-    --destructive-foreground: 210 20% 96%;
+    --destructive: 355 80% 60%;
+    --destructive-foreground: 220 15% 96%;
 
-    --border: 222 14% 22%;
-    --input: 222 14% 22%;
-    --ring: 217 91% 60%;
+    --border: 218 14% 22%;
+    --input: 218 14% 22%;
+    --ring: 213 91% 62%;
 
-    --sidebar-background: 222 22% 12%;
-    --sidebar-foreground: 210 20% 96%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 222 22% 9%;
-    --sidebar-accent: 222 14% 18%;
-    --sidebar-accent-foreground: 210 20% 96%;
-    --sidebar-border: 222 14% 22%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-background: 218 22% 12%;
+    --sidebar-foreground: 220 15% 96%;
+    --sidebar-primary: 213 91% 62%;
+    --sidebar-primary-foreground: 218 22% 9%;
+    --sidebar-accent: 218 14% 18%;
+    --sidebar-accent-foreground: 220 15% 96%;
+    --sidebar-border: 218 14% 22%;
+    --sidebar-ring: 213 91% 62%;
 
     --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.3), 0 1px 2px hsl(0 0% 0% / 0.4);
     --shadow-elevated: 0 4px 24px hsl(0 0% 0% / 0.5);
@@ -218,11 +212,11 @@
 
 /* ── 키프레임 ── */
 @keyframes blinkGreen {
-  0% { background-color: hsl(142 71% 45% / 0.15); }
+  0% { background-color: hsl(var(--positive) / 0.15); }
   100% { background-color: transparent; }
 }
 @keyframes blinkRed {
-  0% { background-color: hsl(0 84% 60% / 0.15); }
+  0% { background-color: hsl(var(--negative) / 0.15); }
   100% { background-color: transparent; }
 }
 

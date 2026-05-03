@@ -202,7 +202,7 @@ export default function PortfolioPage() {
             <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
               1,000만원 가상 잔고 · 실시간 KOSPI 시세 기준
               <span className="inline-flex items-center gap-1 text-xs">
-                <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                <span className="h-1.5 w-1.5 rounded-full bg-positive animate-pulse" />
                 30초마다 갱신
                 {lastUpdated && (
                   <span className="text-muted-foreground/70">
@@ -252,7 +252,7 @@ export default function PortfolioPage() {
             <div className="text-xs text-muted-foreground">평가손익</div>
             <div
               className={`font-data text-xl font-bold mt-1 ${
-                profit >= 0 ? "text-green-600" : "text-red-600"
+                profit >= 0 ? "text-positive" : "text-negative"
               }`}
             >
               {profit >= 0 ? "+" : ""}
@@ -340,7 +340,7 @@ export default function PortfolioPage() {
                 </div>
               </div>
               {formError && (
-                <div className="text-sm text-red-600 mt-3">{formError}</div>
+                <div className="text-sm text-negative mt-3">{formError}</div>
               )}
             </div>
           )}
@@ -391,7 +391,7 @@ export default function PortfolioPage() {
                       </div>
                       <div
                         className={`col-span-2 text-right text-sm font-data font-semibold ${
-                          isUp ? "text-green-600" : "text-red-600"
+                          isUp ? "text-positive" : "text-negative"
                         }`}
                       >
                         {isUp ? "+" : ""}
@@ -462,9 +462,9 @@ export default function PortfolioPage() {
                 >
                   <div className="flex items-center gap-3">
                     {t.type === "buy" ? (
-                      <TrendingUp className="h-4 w-4 text-green-600" />
+                      <TrendingUp className="h-4 w-4 text-positive" />
                     ) : (
-                      <TrendingDown className="h-4 w-4 text-red-600" />
+                      <TrendingDown className="h-4 w-4 text-negative" />
                     )}
                     <div>
                       <div className="text-sm font-medium">

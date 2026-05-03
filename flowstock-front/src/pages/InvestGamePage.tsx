@@ -244,7 +244,7 @@ export default function InvestGamePage() {
                   {portfolioValue.toLocaleString()}원
                 </div>
                 <div
-                  className={`text-xs mt-0.5 ${userReturn >= 0 ? "text-green-600" : "text-red-600"}`}
+                  className={`text-xs mt-0.5 ${userReturn >= 0 ? "text-positive" : "text-negative"}`}
                 >
                   {userReturn >= 0 ? "+" : ""}
                   {userReturn.toFixed(2)}%
@@ -291,9 +291,9 @@ export default function InvestGamePage() {
                           <span
                             className={`mt-1 h-1.5 w-1.5 rounded-full shrink-0 ${
                               n.sentiment === "positive"
-                                ? "bg-green-500"
+                                ? "bg-positive"
                                 : n.sentiment === "negative"
-                                  ? "bg-red-500"
+                                  ? "bg-negative"
                                   : "bg-gray-400"
                             }`}
                           />
@@ -318,14 +318,14 @@ export default function InvestGamePage() {
                 <button
                   onClick={buyAll}
                   disabled={cash < (today?.close ?? Infinity)}
-                  className="px-4 py-2 rounded-full text-sm font-semibold bg-green-100 text-green-800 hover:bg-green-200 disabled:opacity-50"
+                  className="px-4 py-2 rounded-full text-sm font-semibold bg-positive/10 text-positive hover:bg-positive/15 disabled:opacity-50"
                 >
                   매수 (잔고 풀투입)
                 </button>
                 <button
                   onClick={sellAll}
                   disabled={shares <= 0}
-                  className="px-4 py-2 rounded-full text-sm font-semibold bg-red-100 text-red-800 hover:bg-red-200 disabled:opacity-50"
+                  className="px-4 py-2 rounded-full text-sm font-semibold bg-negative/10 text-negative hover:bg-negative/15 disabled:opacity-50"
                 >
                   매도 (전량)
                 </button>
@@ -349,7 +349,7 @@ export default function InvestGamePage() {
                   <div>
                     <div className="text-xs text-muted-foreground">내 수익률</div>
                     <div
-                      className={`text-2xl font-bold mt-1 ${userReturn >= 0 ? "text-green-600" : "text-red-600"}`}
+                      className={`text-2xl font-bold mt-1 ${userReturn >= 0 ? "text-positive" : "text-negative"}`}
                     >
                       {userReturn >= 0 ? "+" : ""}
                       {userReturn.toFixed(2)}%
@@ -358,7 +358,7 @@ export default function InvestGamePage() {
                   <div>
                     <div className="text-xs text-muted-foreground">Buy &amp; Hold</div>
                     <div
-                      className={`text-2xl font-bold mt-1 ${buyHoldReturn >= 0 ? "text-green-600" : "text-red-600"}`}
+                      className={`text-2xl font-bold mt-1 ${buyHoldReturn >= 0 ? "text-positive" : "text-negative"}`}
                     >
                       {buyHoldReturn >= 0 ? "+" : ""}
                       {buyHoldReturn.toFixed(2)}%
@@ -367,7 +367,7 @@ export default function InvestGamePage() {
                   <div>
                     <div className="text-xs text-muted-foreground">차이 (Alpha)</div>
                     <div
-                      className={`text-2xl font-bold mt-1 ${beat >= 0 ? "text-green-600" : "text-red-600"}`}
+                      className={`text-2xl font-bold mt-1 ${beat >= 0 ? "text-positive" : "text-negative"}`}
                     >
                       {beat >= 0 ? "+" : ""}
                       {beat.toFixed(2)}%p
@@ -399,9 +399,9 @@ export default function InvestGamePage() {
                       <span
                         className={`font-medium ${
                           l.action === "매수"
-                            ? "text-green-600"
+                            ? "text-positive"
                             : l.action === "매도"
-                              ? "text-red-600"
+                              ? "text-negative"
                               : "text-muted-foreground"
                         }`}
                       >

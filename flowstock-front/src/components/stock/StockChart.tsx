@@ -60,12 +60,13 @@ export default function StockChart({ data, height = 400 }: Props) {
 
     // ── 캔들스틱 시리즈 추가 ──
     const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: "hsl(142, 71%, 45%)",
-      downColor: "hsl(0, 84%, 60%)",
-      borderUpColor: "hsl(142, 71%, 45%)",
-      borderDownColor: "hsl(0, 84%, 60%)",
-      wickUpColor: "hsl(142, 71%, 55%)",
-      wickDownColor: "hsl(0, 84%, 65%)",
+      // 한국 컨벤션: 상승 = 빨강, 하락 = 파랑 (토스 동일)
+      upColor: "hsl(355, 80%, 56%)",
+      downColor: "hsl(217, 78%, 50%)",
+      borderUpColor: "hsl(355, 80%, 56%)",
+      borderDownColor: "hsl(217, 78%, 50%)",
+      wickUpColor: "hsl(355, 80%, 62%)",
+      wickDownColor: "hsl(217, 78%, 56%)",
     });
 
     // 데이터 설정
