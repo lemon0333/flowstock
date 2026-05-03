@@ -4,22 +4,29 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import java.time.Duration
 import java.time.LocalDate
 import kotlin.math.abs
 
 /**
  * DART(전자공시) Open API 클라이언트.
  *
- * - DART_API_KEY 환경변수가 비어있으면 mock 데이터로 폴백.
- * - 무료 키 발급: https://opendart.fss.or.kr/uss/umt/EgovMberInsertView.do
+ * 동작 우선순위:
+ *   1) DART_API_KEY 미설정 → mock
+ *   2) corp_code 매핑 못 찾음 (비상장 / 우선주 / DART 미등록) → mock
+ *   3) fnlttSinglAcntAll 호출 모두 실패 / 데이터 0건 → mock
+ *   4) 위 모두 통과 → source="dart" 로 실제 데이터 반환
  *
- * 실제 DART API는 corp_code(법인고유번호)가 필요해서 ticker → corp_code 매핑이 별도로 필요.
- * 운영 단계에서 corp_code 매핑 파일(dart_corp_codes.json)을 받아서 캐싱하면 됨.
- * 키만 있고 매핑이 없을 때도 mock으로 폴백.
+ * fnlttSinglAcntAll 응답:
+ *   - status="000" 정상, "013" 데이터 없음, "020" 사용량 초과 등
+ *   - list[].sj_div: BS / IS / CIS / CF / SCE
+ *   - list[].account_nm: K-IFRS 표준 계정과목명
+ *   - list[].thstrm_amount: 당기 금액 (콤마 포함 문자열)
  */
 @Service
 class DartFinancialService(
     @Value("\${dart.api-key:}") private val apiKey: String,
+    private val corpCodeService: DartCorpCodeService,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -36,29 +43,120 @@ class DartFinancialService(
             log.debug("DART_API_KEY 미설정 — mock 응답")
             return mockFinancials(ticker)
         }
+        val corpCode = corpCodeService.lookup(ticker) ?: run {
+            log.debug("DART corp_code not found for ticker {} — mock 폴백", ticker)
+            return mockFinancials(ticker)
+        }
         return try {
-            // 실제 키가 있어도 corp_code 매핑이 별도로 필요해서 일단 mock 폴백.
-            // TODO: corp_code 매핑 캐싱 후 fnlttSinglAcntAll 호출로 교체
-            mockFinancials(ticker)
+            fetchReal(ticker, corpCode) ?: mockFinancials(ticker)
         } catch (e: Exception) {
-            log.warn("DART financials 실패: {}", e.message)
+            log.warn("DART real fetch 실패 ticker={}: {}", ticker, e.message)
             mockFinancials(ticker)
         }
     }
 
     fun getEarningsCalendar(year: Int, quarter: Int): List<Map<String, Any?>> {
         val y = if (year <= 0) LocalDate.now().year else year
-        if (!keyAvailable) return mockEarnings(y, quarter)
-        // 실제로는 list.json + 사업보고서 검색 필요. 일단 mock.
+        // 분기별 사업보고서 발표 일정은 list.json + 공시검색 조합 필요 — 별도 작업으로 추후
         return mockEarnings(y, quarter)
     }
 
+    private fun fetchReal(ticker: String, corpCode: String): Map<String, Any?>? {
+        val currentYear = LocalDate.now().year
+        // 가장 최근 사업보고서는 그 다음 해 3-4월에 공시 → (현재년-1)까지 5년치
+        val years = ((currentYear - 5)..(currentYear - 1)).toList()
+
+        val statements = mutableListOf<Map<String, Any?>>()
+        for (year in years) {
+            val one = fetchAnnual(corpCode, year, fsDiv = "CFS")
+                ?: fetchAnnual(corpCode, year, fsDiv = "OFS")
+            if (one != null) statements.add(one)
+        }
+
+        if (statements.isEmpty()) {
+            log.info("DART returned no usable annual data for ticker={} corp={}", ticker, corpCode)
+            return null
+        }
+
+        return mapOf<String, Any?>(
+            "ticker" to ticker,
+            "source" to "dart",
+            "corpCode" to corpCode,
+            "statements" to statements,
+            // PER/PBR 시계열은 stockTotqyStatus + 시세 결합 필요. 별도 작업으로 추후
+            "valuation" to emptyList<Map<String, Any?>>(),
+            // 사업부별 매출은 사업의 내용 텍스트 파싱 필요. 별도 작업으로 추후
+            "segments" to emptyList<Map<String, Any?>>(),
+            "sharesOutstanding" to null,
+        )
+    }
+
+    private fun fetchAnnual(corpCode: String, year: Int, fsDiv: String): Map<String, Any?>? {
+        val resp = client.get()
+            .uri { uri ->
+                uri.path("/fnlttSinglAcntAll.json")
+                    .queryParam("crtfc_key", apiKey)
+                    .queryParam("corp_code", corpCode)
+                    .queryParam("bsns_year", year.toString())
+                    .queryParam("reprt_code", "11011") // 사업보고서 (annual)
+                    .queryParam("fs_div", fsDiv)
+                    .build()
+            }
+            .retrieve()
+            .bodyToMono(Map::class.java)
+            .timeout(Duration.ofSeconds(15))
+            .onErrorReturn(emptyMap<String, Any>())
+            .block() ?: return null
+
+        if (resp.isEmpty()) return null
+        val status = resp["status"] as? String
+        if (status != "000") {
+            if (status != "013") log.debug("DART status={} for year={} fs={}", status, year, fsDiv)
+            return null
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        val list = resp["list"] as? List<Map<String, Any?>> ?: return null
+
+        var revenue: Long? = null
+        var opProfit: Long? = null
+        var netIncome: Long? = null
+
+        for (row in list) {
+            val accountNm = (row["account_nm"] as? String)?.trim() ?: continue
+            val sjDiv = row["sj_div"] as? String
+            val amount = parseAmount(row["thstrm_amount"]) ?: continue
+
+            if (sjDiv == "IS" || sjDiv == "CIS") {
+                when (accountNm) {
+                    "매출액", "영업수익", "수익(매출액)" -> if (revenue == null) revenue = amount
+                    "영업이익", "영업이익(손실)" -> if (opProfit == null) opProfit = amount
+                    "당기순이익", "당기순이익(손실)" -> if (netIncome == null) netIncome = amount
+                }
+            }
+        }
+
+        if (revenue == null || opProfit == null) return null
+
+        return mapOf<String, Any?>(
+            "year" to year,
+            "revenue" to revenue,
+            "operatingProfit" to opProfit,
+            "netIncome" to (netIncome ?: 0L),
+        )
+    }
+
+    private fun parseAmount(raw: Any?): Long? = when (raw) {
+        is String -> raw.replace(",", "").trim().toLongOrNull()
+        is Number -> raw.toLong()
+        else -> null
+    }
+
     // ────────────────────────────────────────────────────────
-    // mock 데이터 (사용자 데모용 — 키 없거나 매핑 미완 시)
+    // mock 데이터 (키 없거나 corp_code 미매칭 시 폴백)
     // ────────────────────────────────────────────────────────
 
     private fun mockFinancials(ticker: String): Map<String, Any?> {
-        // ticker 마지막 자리 기반으로 살짝 변주 — 의미는 없지만 페이지마다 다른 차트 보이게
         val seed = abs(ticker.hashCode()).toLong()
         val baseRevenue = 50_000L * 100_000_000L + (seed % 50) * 1_000L * 100_000_000L
 
@@ -114,7 +212,7 @@ class DartFinancialService(
             Triple("105560", "KB금융", "확정실적"),
         )
         val baseMonth = when (quarter) {
-            1 -> 4; 2 -> 7; 3 -> 10; else -> 1 // 다음년도 1월에 4Q
+            1 -> 4; 2 -> 7; 3 -> 10; else -> 1
         }
         return tickers.mapIndexed { i, (ticker, name, type) ->
             val day = ((i * 3 + 5) % 25) + 1
