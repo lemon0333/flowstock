@@ -165,9 +165,13 @@ export default function Header() {
           {ThemeBtn}
           {isAuthenticated ? (
             <>
-              <span className="text-sm text-muted-foreground hidden lg:inline">
+              <Link
+                to="/me"
+                className="text-sm text-muted-foreground hover:text-foreground hidden lg:inline transition-colors"
+                title="마이페이지"
+              >
                 {user?.name}
-              </span>
+              </Link>
               <button
                 onClick={logout}
                 aria-label="로그아웃"
@@ -237,7 +241,12 @@ export default function Header() {
                   {isAuthenticated ? (
                     <div className="space-y-2">
                       {user?.name && (
-                        <div className="text-xs text-muted-foreground">{user.name}</div>
+                        <Link
+                          to="/me"
+                          className="block text-xs text-primary hover:underline"
+                        >
+                          {user.name} · 마이페이지
+                        </Link>
                       )}
                       <button
                         onClick={logout}

@@ -56,6 +56,16 @@ export default function Footer() {
             <div className="text-xs font-semibold text-foreground mb-2">링크</div>
             <ul className="space-y-1.5 text-xs text-muted-foreground">
               <li>
+                <Link to="/privacy" className="hover:text-foreground">
+                  개인정보처리방침
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms" className="hover:text-foreground">
+                  이용약관
+                </Link>
+              </li>
+              <li>
                 <a
                   href="https://github.com/lemon0333/flowstock"
                   target="_blank"

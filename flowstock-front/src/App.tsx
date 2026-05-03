@@ -10,6 +10,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 const Index = lazy(() => import("./pages/Index"));
 const StockDetail = lazy(() => import("./pages/StockDetail"));
@@ -29,6 +30,9 @@ const EarningsPage = lazy(() => import("./pages/EarningsPage"));
 const ArticlesPage = lazy(() => import("./pages/ArticlesPage"));
 const ArticleDetailPage = lazy(() => import("./pages/ArticleDetailPage"));
 const ArticleEditPage = lazy(() => import("./pages/ArticleEditPage"));
+const MePage = lazy(() => import("./pages/MePage"));
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
+const TermsPage = lazy(() => import("./pages/TermsPage"));
 
 const queryClient = new QueryClient();
 
@@ -61,6 +65,16 @@ const App = () => (
             <Route path="/articles/new" element={<ArticleEditPage />} />
             <Route path="/articles/:id" element={<ArticleDetailPage />} />
             <Route path="/articles/:id/edit" element={<ArticleEditPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route
+              path="/me"
+              element={
+                <ProtectedRoute>
+                  <MePage />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/portfolio" element={<PortfolioPage />} />
             <Route path="/portfolio/game" element={<InvestGamePage />} />
             <Route path="/alerts" element={<AlertsPage />} />
