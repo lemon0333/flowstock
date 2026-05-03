@@ -66,18 +66,40 @@ backend(Spring) 의 server span 만 보이고 그 안의 WebClient 호출 → ai
 | 8 | Frontend `web-vitals` 패키지 + `lib/web-vitals.ts` 리포터 | `flowstock-front/src/lib/web-vitals.ts` |
 | 9 | LCP/INP/CLS/FCP/TTFB 측정 + localStorage 누적 + DevTools 콘솔 출력 | `main.tsx` |
 
-### 예상 효과 (실측은 다음 사이클에)
+### 실측 결과 (배포 직후, commit `13b0d2a` 이후)
 
-| Endpoint | Before | After (예상) | 메커니즘 |
-|------|------|------|------|
-| /api/news (cold) | 2.4s | **0.5~0.8s** | RSS 4채널 병렬 |
-| /api/news (warm) | 2.4s | **~50ms** | TTL 캐시 |
-| /api/economy/dashboard (warm) | 2.5s | **~10ms** | TTL 캐시 |
-| Jaeger trace span 수 | 5~9 (대부분 Security) | 20+ | ai-service 자체 span + 외부 호출 span 추가 |
+`curl` 실측, ai-service 단독 호출 (Cloudflare edge → cloudflared → backend → ai-service):
 
-다음 측정에서 ai-service trace 의 RSS / Naver Finance / DB 쿼리 span 시간이
-드러날 것. 그 데이터로 다음 라운드 개선 (ex. RSS 에이전트 캐싱, Naver Finance
-응답 압축 등) 을 결정한다.
+| Endpoint | Before | After Cold | After Warm (캐시) | Cold 단축 | Warm 단축 |
+|------|------|------|------|------|------|
+| /api/news?limit=10 | **2.75s** | **1.62s** | **0.40s** | ⬇ 41% | ⬇ 85% |
+| /api/economy/dashboard | **2.46s** | **1.34s** | **0.46s** | ⬇ 46% | ⬇ 81% |
+| /api/dart/financials/005930 | 2.59s | 2.75s* | **0.33s** | (lazy load) | ⬇ 87% |
+
+*DART 첫 호출은 corp_code XML(5MB) 1회 다운로드 + fnlttSinglAcntAll 5회 직렬 호출 → 정상 영역.
+이후 호출은 corp_code 캐시 + 데이터 자체 캐시로 빠름.
+
+**Jaeger services**:
+```
+Before: ["jaeger-all-in-one", "flowstock-backend"]
+After : ["jaeger-all-in-one", "flowstock-backend", "ai-service"]  ✅
+```
+
+ai-service 가 trace 를 보내기 시작함. 다음 라운드에서는 ai-service 안의 RSS /
+Naver Finance / SQLAlchemy span 들이 backend trace 에 child 로 붙어 보일 것.
+
+### Floor 분석 (Warm 0.4s 의 정체)
+
+응답 0.4s 중 추정 분해:
+- Cloudflare edge → cloudflared 라우팅: ~100~150ms
+- Spring Boot WebClient → ai-service HTTP overhead: ~100~150ms
+- Spring Security filter chain + serialization: ~50~100ms
+- 캐시 lookup + JSON 직렬화: ~5ms
+
+추가 단축 옵션 (이 floor 깨려면):
+- Cloudflare edge worker 에서 캐시 (TTL 60s) → 0.4s → 0.1s 가능
+- 또는 backend 도 응답 캐싱 (Spring `@Cacheable`)
+- 단 데이터 신선도와 trade-off, 현재 0.4s 면 사용자 체감 양호.
 
 ### 측정 가이드 (다음 사이클용)
 
@@ -92,6 +114,42 @@ time curl -s -o /dev/null https://api.flowstock.info/api/news?limit=10
 # 프론트 Web Vitals 누적 데이터 확인 (DevTools 콘솔에서)
 flowstockWebVitals()
 ```
+
+---
+
+## 2026-05-04 (보충): GitHub Actions 워크플로 yaml 안 inline python heredoc 금지
+
+### 증상
+
+```
+Invalid workflow file: .github/workflows/daily-health.yml#L30
+You have an error in your yaml syntax on line 30
+```
+
+`daily-health.yml` 추가한 직후부터 6번 push 동안 모든 yaml validation 실패. 사용자가
+발견할 때까지 못 잡았음.
+
+### 원인
+
+`run: |` 안에 `python3 -c "<여러 줄 스크립트>"` 패턴. YAML multi-line scalar 의 첫
+non-empty line indent 가 base 인데, python top-level statement 는 indent 0 이라
+base(10 spaces) 보다 적음 → yaml 파서가 scalar 종료로 보고 새 mapping 시작 →
+syntax error.
+
+### 수정
+
+- `daily-health.yml` 의 inline python heredoc 2개 (CI failures / npm audit) 모두 jq 로 대체
+- 머신러닝: 새 워크플로 / 워크플로 수정 시 다음 사전 검증:
+  ```bash
+  python3 -c "import yaml; yaml.safe_load(open('.github/workflows/foo.yml'))"
+  grep -rn 'python3 -c "' .github/workflows/   # heredoc 패턴 사전 적발
+  ```
+- push 후 즉시 `/ci-status` 실행 — 다음 push 까지 방치 금지
+
+### 재발 방지 메모리
+
+`feedback_yaml_inline_python.md` 로 영구 저장. JSON 파싱은 jq 우선,
+정말 python 이 필요하면 `.github/scripts/<name>.py` 별도 파일.
 
 ---
 
@@ -130,15 +188,19 @@ GitHub Actions deploy 평균 9분 12초 (552초). 잡별 분포:
 | SSH script timing log | 없음 | 단계별 `[hh:mm:ss] +N초` |
 | 실패 시 자동 describe pods | 없음 | 추가 |
 
-### 효과 (예상)
+### 효과 (실측)
 
-| 시나리오 | Before | After |
-|------|------|------|
-| backend 부팅 (직렬 90s × 3) | ~270s+ | ~90~120s (1 replica) |
-| ready 감지 latency | ~30s | ~10s |
-| ai-service 대기 (병렬화) | backend 끝난 뒤 | 동시 |
-| **deploy-k8s 잡** | **491s** | **~150~200s** |
-| **전체 wall-clock** | **9분 12초** | **4~5분** |
+| 커밋 | wall-clock | deploy-k8s 잡 | 비고 |
+|------|------|------|------|
+| Before (`726d1b4`) | **667s (11분)** | failure | replica 3 + 직렬 |
+| `f46defb` (1차 적용) | **407s (6.8분)** | 191s | replica 1 + probe 가속 + 병렬 |
+| `13b0d2a` | **351s (5.85분)** | **266s** | 추가 안정화 |
+| `9115a9a` | 553s | (변동) | mini PC 회선 변동성 (예상치 안에) |
+
+**평균 9분 → 5~7분**. 가장 빠른 케이스는 5.85분.
+
+남은 변동성(351s ↔ 553s)의 원인은 SSH script 안의 timing log 로 다음 라운드에 식별.
+주된 가설: image pull 속도 (mini PC 인터넷 회선) + Spring Boot startup 시 JPA init 시간.
 
 ---
 
