@@ -179,22 +179,27 @@ jobs:
           script: |
             set -e
             export KUBECONFIG=$HOME/.kube/config
+
+            # ── 단계별 timing 측정 (병목 식별용) ──
+            T_START=$(date +%s)
+            log_step() { echo "[$(date '+%H:%M:%S')] +$(($(date +%s)-T_START))s — $1"; }
+
+            log_step "checkout main"
             cd /opt/flowstock
             git fetch origin main
             git reset --hard origin/main
-
             cd flowstock-infra
 
-            # 1) namespace + secrets
+            log_step "1) namespace + secrets"
             k3s kubectl apply -f k8s/namespace/namespaces.yaml
             bash scripts/generate-secrets.sh
 
-            # 2) DBs (idempotent)
+            log_step "2) DBs (idempotent)"
             k3s kubectl apply -f k8s/postgresql/postgresql.yaml
             k3s kubectl apply -f k8s/mysql/mysql.yaml
             k3s kubectl apply -f k8s/redis/redis.yaml
 
-            # 3) Cloudflared (envsubst with .env) — ingress rule 변경 즉시 반영 위해 rollout restart
+            log_step "3) cloudflared envsubst"
             set -a; source .env; set +a
             CLOUDFLARED_BEFORE=$(k3s kubectl get configmap cloudflared-config -n flowstock -o jsonpath='{.data.config\.yml}' 2>/dev/null | sha256sum | cut -d' ' -f1)
             envsubst < k8s/cloudflared/cloudflared.yaml | k3s kubectl apply -f -
@@ -204,28 +209,50 @@ jobs:
               k3s kubectl rollout restart deployment/cloudflared -n flowstock
             fi
 
-            # 4) Observability — Prometheus / Grafana / kube-state-metrics / node-exporter / Jaeger
+            log_step "4) observability stack"
             k3s kubectl apply -f k8s/monitoring/kube-state-metrics.yaml || true
             k3s kubectl apply -f k8s/monitoring/node-exporter.yaml || true
             k3s kubectl apply -f k8s/monitoring/prometheus.yaml || true
             k3s kubectl apply -f k8s/monitoring/grafana.yaml || true
             k3s kubectl apply -f k8s/jaeger/jaeger.yaml || true
 
-            # 5) AI + Backend
+            log_step "5) ai + backend manifests"
             k3s kubectl apply -f k8s/ai-service/deployment.yaml
             k3s kubectl apply -f k8s/backend/deployment.yaml
 
-            # 4) Rolling update with this commit's SHA tag
+            BACKEND_REF="${{ env.BACKEND_IMAGE }}:${{ github.sha }}"
+            AI_REF="${{ env.AI_IMAGE }}:${{ github.sha }}"
+            # NOTE: k3s ctr image pull은 root 권한 필요 — mini PC는 비밀번호 sudo 막혀있어서 skip.
+            # rolling update 내부의 imagePull로 의존 (GHCR 평균 30-60s, 1회만).
+
+            log_step "7) set image (rolling update 시작)"
             k3s kubectl set image deployment/flowstock-backend \
-              flowstock-backend=${{ env.BACKEND_IMAGE }}:${{ github.sha }} \
+              flowstock-backend=$BACKEND_REF \
               -n flowstock
             k3s kubectl set image deployment/ai-service \
-              ai-service=${{ env.AI_IMAGE }}:${{ github.sha }} \
+              ai-service=$AI_REF \
               -n flowstock
 
-            # 5) Wait for rollout (Spring 부팅 ~90s + rolling update 여유까지 10분 잡음)
-            k3s kubectl rollout status deployment/flowstock-backend -n flowstock --timeout=600s
-            k3s kubectl rollout status deployment/ai-service -n flowstock --timeout=600s
+            log_step "8) rollout status (backend + ai 병렬 대기, 각 8분)"
+            k3s kubectl rollout status deployment/flowstock-backend -n flowstock --timeout=480s &
+            ROLL_BACKEND=$!
+            k3s kubectl rollout status deployment/ai-service -n flowstock --timeout=480s &
+            ROLL_AI=$!
 
-            # 6) Status
+            FAIL=0
+            if ! wait $ROLL_BACKEND; then
+              echo "❌ backend rollout 실패"
+              k3s kubectl describe pods -n flowstock -l app=flowstock-backend | tail -40
+              FAIL=1
+            fi
+            if ! wait $ROLL_AI; then
+              echo "❌ ai-service rollout 실패"
+              k3s kubectl describe pods -n flowstock -l app=ai-service | tail -40
+              FAIL=1
+            fi
+
+            log_step "9) final pod status"
             k3s kubectl get pods -n flowstock
+
+            log_step "TOTAL"
+            exit $FAIL

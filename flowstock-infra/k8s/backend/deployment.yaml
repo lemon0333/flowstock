@@ -6,15 +6,18 @@ metadata:
   labels:
     app: flowstock-backend
 spec:
-  replicas: 2
+  # mini PC 단일 노드 환경에선 replica 다수 운영해도 노드 다운 시 전체 다운이라 의미 없음.
+  # CPU 8% / 메모리 50% 수준 트래픽이면 1 replica로 충분.
+  # 노드 추가 후 다시 늘리려면 HPA min/maxReplicas 변경.
+  replicas: 1
   selector:
     matchLabels:
       app: flowstock-backend
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0        # 무중단 배포
+      maxSurge: 1               # 새 pod 1개 더 띄운 후 옛 pod 종료 (Recreate 대신)
+      maxUnavailable: 0         # 짧은 ready 갭만 허용
   template:
     metadata:
       labels:
@@ -109,16 +112,17 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "500m"
-          # actuator endpoint가 안 떠도 동작하도록 TCP socket probe 사용
+          # Spring Boot 부팅 ~90s + readiness 감지 latency 단축
+          # startup: 5s × 60 = 5분까지 부팅 대기 (이전 10s × 30 = 5분과 동일하지만 ready 감지 2배 빠름)
           startupProbe:
             tcpSocket:
               port: 8080
-            periodSeconds: 10
-            failureThreshold: 30
+            periodSeconds: 5
+            failureThreshold: 60
           readinessProbe:
             tcpSocket:
               port: 8080
-            periodSeconds: 10
+            periodSeconds: 5
             failureThreshold: 3
           livenessProbe:
             tcpSocket:
@@ -138,7 +142,8 @@ spec:
     - port: 80
       targetPort: 8080
 ---
-# HPA — CPU 70% 넘으면 자동 스케일 (32GB라 최대 3개)
+# HPA — mini PC 1대 환경에선 사실상 비활성. CPU 80% 넘으면 max 2까지만 (피크 시).
+# 노드 추가 후엔 maxReplicas 늘리면 됨.
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -149,18 +154,18 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: flowstock-backend
-  minReplicas: 2
-  maxReplicas: 3
+  minReplicas: 1
+  maxReplicas: 2
   metrics:
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 70
+          averageUtilization: 80
     - type: Resource
       resource:
         name: memory
         target:
           type: Utilization
-          averageUtilization: 80
+          averageUtilization: 85
