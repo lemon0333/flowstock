@@ -4,6 +4,7 @@ from fastapi import FastAPI
 
 from app.config import settings
 from app.database import Base, engine
+from app.observability import setup_tracing
 from app.routers import chart, economy, graph, news, stock
 
 logging.basicConfig(
@@ -18,6 +19,9 @@ app = FastAPI(
     version="1.0.0",
     description="AI-powered news analysis, chart analysis, and graph generation for FlowStock",
 )
+
+# OpenTelemetry 트레이싱 — backend(Spring) 와 묶여서 Jaeger 에 표시됨
+setup_tracing(app, engine=engine)
 
 app.include_router(news.router)
 app.include_router(chart.router)

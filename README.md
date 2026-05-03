@@ -2,6 +2,9 @@
 
 주식 뉴스와 종목 간의 관계를 AI(LangChain + Claude)로 분석하고, ReactFlow 기반 그래프로 시각화하는 서비스.
 
+> 📊 **성능 분석 & 개선 이력**: [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) — Jaeger trace 기반 진단,
+> 캐싱 / RSS 병렬화 / 배포 단축 같은 작업이 어떤 데이터로 식별되어 어떻게 개선됐는지 누적 기록.
+
 ---
 
 ## Architecture Overview

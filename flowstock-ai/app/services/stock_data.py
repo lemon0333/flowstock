@@ -25,6 +25,9 @@ NAVER_UA = {"User-Agent": "Mozilla/5.0"}
 # 60초 TTL 메모리 캐시 — 외부 API 호출 부하/지연 감소
 _NAVER_CACHE: TTLCache = TTLCache(maxsize=128, ttl=60)
 
+# economy_dashboard 응답 전체 캐시 (조합 비용 + 다수 외부 호출 합산 절감)
+_DASHBOARD_CACHE: TTLCache = TTLCache(maxsize=4, ttl=60)
+
 
 def _get_json(url: str, timeout: int = 15) -> dict:
     cached = _NAVER_CACHE.get(url)
@@ -198,7 +201,13 @@ class StockDataService:
 
     # ── 경제 대시보드 (맨큐 거시/미시 관점) ───────────────
     def get_economy_dashboard(self) -> dict:
-        """KOSPI/KOSDAQ 통합 정보 + 매매주체별 동향 + 시장폭 + 52주 고저 + 시계열."""
+        """KOSPI/KOSDAQ 통합 정보 + 매매주체별 동향 + 시장폭 + 52주 고저 + 시계열.
+
+        60초 TTL 캐시 — 같은 60초 안에 두 번째 호출은 ~5ms 안에 응답.
+        """
+        cached = _DASHBOARD_CACHE.get("dashboard")
+        if cached is not None:
+            return cached
         result: dict = {
             "indices": [],
             "deal_trend": {},        # 외국인/기관/개인 매매 동향
@@ -341,6 +350,7 @@ class StockDataService:
             },
         }
 
+        _DASHBOARD_CACHE["dashboard"] = result
         return result
 
 

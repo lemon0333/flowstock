@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import { ThemeProvider } from "@/components/theme-provider";
+import { initWebVitals } from "@/lib/web-vitals";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
@@ -8,3 +9,6 @@ createRoot(document.getElementById("root")!).render(
     <App />
   </ThemeProvider>,
 );
+
+// Core Web Vitals 측정 시작 (DevTools 콘솔에서 [web-vitals] 로그 확인)
+initWebVitals();
