@@ -101,8 +101,10 @@ const MOOD_COLOR: Record<FearGreed["mood"], string> = {
   extreme_greed: "#DC2626",
 };
 
+// 매매주체 (개인/외국인/기관) — 의미적 mapping 자유, 토스 톤으로 정렬
 const COLORS_DEAL = ["#3B82F6", "#10B981", "#F59E0B"];
-const COLORS_UPDOWN = ["#DC2626", "#EF4444", "#9CA3AF", "#10B981", "#059669"];
+// 한국 컨벤션: 상한가/상승 = 빨강 계열, 하락/하한가 = 파랑 계열, 보합 = 회색
+const COLORS_UPDOWN = ["#DC2626", "#EF4444", "#9CA3AF", "#2563EB", "#1E40AF"];
 
 export default function EconomyPage() {
   const [data, setData] = useState<DashboardData>({});
@@ -172,12 +174,13 @@ export default function EconomyPage() {
 
   // ── 상승/하락 종목 비율 (도넛, KOSPI 우선) ──
   const ud = data.up_down?.KOSPI;
+  // 한국 컨벤션: 상한가/상승 = 빨강, 보합 = 회색, 하락/하한가 = 파랑
   const upDownPie = ud
     ? [
         { name: "상한가", value: ud.upper, color: "#DC2626" },
-        { name: "상승", value: ud.rise, color: "#10B981" },
+        { name: "상승", value: ud.rise, color: "#EF4444" },
         { name: "보합", value: ud.steady, color: "#9CA3AF" },
-        { name: "하락", value: ud.fall, color: "#3B82F6" },
+        { name: "하락", value: ud.fall, color: "#2563EB" },
         { name: "하한가", value: ud.lower, color: "#1E40AF" },
       ]
     : [];
@@ -275,7 +278,7 @@ export default function EconomyPage() {
                 {dealTrendBars.map((d, i) => (
                   <Cell
                     key={i}
-                    fill={d.value >= 0 ? COLORS_DEAL[i % 3] : "#EF4444"}
+                    fill={d.value >= 0 ? COLORS_DEAL[i % 3] : "#2563EB"}
                   />
                 ))}
               </Bar>
@@ -320,7 +323,7 @@ export default function EconomyPage() {
               <YAxis type="category" dataKey="name" />
               <Tooltip formatter={(v: number) => `${v.toFixed(1)}%`} />
               <Legend />
-              <Bar dataKey="저점대비" stackId="a" fill="#10B981" />
+              <Bar dataKey="저점대비" stackId="a" fill="#EF4444" />
               <Bar dataKey="고점까지 여유" stackId="a" fill="#E5E7EB" />
             </BarChart>
           </ResponsiveContainer>
