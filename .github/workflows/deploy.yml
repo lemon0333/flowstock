@@ -108,6 +108,9 @@ jobs:
           VITE_NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
           VITE_NAVER_CALLBACK_URL: https://flowstock.info/login
           VITE_API_URL: https://api.flowstock.info/api
+          # Umami Analytics — secrets.UMAMI_WEBSITE_ID 가 비어있으면 트래커 silently skip
+          VITE_UMAMI_SCRIPT_URL: https://analytics.flowstock.info/script.js
+          VITE_UMAMI_WEBSITE_ID: ${{ secrets.UMAMI_WEBSITE_ID }}
         run: npm run build
 
       - name: Ensure Cloudflare Pages project exists
@@ -216,9 +219,10 @@ jobs:
             k3s kubectl apply -f k8s/monitoring/grafana.yaml || true
             k3s kubectl apply -f k8s/jaeger/jaeger.yaml || true
 
-            log_step "5) ai + backend manifests"
+            log_step "5) ai + backend + umami manifests"
             k3s kubectl apply -f k8s/ai-service/deployment.yaml
             k3s kubectl apply -f k8s/backend/deployment.yaml
+            k3s kubectl apply -f k8s/umami/umami.yaml || echo "(umami apply skipped/failed — check secrets)"
 
             BACKEND_REF="${{ env.BACKEND_IMAGE }}:${{ github.sha }}"
             AI_REF="${{ env.AI_IMAGE }}:${{ github.sha }}"

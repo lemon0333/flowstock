@@ -74,6 +74,10 @@ export default function PrivacyPage() {
               ["Anthropic, PBC", "AI 분석 처리 (이용자 식별 정보는 전송하지 않음)"],
             ]}
           />
+          <p className="text-xs text-muted-foreground mt-2">
+            ※ 페이지 방문 통계는 자체 호스팅한 Umami 서비스로 수집되며 외부에 전송되지 않습니다.
+            쿠키를 사용하지 않고, 개인을 식별할 수 있는 정보(IP·정확한 위치 등)는 저장하지 않습니다.
+          </p>
         </Section>
 
         <Section title="6. 이용자 권리와 행사 방법">

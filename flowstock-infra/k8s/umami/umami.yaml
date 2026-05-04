@@ -1,0 +1,128 @@
+# ============================================================
+# Umami — 오픈소스 Web Analytics (자체호스팅)
+# - flowstock 의 PostgreSQL StatefulSet 을 그대로 재사용 (별도 DB `umami`)
+# - https://analytics.flowstock.info 로 cloudflared 라우팅 (별도 ingress rule)
+# - 쿠키 사용 0, GDPR 친화, 데이터 영구 보존 (Postgres)
+# - 메모리 ~150MB, CPU 미미
+# ============================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: umami-config
+  namespace: flowstock
+data:
+  DATABASE_TYPE: postgresql
+  HOSTNAME: "0.0.0.0"
+  PORT: "3000"
+  # Umami 첫 부팅 시 schema 자동 마이그레이션 — 별도 작업 불필요
+  TRACKER_SCRIPT_NAME: "script"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: umami
+  namespace: flowstock
+  labels:
+    app: umami
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: umami
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: umami
+    spec:
+      # PostgreSQL 이 ready 될 때까지 대기 + umami DB 자동 생성 (idempotent)
+      initContainers:
+        - name: wait-and-create-db
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              until pg_isready -h postgresql.flowstock.svc.cluster.local -U flowstock; do
+                echo "waiting for postgresql..."
+                sleep 2
+              done
+              echo "postgresql is up — checking umami DB"
+              export PGPASSWORD="$DB_PASSWORD"
+              EXISTS=$(psql -h postgresql.flowstock.svc.cluster.local -U flowstock -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='umami'" || echo "")
+              if [ "$EXISTS" = "1" ]; then
+                echo "umami DB already exists — skipping"
+              else
+                echo "creating umami DB"
+                psql -h postgresql.flowstock.svc.cluster.local -U flowstock -d postgres -c "CREATE DATABASE umami"
+              fi
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: flowstock-secrets
+                  key: DB_PASSWORD
+      containers:
+        - name: umami
+          image: ghcr.io/umami-software/umami:postgresql-latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: umami-config
+          env:
+            # PG: flowstock 의 동일 DB 인스턴스 + DB 이름만 umami
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: flowstock-secrets
+                  key: UMAMI_DATABASE_URL
+            # 세션 토큰 서명 키 (32+ chars random)
+            - name: APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: flowstock-secrets
+                  key: UMAMI_APP_SECRET
+          resources:
+            requests:
+              memory: "150Mi"
+              cpu: "50m"
+            limits:
+              memory: "400Mi"
+              cpu: "300m"
+          startupProbe:
+            httpGet:
+              path: /api/heartbeat
+              port: 3000
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /api/heartbeat
+              port: 3000
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/heartbeat
+              port: 3000
+            periodSeconds: 30
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: umami
+  namespace: flowstock
+spec:
+  selector:
+    app: umami
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: ClusterIP
