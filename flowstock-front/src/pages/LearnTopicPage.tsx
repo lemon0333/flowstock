@@ -14,7 +14,12 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, XCircle } from "lucide-react";
 import Layout from "@/components/layout/Layout";
-import { LEARN_TOPICS, getTopic } from "@/lib/learn-content";
+import {
+  AUDIENCE_EMOJI,
+  AUDIENCE_LABEL,
+  LEARN_TOPICS,
+  getTopic,
+} from "@/lib/learn-content";
 
 export default function LearnTopicPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -52,6 +57,11 @@ export default function LearnTopicPage() {
         {/* Title */}
         <header className="space-y-3">
           <span className="text-5xl">{topic.emoji}</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-primary/10 text-primary">
+              {AUDIENCE_EMOJI[topic.audience]} {AUDIENCE_LABEL[topic.audience]}
+            </span>
+          </div>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">{topic.title}</h1>
           <p className="text-sm md:text-base text-muted-foreground">{topic.oneLiner}</p>
         </header>

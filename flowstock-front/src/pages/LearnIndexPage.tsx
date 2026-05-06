@@ -2,16 +2,23 @@
  * ============================================================
  * 주식 공부 인덱스 (/learn)
  *
- * - 6개 토픽 카드 (입문 / 초급 / 중급 표시)
- * - 비유 중심, 초등생도 읽을 수 있는 톤
- * - 각 카드 → /learn/:slug 상세 페이지
+ * - 3 트랙 (kid / student / pro) audience 탭 필터
+ * - 카드: 이모지 + level 배지 + audience 배지
+ * - 첫 진입은 '전체' 보임 → 사용자 self-select
  * ============================================================
  */
 
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, BookOpen, Sparkles } from "lucide-react";
 import Layout from "@/components/layout/Layout";
-import { LEARN_TOPICS } from "@/lib/learn-content";
+import {
+  AUDIENCE_DESC,
+  AUDIENCE_EMOJI,
+  AUDIENCE_LABEL,
+  LEARN_TOPICS,
+  type Audience,
+} from "@/lib/learn-content";
 
 const LEVEL_LABEL: Record<1 | 2 | 3, string> = {
   1: "입문",
@@ -24,7 +31,30 @@ const LEVEL_COLOR: Record<1 | 2 | 3, string> = {
   3: "bg-amber-500/15 text-amber-700 dark:text-amber-300",
 };
 
+type Tab = "all" | Audience;
+const TABS: { key: Tab; label: string; emoji: string }[] = [
+  { key: "all", label: "전체", emoji: "📚" },
+  { key: "kid", label: AUDIENCE_LABEL.kid, emoji: AUDIENCE_EMOJI.kid },
+  { key: "student", label: AUDIENCE_LABEL.student, emoji: AUDIENCE_EMOJI.student },
+  { key: "pro", label: AUDIENCE_LABEL.pro, emoji: AUDIENCE_EMOJI.pro },
+];
+
 export default function LearnIndexPage() {
+  const [tab, setTab] = useState<Tab>("all");
+
+  const filtered = useMemo(() => {
+    if (tab === "all") return LEARN_TOPICS;
+    return LEARN_TOPICS.filter((t) => t.audience === tab);
+  }, [tab]);
+
+  const counts = useMemo(() => {
+    const c: Record<Audience, number> = { kid: 0, student: 0, pro: 0 };
+    LEARN_TOPICS.forEach((t) => {
+      c[t.audience] += 1;
+    });
+    return c;
+  }, []);
+
   return (
     <Layout>
       <div className="space-y-8">
@@ -32,32 +62,68 @@ export default function LearnIndexPage() {
         <section className="text-center max-w-2xl mx-auto pt-2 md:pt-4">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4">
             <Sparkles className="h-3.5 w-3.5" />
-            주식, 처음부터 차근차근
+            대상별로 골라 배우세요
           </div>
           <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight leading-tight">
-            <span className="text-primary">초등생</span>도 이해할 수 있는 주식 이야기
+            <span className="text-primary">{LEARN_TOPICS.length}개</span> 토픽으로 배우는 주식
           </h1>
           <p className="text-sm md:text-base text-muted-foreground mt-3 leading-relaxed">
-            어려운 용어 대신 비유로 설명해요. 우리 사이트의 <strong className="text-foreground">실제 데이터</strong>로
+            초등생부터 전공자까지. 비유로 시작해 수식으로 끝나는 단계적 커리큘럼.
+            우리 사이트의 <strong className="text-foreground">실제 데이터</strong>로
             예시를 보고, 짧은 퀴즈로 확인해요.
           </p>
         </section>
+
+        {/* Audience Tabs */}
+        <section className="flex flex-wrap gap-2 justify-center">
+          {TABS.map((t) => {
+            const isActive = tab === t.key;
+            const count = t.key === "all" ? LEARN_TOPICS.length : counts[t.key as Audience];
+            return (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card border border-border hover:bg-accent text-foreground"
+                }`}
+              >
+                <span>{t.emoji}</span>
+                {t.label}
+                <span
+                  className={`text-xs ${
+                    isActive ? "opacity-80" : "text-muted-foreground"
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </section>
+
+        {/* Tab description */}
+        {tab !== "all" && (
+          <section className="text-center max-w-xl mx-auto -mt-2">
+            <p className="text-sm text-muted-foreground">
+              {AUDIENCE_DESC[tab as Audience]}
+            </p>
+          </section>
+        )}
 
         {/* Topics */}
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-primary" />
-              주제별로 보기 ({LEARN_TOPICS.length})
+              {tab === "all" ? "모든 토픽" : `${AUDIENCE_LABEL[tab as Audience]} 트랙`} (
+              {filtered.length})
             </h2>
-            <span className="text-xs text-muted-foreground">
-              완성 {LEARN_TOPICS.filter((t) => t.status === "ready").length} · 준비 중{" "}
-              {LEARN_TOPICS.filter((t) => t.status === "soon").length}
-            </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {LEARN_TOPICS.map((t) => {
+            {filtered.map((t) => {
               const isReady = t.status === "ready";
               return (
                 <Link
@@ -68,13 +134,20 @@ export default function LearnIndexPage() {
                   }`}
                   style={{ boxShadow: "var(--shadow-card)" }}
                 >
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-start justify-between mb-3 gap-2">
                     <span className="text-3xl">{t.emoji}</span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
                       <span
                         className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${LEVEL_COLOR[t.level]}`}
+                        title="난이도"
                       >
                         {LEVEL_LABEL[t.level]}
+                      </span>
+                      <span
+                        className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary"
+                        title={AUDIENCE_DESC[t.audience]}
+                      >
+                        {AUDIENCE_EMOJI[t.audience]} {AUDIENCE_LABEL[t.audience]}
                       </span>
                       {!isReady && (
                         <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
