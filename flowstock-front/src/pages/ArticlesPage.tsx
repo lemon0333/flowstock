@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, Heart, MessageSquare, PenSquare } from "lucide-react";
 import Layout from "@/components/layout/Layout";
+import PaginationControl from "@/components/ui/pagination-control";
 import { articleApi, type ArticleCategory, type ArticleListResponse } from "@/services/api";
 import { useStore } from "@/stores/useStore";
 
@@ -136,27 +137,13 @@ export default function ArticlesPage() {
                   </li>
                 ))}
               </ul>
-              <div className="flex items-center justify-between px-5 py-3 border-t border-border text-xs text-muted-foreground">
-                <span>전체 {data.totalElements}건</span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setPage(Math.max(0, page - 1))}
-                    disabled={page === 0}
-                    className="px-3 py-1 rounded-full border border-border disabled:opacity-40 hover:bg-accent"
-                  >
-                    이전
-                  </button>
-                  <span>
-                    {data.page + 1} / {Math.max(1, data.totalPages)}
-                  </span>
-                  <button
-                    onClick={() => setPage(Math.min(data.totalPages - 1, page + 1))}
-                    disabled={page >= data.totalPages - 1}
-                    className="px-3 py-1 rounded-full border border-border disabled:opacity-40 hover:bg-accent"
-                  >
-                    다음
-                  </button>
-                </div>
+              <div className="px-5 py-3 border-t border-border">
+                <PaginationControl
+                  page={data.page}
+                  totalPages={Math.max(1, data.totalPages)}
+                  totalItems={data.totalElements}
+                  onChange={setPage}
+                />
               </div>
             </>
           )}

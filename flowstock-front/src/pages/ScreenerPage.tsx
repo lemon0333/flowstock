@@ -11,7 +11,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Filter } from "lucide-react";
 import Layout from "@/components/layout/Layout";
+import PaginationControl from "@/components/ui/pagination-control";
 import { stockApi } from "@/services/api";
+
+const PAGE_SIZE = 25;
 
 interface StockRow {
   id: string;
@@ -38,6 +41,7 @@ export default function ScreenerPage() {
   const [minVolume, setMinVolume] = useState(0);
   const [keyword, setKeyword] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("volume");
+  const [page, setPage] = useState(0);
   const [sortDesc, setSortDesc] = useState(true);
 
   useEffect(() => {
@@ -88,6 +92,15 @@ export default function ScreenerPage() {
     });
     return arr;
   }, [filtered, sortKey, sortDesc]);
+
+  // 필터/정렬 변경 시 page 0 으로 자동 reset
+  useEffect(() => {
+    setPage(0);
+  }, [keyword, minPrice, maxPrice, minChange, maxChange, minVolume, sortKey, sortDesc]);
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const pageStart = page * PAGE_SIZE;
+  const pageRows = sorted.slice(pageStart, pageStart + PAGE_SIZE);
 
   const toggleSort = (k: SortKey) => {
     if (sortKey === k) setSortDesc(!sortDesc);
@@ -208,7 +221,7 @@ export default function ScreenerPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sorted.slice(0, 200).map((r) => (
+                  {pageRows.map((r) => (
                     <tr key={r.id} className="border-t border-border hover:bg-accent/40">
                       <td className="py-2 px-4">
                         <Link to={`/stock/${r.id}`} className="hover:text-primary">
@@ -238,11 +251,14 @@ export default function ScreenerPage() {
                   ))}
                 </tbody>
               </table>
-              {sorted.length > 200 && (
-                <div className="px-4 py-2 text-xs text-muted-foreground border-t border-border">
-                  상위 200개만 표시 (전체 {sorted.length})
-                </div>
-              )}
+              <div className="px-4 py-3 border-t border-border">
+                <PaginationControl
+                  page={page}
+                  totalPages={totalPages}
+                  totalItems={sorted.length}
+                  onChange={setPage}
+                />
+              </div>
             </div>
           )}
         </section>
