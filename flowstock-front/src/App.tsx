@@ -33,6 +33,8 @@ const ArticleEditPage = lazy(() => import("./pages/ArticleEditPage"));
 const MePage = lazy(() => import("./pages/MePage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
+const LearnIndexPage = lazy(() => import("./pages/LearnIndexPage"));
+const LearnTopicPage = lazy(() => import("./pages/LearnTopicPage"));
 
 const queryClient = new QueryClient();
 
@@ -67,6 +69,8 @@ const App = () => (
             <Route path="/articles/:id/edit" element={<ArticleEditPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
+            <Route path="/learn" element={<LearnIndexPage />} />
+            <Route path="/learn/:slug" element={<LearnTopicPage />} />
             <Route
               path="/me"
               element={

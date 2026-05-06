@@ -13,7 +13,7 @@ import {
   TrendingUp, Newspaper, Briefcase, LogIn, LogOut, BarChart3,
   LineChart, Gamepad2, Bell, Sun, Moon, Menu,
   Filter, GitCompareArrows, Grid3x3, FlaskConical, Globe, Calendar, Users,
-  ChevronDown, type LucideIcon,
+  ChevronDown, BookOpen, type LucideIcon,
 } from "lucide-react";
 import { useStore } from "@/stores/useStore";
 import { useTheme } from "@/components/theme-provider";
@@ -60,6 +60,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { path: "/news", label: "뉴스", icon: Newspaper },
       { path: "/articles", label: "커뮤니티", icon: Users },
+      { path: "/learn", label: "주식 공부", icon: BookOpen },
     ],
   },
   {

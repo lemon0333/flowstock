@@ -293,7 +293,8 @@ export default function PortfolioPage() {
                   매도
                 </button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {/* ── 종목 선택 ── */}
+              <div className="space-y-3">
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">종목</label>
                   {formAction === "buy" && (
@@ -320,23 +321,112 @@ export default function PortfolioPage() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">수량</label>
-                  <input
-                    type="number"
-                    value={formQuantity}
-                    onChange={(e) => setFormQuantity(e.target.value)}
-                    placeholder="10"
-                    className="w-full bg-accent border border-border rounded-xl px-3 py-2.5 text-sm font-data"
-                  />
-                </div>
-                <div className="flex items-end">
-                  <button
-                    onClick={handleSubmit}
-                    className="w-full px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors"
-                  >
-                    {formAction === "buy" ? "매수 주문" : "매도 주문"}
-                  </button>
+
+                {/* ── 매수/매도 컨텍스트 정보 + 퀵 버튼 ── */}
+                {(() => {
+                  const selectedStock =
+                    formAction === "buy"
+                      ? buySelectable.find((s) => s.id === formStockId)
+                      : sellSelectable.find((s) => s.id === formStockId);
+                  if (!selectedStock) return null;
+
+                  const price = selectedStock.price;
+                  const heldQty = formAction === "sell"
+                    ? holdings.find((h) => h.stockId === formStockId)?.quantity ?? 0
+                    : 0;
+                  const maxBuyable = formAction === "buy" ? Math.floor(cash / price) : heldQty;
+                  const qtyNum = Number(formQuantity) || 0;
+                  const totalAmount = qtyNum * price;
+                  const presets = formAction === "buy"
+                    ? [1, 10, Math.max(1, Math.floor(maxBuyable / 2)), maxBuyable].filter((v, i, arr) => v > 0 && arr.indexOf(v) === i)
+                    : [1, Math.max(1, Math.floor(heldQty / 2)), heldQty].filter((v, i, arr) => v > 0 && arr.indexOf(v) === i);
+
+                  return (
+                    <>
+                      <div className="bg-accent/50 border border-border rounded-xl p-3 text-xs space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">현재가</span>
+                          <span className="font-data font-medium">{price.toLocaleString()}원</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">
+                            {formAction === "buy" ? "최대 매수 가능" : "보유 수량"}
+                          </span>
+                          <span className="font-data font-bold text-primary">
+                            {maxBuyable.toLocaleString()}주
+                          </span>
+                        </div>
+                        {qtyNum > 0 && (
+                          <>
+                            <div className="flex items-center justify-between pt-1.5 border-t border-border">
+                              <span className="text-muted-foreground">주문 금액</span>
+                              <span className="font-data font-medium">{totalAmount.toLocaleString()}원</span>
+                            </div>
+                            {formAction === "buy" ? (
+                              <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">매수 후 현금 잔고</span>
+                                <span
+                                  className={`font-data font-medium ${
+                                    cash - totalAmount < 0 ? "text-negative" : ""
+                                  }`}
+                                >
+                                  {(cash - totalAmount).toLocaleString()}원
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">매도 후 현금 잔고</span>
+                                <span className="font-data font-medium">
+                                  {(cash + totalAmount).toLocaleString()}원
+                                </span>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+
+                      {/* 퀵 버튼 */}
+                      <div className="flex flex-wrap gap-2">
+                        {presets.map((n) => (
+                          <button
+                            key={n}
+                            type="button"
+                            onClick={() => setFormQuantity(String(n))}
+                            className="px-3 py-1.5 text-xs font-medium rounded-full border border-border hover:bg-accent transition-colors"
+                          >
+                            {n === maxBuyable && formAction === "buy"
+                              ? `최대 ${n}주`
+                              : n === heldQty && formAction === "sell"
+                                ? `전량 ${n}주`
+                                : `${n}주`}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  );
+                })()}
+
+                {/* ── 수량 + 주문 버튼 ── */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">수량</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={formQuantity}
+                      onChange={(e) => setFormQuantity(e.target.value)}
+                      placeholder="10"
+                      className="w-full bg-accent border border-border rounded-xl px-3 py-2.5 text-sm font-data"
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <button
+                      onClick={handleSubmit}
+                      className="w-full px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors"
+                    >
+                      {formAction === "buy" ? "매수 주문" : "매도 주문"}
+                    </button>
+                  </div>
                 </div>
               </div>
               {formError && (
