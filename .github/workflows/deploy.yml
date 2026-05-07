@@ -237,10 +237,10 @@ jobs:
               ai-service=$AI_REF \
               -n flowstock
 
-            log_step "8) rollout status (backend + ai 병렬 대기, 각 8분)"
-            k3s kubectl rollout status deployment/flowstock-backend -n flowstock --timeout=480s &
+            log_step "8) rollout status (backend + ai 병렬 대기, 각 20분 — AI는 첫 pull 시 이미지 큼)"
+            k3s kubectl rollout status deployment/flowstock-backend -n flowstock --timeout=1200s &
             ROLL_BACKEND=$!
-            k3s kubectl rollout status deployment/ai-service -n flowstock --timeout=480s &
+            k3s kubectl rollout status deployment/ai-service -n flowstock --timeout=1200s &
             ROLL_AI=$!
 
             FAIL=0
