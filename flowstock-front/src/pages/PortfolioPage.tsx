@@ -10,10 +10,15 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { Download, Plus, RefreshCw, Search, TrendingDown, TrendingUp } from "lucide-react";
+import { Download, Plus, RefreshCw, Search, TrendingDown, TrendingUp, Newspaper, Globe, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { useStore } from "@/stores/useStore";
-import { stockApi } from "@/services/api";
+import { stockApi, marketApi, newsApi, macroApi } from "@/services/api";
+
+interface MarketIndexLite { id?: string; name: string; value: number; change: number; changePercent: number; }
+interface NewsLite { id?: string | number; title: string; publishedAt?: string; source?: string; url?: string; }
+interface MacroSeriesLite { code: string; name: string; series: Array<{ date: string; value: number }> }
 
 const COLORS = [
   "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6",
@@ -35,6 +40,31 @@ export default function PortfolioPage() {
   const [stocks, setStocks] = useState<StockRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  // 사이드 정보: 시장지수 + 환율(USD/KRW) + 최근 뉴스
+  const [indices, setIndices] = useState<MarketIndexLite[]>([]);
+  const [news, setNews] = useState<NewsLite[]>([]);
+  const [usdKrw, setUsdKrw] = useState<{ value: number; date: string } | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    Promise.all([
+      marketApi.getIndices().catch(() => null),
+      newsApi.getLatest().catch(() => null),
+      macroApi.getDashboard().catch(() => null),
+    ]).then(([mRes, nRes, macroRes]) => {
+      if (!alive) return;
+      setIndices(((mRes?.data ?? []) as MarketIndexLite[]).slice(0, 2));
+      const rawNews = nRes?.data;
+      const list = Array.isArray(rawNews) ? rawNews : (rawNews as { content?: NewsLite[] } | undefined)?.content ?? [];
+      setNews(list.slice(0, 5));
+      const series = (macroRes?.data?.series ?? []) as MacroSeriesLite[];
+      const ex = series.find((s) => s.code?.toUpperCase().includes("EXCHANGE") || s.code === "USD_KRW" || s.name?.includes("환율"));
+      const last = ex?.series?.[ex.series.length - 1];
+      if (last) setUsdKrw({ value: last.value, date: last.date });
+    });
+    return () => { alive = false; };
+  }, []);
 
   // 매수/매도 폼
   const [showForm, setShowForm] = useState(false);
@@ -260,6 +290,89 @@ export default function PortfolioPage() {
             </div>
           </div>
         </div>
+
+        {/* 투자 참고 정보 — 지수 + 환율 + 뉴스 */}
+        {(indices.length > 0 || news.length > 0 || usdKrw) && (
+          <section className="bg-card border border-border rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Newspaper className="h-4 w-4 text-primary" />
+              <h2 className="text-sm font-semibold">투자 참고 — 지금 시장</h2>
+              <span className="text-[11px] text-muted-foreground">투자 결정에 도움되는 실시간 정보</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {/* 지수 + 환율 */}
+              <div className="space-y-2">
+                {indices.map((idx) => {
+                  const up = (idx.change ?? 0) > 0;
+                  const down = (idx.change ?? 0) < 0;
+                  return (
+                    <div key={idx.id ?? idx.name} className="rounded-xl border border-border bg-background/50 p-3">
+                      <div className="text-[11px] text-muted-foreground">{idx.name}</div>
+                      <div className="flex items-baseline gap-2 mt-0.5">
+                        <span className="font-num text-base font-bold">
+                          {idx.value?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                        </span>
+                        <span className={`text-xs font-num ${up ? "text-positive" : down ? "text-negative" : "text-muted-foreground"}`}>
+                          {up ? "▲" : down ? "▼" : "·"} {Math.abs(idx.change ?? 0).toFixed(2)} ({(idx.changePercent ?? 0).toFixed(2)}%)
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+                {usdKrw && (
+                  <div className="rounded-xl border border-border bg-background/50 p-3">
+                    <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <Globe className="h-3 w-3" /> 원·달러 환율
+                    </div>
+                    <div className="font-num text-base font-bold mt-0.5">
+                      {usdKrw.value.toLocaleString(undefined, { maximumFractionDigits: 2 })}원
+                    </div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                      {usdKrw.date}
+                    </div>
+                  </div>
+                )}
+              </div>
+              {/* 최근 뉴스 */}
+              <div className="md:col-span-2 rounded-xl border border-border bg-background/50 p-3">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="text-[11px] text-muted-foreground">📰 최근 뉴스 {news.length}개</div>
+                  <Link to="/news" className="text-[11px] text-primary hover:underline inline-flex items-center gap-0.5">
+                    전체 <ArrowRight className="h-2.5 w-2.5" />
+                  </Link>
+                </div>
+                {news.length === 0 ? (
+                  <div className="text-xs text-muted-foreground py-2">뉴스를 불러오는 중…</div>
+                ) : (
+                  <ul className="space-y-1.5">
+                    {news.map((n, i) => (
+                      <li key={n.id ?? i} className="text-xs leading-snug">
+                        {n.url ? (
+                          <a
+                            href={n.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-primary line-clamp-2 break-words"
+                          >
+                            {n.title}
+                          </a>
+                        ) : (
+                          <span className="line-clamp-2 break-words">{n.title}</span>
+                        )}
+                        {n.source && (
+                          <span className="ml-1 text-[10px] text-muted-foreground">· {n.source}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+            <div className="mt-2 text-[10px] text-muted-foreground">
+              💡 매수 전에 시장 분위기와 관련 뉴스를 한 번 확인하면 좋아요. 자세한 정보는 <Link to="/economy" className="text-primary hover:underline">경제 지표</Link> · <Link to="/macro" className="text-primary hover:underline">거시</Link>.
+            </div>
+          </section>
+        )}
 
         {/* 매수/매도 폼 */}
         <div>
