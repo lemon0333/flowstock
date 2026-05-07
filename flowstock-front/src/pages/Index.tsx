@@ -15,7 +15,7 @@ import { Link } from "react-router-dom";
 import {
   ArrowRight, Filter, GitCompareArrows, Grid3x3, FlaskConical,
   LineChart, Globe, Calendar, Users, TrendingUp, ShieldCheck,
-  Database, Sparkles,
+  Database, Sparkles, BookOpen, Briefcase,
 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import MarketIndexCard from "@/components/home/MarketIndexCard";
@@ -39,58 +39,72 @@ interface FeatureCard {
 
 const FEATURES: FeatureCard[] = [
   {
+    to: "/learn",
+    title: "주식 공부 (주린이 시작)",
+    desc: "PER이 뭔지, 코스피가 뭔지 — 진짜 처음부터 쉬운 말로",
+    icon: BookOpen,
+    accent: "text-primary",
+  },
+  {
+    to: "/portfolio",
+    title: "모의투자",
+    desc: "가상 1,000만원으로 진짜 돈 안 잃고 연습 (로그인 시)",
+    icon: Briefcase,
+    accent: "text-emerald-500",
+  },
+  {
     to: "/screener",
-    title: "종목 스크리너",
-    desc: "가격·등락률·거래량 필터로 KOSPI 종목 발굴",
+    title: "종목 찾기",
+    desc: "가격·등락률·거래량 조건으로 관심 종목 발굴",
     icon: Filter,
     accent: "text-blue-500",
   },
   {
-    to: "/compare",
-    title: "종목 비교",
-    desc: "최대 4개 종목 시작점 100 정규화 그래프 + 수익률·변동성·Sharpe",
-    icon: GitCompareArrows,
-    accent: "text-purple-500",
-  },
-  {
-    to: "/backtest",
-    title: "백테스터",
-    desc: "MA 교차 / RSI / 볼린저 평균회귀 전략 — 수수료·슬리피지 옵션",
-    icon: FlaskConical,
-    accent: "text-amber-500",
-  },
-  {
     to: "/sectors",
     title: "섹터 히트맵",
-    desc: "KOSPI 18개 섹터 평균 등락률 한눈에",
+    desc: "어떤 산업이 오르고 내리는지 한눈에 (반도체·자동차 등)",
     icon: Grid3x3,
-    accent: "text-emerald-500",
+    accent: "text-amber-500",
   },
   {
     to: "/economy",
     title: "경제 지표",
-    desc: "Fear & Greed Index, 매매주체 동향, 시장 폭, 종목 상관관계",
+    desc: "공포·탐욕 지수, 외국인/기관 매매 동향 — 시장 분위기 체크",
     icon: LineChart,
     accent: "text-rose-500",
   },
   {
     to: "/macro",
-    title: "거시 대시보드",
-    desc: "기준금리 / CPI / M2 / 원·달러 환율 / 경기선행지수 시계열",
+    title: "거시 지표",
+    desc: "금리·환율·물가 — 시장 큰 그림 한 페이지에",
     icon: Globe,
     accent: "text-cyan-500",
   },
   {
+    to: "/compare",
+    title: "종목 비교",
+    desc: "종목 4개 같은 그래프에 — 누가 더 잘 갔나",
+    icon: GitCompareArrows,
+    accent: "text-purple-500",
+  },
+  {
+    to: "/backtest",
+    title: "백테스트 게임",
+    desc: "과거 시점부터 매매 시뮬레이션 — 안전하게 전략 연습",
+    icon: FlaskConical,
+    accent: "text-orange-500",
+  },
+  {
     to: "/earnings",
     title: "실적 캘린더",
-    desc: "분기별 잠정/확정 실적 발표 일정 — 종목별 일정 추적",
+    desc: "분기별 실적 발표 일정 — 종목별 추적",
     icon: Calendar,
-    accent: "text-orange-500",
+    accent: "text-yellow-600",
   },
   {
     to: "/articles",
     title: "커뮤니티",
-    desc: "분석·복기·뉴스 공유 — 카테고리 필터 + 좋아요·댓글",
+    desc: "다른 사람 분석·복기 읽고 쓰기",
     icon: Users,
     accent: "text-indigo-500",
   },
@@ -148,30 +162,32 @@ export default function Index() {
         <div className="text-center max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4">
             <Sparkles className="h-3.5 w-3.5" />
-            AI 뉴스 분석 + 모의투자 + 백테스터
+            주식 처음이세요? 주린이를 위한 사이트
           </div>
           <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-foreground leading-tight">
-            한국 주식 시장을 <span className="text-primary">한 화면에</span>
+            주식, <span className="text-primary">어렵지 않아요</span>
           </h1>
           <p className="text-sm md:text-base text-muted-foreground mt-4 leading-relaxed">
-            뉴스↔종목 네트워크 그래프, 기술적 분석 차트, 섹터 히트맵, 분기 실적 캘린더,
-            전략 백테스터까지 — <strong className="text-foreground">로그인 없이</strong> 바로 둘러보세요.
+            용어 설명부터 모의투자, 시장 흐름 읽기까지 —
+            <strong className="text-foreground"> 진짜 돈 안 잃고</strong> 안전하게 연습하세요.
+            로그인 없이도 둘러볼 수 있어요.
           </p>
           <div className="flex flex-wrap gap-3 justify-center mt-6">
-            <a
-              href="#today-market"
+            <Link
+              to="/learn"
               className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
             >
-              <TrendingUp className="h-4 w-4" />
-              오늘 시장 보기
-            </a>
-            <Link
-              to="/portfolio"
+              <BookOpen className="h-4 w-4" />
+              주식 공부 먼저 보기
+            </Link>
+            <a
+              href="#today-market"
               className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-medium border border-border hover:bg-accent text-foreground transition-colors"
             >
-              모의투자 시작
+              <TrendingUp className="h-4 w-4" />
+              오늘 시장 둘러보기
               <ArrowRight className="h-4 w-4" />
-            </Link>
+            </a>
           </div>
         </div>
       </section>
@@ -184,7 +200,7 @@ export default function Index() {
               뭘 할 수 있나요
             </h2>
             <p className="text-xs md:text-sm text-muted-foreground mt-1">
-              8가지 핵심 도구. 각 카드를 누르면 바로 사용 가능
+              주린이부터 차근차근 — 카드를 누르면 바로 시작
             </p>
           </div>
         </div>

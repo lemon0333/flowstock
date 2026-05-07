@@ -1,5 +1,35 @@
 @import url('https://fonts.googleapis.com/css2?family=Pretendard+Variable:wght@300;400;500;600;700&display=swap');
 
+/* ── 마루부리 (네이버 클로바) — 본문/헤딩 한글 폰트 ── */
+@font-face {
+  font-family: 'MaruBuri';
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/MaruBuri-Light.otf') format('opentype');
+}
+@font-face {
+  font-family: 'MaruBuri';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/MaruBuri-Regular.otf') format('opentype');
+}
+@font-face {
+  font-family: 'MaruBuri';
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/MaruBuri-SemiBold.otf') format('opentype');
+}
+@font-face {
+  font-family: 'MaruBuri';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/MaruBuri-Bold.otf') format('opentype');
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -74,8 +104,10 @@
     --shadow-elevated: 0 8px 32px hsl(218 25% 13% / 0.10);
 
     /* ── 폰트 ── */
-    --font-sans: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --font-sans: 'MaruBuri', 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     --font-mono: 'SF Mono', 'Fira Code', monospace;
+    /* 데이터(숫자)는 가독성 위해 Pretendard 강제 */
+    --font-numeric: 'Pretendard Variable', -apple-system, system-ui, sans-serif;
   }
 
   /* ── Dark mode tokens ── */
@@ -161,6 +193,12 @@
   /* 모노스페이스 숫자 표시용 */
   .font-data {
     font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 숫자 가독성용 — 마루부리 본문 안에서 숫자만 Pretendard로 */
+  .font-num {
+    font-family: var(--font-numeric);
     font-variant-numeric: tabular-nums;
   }
 
