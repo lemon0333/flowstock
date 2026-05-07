@@ -10,7 +10,7 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Mail, User as UserIcon, LogOut, Briefcase, Bell, ShieldCheck, Calendar } from "lucide-react";
+import { Mail, User as UserIcon, LogOut, Briefcase, Bell, ShieldCheck, Calendar, Pencil, Check, X, Loader2 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { authApi } from "@/services/api";
 import { useStore } from "@/stores/useStore";
@@ -38,6 +38,12 @@ export default function MePage() {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // 닉네임 인라인 편집
+  const [editing, setEditing] = useState(false);
+  const [draftNickname, setDraftNickname] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState("");
 
   useEffect(() => {
     let alive = true;
@@ -68,6 +74,47 @@ export default function MePage() {
   const displayEmail = me?.email || user?.email || "(이메일 정보 없음)";
   const provider = me?.provider ? PROVIDER_LABEL[me.provider] ?? me.provider : "-";
   const joinedAt = me?.createdAt ? new Date(me.createdAt).toLocaleDateString("ko-KR") : "-";
+
+  const startEdit = () => {
+    setDraftNickname(me?.nickname ?? "");
+    setEditError("");
+    setEditing(true);
+  };
+
+  const cancelEdit = () => {
+    setEditing(false);
+    setEditError("");
+  };
+
+  const saveNickname = async () => {
+    const v = draftNickname.trim();
+    if (v.length < 1 || v.length > 50) {
+      setEditError("닉네임은 1~50자");
+      return;
+    }
+    if (v === me?.nickname) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    setEditError("");
+    try {
+      const res = await authApi.updateProfile({ nickname: v });
+      const updated = res.data;
+      if (updated) {
+        setMe((prev) =>
+          prev
+            ? { ...prev, nickname: updated.nickname, isProfileCompleted: updated.isProfileCompleted }
+            : { nickname: updated.nickname, isProfileCompleted: updated.isProfileCompleted, email: updated.email }
+        );
+      }
+      setEditing(false);
+    } catch (e) {
+      setEditError(e instanceof Error ? e.message : "저장 실패");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <Layout>
@@ -117,13 +164,68 @@ export default function MePage() {
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-lg font-bold">{displayName}</h2>
-                    {provider !== "-" && (
-                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
-                        {provider}
-                      </span>
+                    {editing ? (
+                      <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                        <input
+                          type="text"
+                          value={draftNickname}
+                          onChange={(e) => setDraftNickname(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") saveNickname();
+                            else if (e.key === "Escape") cancelEdit();
+                          }}
+                          maxLength={50}
+                          autoFocus
+                          disabled={saving}
+                          className="flex-1 min-w-0 px-2 py-1 text-base font-bold rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        />
+                        <button
+                          type="button"
+                          onClick={saveNickname}
+                          disabled={saving}
+                          title="저장"
+                          className="p-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                        >
+                          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={cancelEdit}
+                          disabled={saving}
+                          title="취소"
+                          className="p-1.5 rounded-lg border border-border hover:bg-accent disabled:opacity-50"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <h2 className="text-lg font-bold">{displayName}</h2>
+                        <button
+                          type="button"
+                          onClick={startEdit}
+                          title="닉네임 수정"
+                          className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        {provider !== "-" && (
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                            {provider}
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
+                  {editError && (
+                    <p className="text-xs text-destructive mt-1.5">{editError}</p>
+                  )}
+                  {!editing && me && !me.isProfileCompleted && (
+                    <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
+                      💡 닉네임을 수정하지 않으면 게시글에서 이메일 앞 3자만 노출돼요 (예: <span className="font-mono">{(me.email || "").split("@")[0]?.slice(0, 3)}***</span>).
+                      위 ✏️ 눌러서 본인 닉네임으로 바꾸면 그대로 표시.
+                    </p>
+                  )}
 
                   <dl className="mt-3 space-y-1.5 text-sm">
                     <div className="flex items-center gap-2">

@@ -105,6 +105,11 @@ export const authApi = {
     api.post<ApiResponse<{ accessToken: string; refreshToken: string }>>('/members/token/refresh', { refreshToken }),
   getMe: () => api.get<ApiResponse<any>>('/members/me'),
   logout: () => api.post<ApiResponse<void>>('/members/logout'),
+  updateProfile: (body: { nickname: string; profileImageUrl?: string }) =>
+    api.patch<ApiResponse<{ id: number; email: string; nickname: string; profileImageUrl?: string; isProfileCompleted: boolean }>>(
+      '/members/me/profile/setup',
+      body,
+    ),
 };
 
 // Stock APIs
