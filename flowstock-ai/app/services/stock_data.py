@@ -110,36 +110,40 @@ class StockDataService:
         return results
 
     # ── 전체 시장 시세 (시가총액 top, 거래량 desc 정렬) ───
-    def get_market_ohlcv(self, date: str | None = None, market: str = "KOSPI") -> list[dict]:
-        if market not in ("KOSPI", "KOSDAQ"):
+    # market="ALL" 이면 KOSPI 200 + KOSDAQ 200 = 400 종목 합쳐서 반환
+    # market="KOSPI" / "KOSDAQ" 이면 해당 시장만 200 종목
+    def get_market_ohlcv(self, date: str | None = None, market: str = "ALL") -> list[dict]:
+        markets = ["KOSPI", "KOSDAQ"] if market == "ALL" else [market]
+        if not all(m in ("KOSPI", "KOSDAQ") for m in markets):
             return []
-        try:
-            data = _get_json(
-                f"https://m.stock.naver.com/api/stocks/marketValue/{market}?pageSize=100&page=1"
-            )
-        except Exception as e:
-            logger.error("Naver %s 종목 리스트 실패: %s", market, e)
-            return []
-        stocks = data.get("stocks") or []
         results: list[dict] = []
-        for s in stocks:
-            close = _to_int(s.get("closePrice"))
-            change_amount = _to_int(s.get("compareToPreviousClosePrice"))
-            rate = _to_float(s.get("fluctuationsRatio"))
-            results.append(
-                {
-                    "ticker": s.get("itemCode") or "",
-                    "name": s.get("stockName") or "",
-                    "open": 0,
-                    "high": 0,
-                    "low": 0,
-                    "close": close,
-                    "change": change_amount,
-                    "volume": _to_int(s.get("accumulatedTradingVolume")),
-                    "change_rate": rate,
-                    "market_value": _to_int(s.get("marketValue")),
-                }
-            )
+        for mkt in markets:
+            try:
+                data = _get_json(
+                    f"https://m.stock.naver.com/api/stocks/marketValue/{mkt}?pageSize=200&page=1"
+                )
+            except Exception as e:
+                logger.error("Naver %s 종목 리스트 실패: %s", mkt, e)
+                continue
+            for s in (data.get("stocks") or []):
+                close = _to_int(s.get("closePrice"))
+                change_amount = _to_int(s.get("compareToPreviousClosePrice"))
+                rate = _to_float(s.get("fluctuationsRatio"))
+                results.append(
+                    {
+                        "ticker": s.get("itemCode") or "",
+                        "name": s.get("stockName") or "",
+                        "market": mkt,
+                        "open": 0,
+                        "high": 0,
+                        "low": 0,
+                        "close": close,
+                        "change": change_amount,
+                        "volume": _to_int(s.get("accumulatedTradingVolume")),
+                        "change_rate": rate,
+                        "market_value": _to_int(s.get("marketValue")),
+                    }
+                )
         # 거래량 desc 정렬
         results.sort(key=lambda x: x["volume"], reverse=True)
         return results
