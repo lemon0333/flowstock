@@ -7,7 +7,7 @@ GitHub commit 보단 이쪽이 한눈에 봄. epic 단위 그룹.
 
 ## 🚧 진행 중 / TODO
 
-- [ ] 학습 콘텐츠 풍부화 R1 — kid 14 토픽 (6/14 완료, 8개 남음)
+- [x] 학습 콘텐츠 풍부화 R1 — kid 14 토픽 ✅ 완료
 - [ ] 학습 콘텐츠 풍부화 R2 — student 18 토픽
 - [ ] 학습 콘텐츠 풍부화 R3 — pro 13 토픽
 - [ ] 챗봇 RAG 재도입 (가벼운 임베딩 옵션 검토 — ONNX/외부 API/사이드카)
@@ -25,15 +25,23 @@ GitHub commit 보단 이쪽이 한눈에 봄. epic 단위 그룹.
 - Backend StockController도 `?market=KOSPI` → `?market=ALL`로 변경 (KOSDAQ도 포함).
 - 병렬 fork(R1/R2/R3) 권한 fail로 직접 진행 중 발견.
 
-### 📚 학습 R1 진행 중 (6/14)
-- kid 트랙 첫 6 토픽 풍부화: what-is-stock, why-stocks-rise, how-companies-earn,
-  save-vs-invest, compound-interest, kospi-vs-kosdaq.
-- 각 토픽 intro 확장 + 핵심 sections body 1.5~2배 + 신규 section 1개 추가
-  + example body에 FlowStock 활용 팁.
-- 패턴: 구체 수치 (삼성전자 60억 주, 카카오 5만→17만), 한국 회사 예시,
-  실제 사례(2008 금융위기, 2017 한진해운).
-- 나머지 8개 토픽(market-cap, candle-chart, diversification, inflation,
-  dividend-basics, ipo-basics, market-hours, risk-vs-return) 다음 라운드.
+### 📚 학습 R1 — kid 14 토픽 풍부화 ✅ 완료
+- 6 + 8 = 14 토픽 모두 풍부화 완료
+- 토픽: what-is-stock, why-stocks-rise, how-companies-earn, save-vs-invest,
+  compound-interest, kospi-vs-kosdaq, market-cap, candle-chart, diversification,
+  inflation, exchange-rate, business-cycle, ipo-and-splits, fund-and-trust
+- 패턴 (각 토픽):
+  - intro 1-2 문장 추가 (배경/맥락)
+  - 핵심 sections body 1.5~2배 확장 (구체 수치/예시)
+  - 신규 section 1개 추가 (자주 헷갈리는 포인트)
+  - example body에 FlowStock 활용 팁
+- 추가된 컨텍스트 예시:
+  - 삼성전자 60억 주, 매출 300조, 영업이익 32조
+  - 카카오 5만→17만→5만 사례, 한진해운 2017 파산
+  - 2008 금융위기 -40%, 2022 한국 CPI 5%
+  - 워런 버핏 80% 수익이 마지막 20년에
+  - LG에너지솔루션 한국 최대 IPO, 두산로보틱스 첫날 폭등
+- 다음: student 트랙 18 토픽
 
 ### 📊 모의투자 종목 확장 + 시장정보 사이드 패널
 - `43c52b0` — 종목 400 → **800** (KOSPI 400 + KOSDAQ 400, page 1+2 fetch).
