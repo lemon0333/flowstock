@@ -1145,7 +1145,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "🚨",
         heading: "분식회계 신호",
-        body: "1) 매출 ↑ 영업CF ↓ 2) 매출채권이 매출보다 빠르게 ↑ 3) 재고 빠르게 쌓임. 셋 중 하나만도 의심.",
+        body: "1) 매출 ↑ 영업CF ↓ 2) 매출채권이 매출보다 빠르게 ↑ 3) 재고 빠르게 쌓임. 셋 중 하나만도 의심. 한국에선 대우조선해양(2015), 한진해운(2016) 분식회계 사례. 외부감사 의견(적정/한정/부적정) + 감사보고서 주석도 같이 봐야.",
+      },
+      {
+        emoji: "🔄",
+        heading: "유보율과 EPS — 주주 가치 측정",
+        body: "EPS = 순이익 ÷ 발행주식수. 유보율 = 잉여금 ÷ 자본금. EPS 꾸준히 증가 + 유보율 1,000%+ = 자본 효율 좋고 자기자본만으로 사업 굴림. 매년 EPS 성장률이 매출 성장률보다 높으면 마진 개선 신호.",
       },
     ],
     example: {
@@ -1195,7 +1200,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "🏦",
         heading: "ISA / 연금저축 / IRP",
-        body: "ISA: 연 200만원 비과세 + 9.9% 분리과세. 연금저축/IRP: 세액공제 (연 700만원 16.5% = 약 115만원 환급). 장기 거의 필수.",
+        body: "ISA: 연 200만원 비과세 + 9.9% 분리과세. 연금저축/IRP: 세액공제 (연 700만원 16.5% = 약 115만원 환급). 장기 거의 필수. 단 IRP는 55세 이전 인출 시 세액공제 받은 거 토해내고 16.5% 기타소득세까지 — 진짜 노후 자금만.",
+      },
+      {
+        emoji: "🇰🇷",
+        heading: "대주주 양도세 — 한국 개별주의 함정",
+        body: "한 종목 보유액 50억원 이상 또는 지분 1~2%+ = '대주주' → 매매차익 22~33% 양도세. 일반인은 거의 안 걸리지만 한 종목에 큰돈 집중 시 주의. 가족 합산 룰도 있어 부모/자녀 합산 50억 넘으면 해당.",
       },
     ],
     example: {
@@ -1240,7 +1250,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "🌳",
         heading: "지속성이 핵심",
-        body: "1년만 ROE 30% 보다 10년 연속 ROE 15% 가 더 좋음. Buffett 의 '경제적 해자(moat)' 가 있는 회사 = 높은 ROIC 를 길게 유지.",
+        body: "1년만 ROE 30% 보다 10년 연속 ROE 15% 가 더 좋음. Buffett 의 '경제적 해자(moat)' 가 있는 회사 = 높은 ROIC 를 길게 유지. 한국에서 KT&G, NAVER, LG생활건강 등이 장기 ROE 15%+ 유지한 대표 회사들.",
+      },
+      {
+        emoji: "🧬",
+        heading: "Du Pont 분해 — ROE를 3개로 쪼개기",
+        body: "ROE = 순이익률 × 자산회전율 × 재무레버리지. 같은 ROE 15%여도 (10% × 1.5 × 1) vs (5% × 1 × 3) 완전 다른 사업. 마진형(브랜드/IT), 회전형(유통), 레버리지형(은행/리츠) 어떤 모델인지 분해해서 비교.",
       },
     ],
     example: {
@@ -1290,7 +1305,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "💰",
         heading: "Net Cash 회사",
-        body: "현금 - 차입금 > 0 인 회사. 빚이 사실상 없고 현금 많음. 위기 때 가장 안전. 애플, 마이크로소프트 같은 회사들.",
+        body: "현금 - 차입금 > 0 인 회사. 빚이 사실상 없고 현금 많음. 위기 때 가장 안전. 애플, 마이크로소프트 같은 회사들. 한국에선 NAVER, KT&G가 net cash 대표.",
+      },
+      {
+        emoji: "📉",
+        heading: "이자보상배율 (Interest Coverage)",
+        body: "영업이익 ÷ 이자비용. 회사가 이자를 갚을 수 있는 여력. 1배 미만 = 영업으로도 이자 못 갚음(좀비기업). 5배+ 양호, 10배+ 안전. 한국 한계기업 통계의 핵심 지표 — 3년 연속 1배 미만이면 구조조정 대상.",
       },
     ],
     example: {
@@ -1340,7 +1360,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "⚠️",
         heading: "위험 경고",
-        body: "옵션 매수: 프리미엄 100% 손실 가능. 옵션 매도: 손실 무한대. 선물: 증거금 다 날리고 추가 손실 가능. 입문자는 '있다는 것만 알기' 단계 권장.",
+        body: "옵션 매수: 프리미엄 100% 손실 가능. 옵션 매도: 손실 무한대. 선물: 증거금 다 날리고 추가 손실 가능. 입문자는 '있다는 것만 알기' 단계 권장. 한국에선 사전교육 + 자격 시험 통과해야 거래 허용 (개인 투자자 보호 정책).",
+      },
+      {
+        emoji: "🛡️",
+        heading: "현실적 활용 — Covered Call",
+        body: "보유 주식 + 콜옵션 매도 = 'Covered Call'. 주가 상승 일부 포기하는 대신 프리미엄 수익. 횡보장에서 추가 수익. 한국에선 KODEX 미국S&P500 커버드콜처럼 ETF로 패키지 형태 가능. 입문자가 옵션을 안전하게 맛보는 방법.",
       },
     ],
     example: {
@@ -1389,7 +1414,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "🇰🇷",
         heading: "한국의 공매도",
-        body: "한국은 개인 공매도 어려움 (대주거래 제한). 주로 외국인·기관. 2024년부터 일부 종목 공매도 금지 또는 제한 — 정책 자주 바뀜.",
+        body: "한국은 개인 공매도 어려움 (대주거래 제한). 주로 외국인·기관. 2024년부터 일부 종목 공매도 금지 또는 제한 — 정책 자주 바뀜. 2023년 11월 ~ 2025년 한국 전 종목 공매도 금지 시기도 있었어요.",
+      },
+      {
+        emoji: "📊",
+        heading: "공매도 잔고 = 약세 베팅 측정",
+        body: "공매도 잔고/시가총액 비율 = 'short interest'. 5%+ 면 시장이 그 종목 부정적, 10%+ 면 강한 약세 베팅. 단 short squeeze 잠재력도 큼 (게임스톱 short interest 140%였음). FlowStock에서 보진 못하지만 KRX 종합포털 데이터.",
       },
     ],
     example: {
@@ -1438,7 +1468,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "🔁",
         heading: "역전 시 시그널",
-        body: "한미 금리 역전 (미국 > 한국) 이 1.5%p 넘으면 자금 유출 본격. 1%p 이내 = 관리 가능 영역. 한국 정책의 결정적 변수.",
+        body: "한미 금리 역전 (미국 > 한국) 이 1.5%p 넘으면 자금 유출 본격. 1%p 이내 = 관리 가능 영역. 한국 정책의 결정적 변수. 2023년 7월 미 5.5% / 한 3.5% = 2.0%p 역전 — 사상 최대 폭이었어요.",
+      },
+      {
+        emoji: "🎯",
+        heading: "외국인 매매 추적 — 자금 흐름 신호",
+        body: "한국 거래소 일별 외국인 순매수/매도 공시 — KOSPI는 외국인 비중 33%대로 그들 흐름이 시장 방향에 큰 영향. 외국인 5거래일 연속 순매수 → 강세 전환 신호로 자주 해석. FlowStock 경제 지표에서 매매주체별 동향 확인 가능.",
       },
     ],
     example: {
@@ -1488,7 +1523,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "📦",
         heading: "채권 ETF로 쉽게",
-        body: "직접 채권 사기 어려우면 KBSTAR 국고채10년, KODEX 단기채권 같은 ETF. 분산 + 매매 쉬움. 주식 폭락 시 채권은 보통 상승 — 헤지 효과.",
+        body: "직접 채권 사기 어려우면 KBSTAR 국고채10년, KODEX 단기채권 같은 ETF. 분산 + 매매 쉬움. 주식 폭락 시 채권은 보통 상승 — 헤지 효과. 단 2022년처럼 주식·채권 동시 폭락(stagflation 우려)도 있어 절대 안전은 아님.",
+      },
+      {
+        emoji: "⚖️",
+        heading: "60/40 포트폴리오 — 고전적 자산 배분",
+        body: "주식 60% + 채권 40% — 100년간 검증된 균형. 주식 폭락 시 채권이 받쳐줘서 MDD 작음. Sharpe Ratio 단일 자산보다 우수. 단 60/40 종말론(2022 실패)도 있어 최근엔 골드/원자재/REIT 일부 추가하는 변형 인기.",
       },
     ],
     example: {
@@ -1538,7 +1578,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "🌍",
         heading: "미국 REIT (예: O)",
-        body: "Realty Income (O) 는 월배당으로 유명. AEW, Vanguard VNQ 같은 REIT ETF 도. 미국이 REIT 시장 50배 큼.",
+        body: "Realty Income (O) 는 월배당으로 유명. AEW, Vanguard VNQ 같은 REIT ETF 도. 미국이 REIT 시장 50배 큼. 단 미국 직투는 양도세 22% 적용 — 한국 REIT가 세금상 유리.",
+      },
+      {
+        emoji: "🏠",
+        heading: "FFO — REIT 만의 평가지표",
+        body: "REIT는 감가상각이 큰 비용이라 일반 PER 의미 적음. FFO (Funds From Operations) = 순이익 + 감가상각 + 부동산 매각손실 — 매각이익. 'P/FFO' 가 REIT 의 PER 대안. 보통 P/FFO 12~18 적정.",
       },
     ],
     example: {
@@ -1588,7 +1633,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "🌾",
         heading: "농산물 / 비철금속",
-        body: "옥수수, 대두, 밀, 코코아 등. 기후·전쟁·해상운송 영향. 일반 투자자에겐 어렵고 변동 큼.",
+        body: "옥수수, 대두, 밀, 코코아 등. 기후·전쟁·해상운송 영향. 일반 투자자에겐 어렵고 변동 큼. 2024년 코코아는 가나/코트디부아르 작황 급락으로 1년 만에 +200% — 단일 원자재의 변동성 보여준 사례.",
+      },
+      {
+        emoji: "⚙️",
+        heading: "원자재 ETF의 함정 — Contango",
+        body: "원자재 ETF는 대부분 '선물' 기반. 만기 다가오면 다음 달 선물로 'roll-over' 하는데, 다음 달이 더 비싸면(contango) 매번 손실. WTI원유선물 ETF가 2020 코로나 때 손실 큰 이유. 장기 보유 시 현물 가격 그대로 추적 안 됨.",
       },
     ],
     example: {
@@ -1638,7 +1688,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "🛡️",
         heading: "환노출 vs 환헤지",
-        body: "미국 주식 ETF '(H)' 표시 = 환헤지 (환율 영향 차단). 표시 없음 = 환노출 (원/달러 영향 받음). 둘 다 일장일단 — 분산 차원에서 둘 다 일부 섞기도.",
+        body: "미국 주식 ETF '(H)' 표시 = 환헤지 (환율 영향 차단). 표시 없음 = 환노출 (원/달러 영향 받음). 둘 다 일장일단 — 분산 차원에서 둘 다 일부 섞기도. 환헤지는 헤지 비용(보통 연 1~2%)이 따라붙어 장기엔 비헤지가 유리할 수도.",
+      },
+      {
+        emoji: "🏦",
+        heading: "Carry Trade — 금리차 거래",
+        body: "저금리 통화 빌려서 고금리 통화 자산 매수. 일본 엔(0%) 빌려 호주 달러(4%) 채권 매수 = 4%p 차익. 단 환율 급변(엔 강세 등) 시 손실 폭주 — 2024년 8월 엔 carry unwind로 글로벌 변동성 폭발 사례.",
       },
     ],
     example: {
@@ -1697,7 +1752,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "🎯",
         heading: "Kelly Criterion",
-        body: "f* = (pb − q)/b. 한 번에 자산의 몇 % 베팅이 장기 성장 극대화. 보통 'Half Kelly' 보수적 적용.",
+        body: "f* = (pb − q)/b. 한 번에 자산의 몇 % 베팅이 장기 성장 극대화. 보통 'Half Kelly' 보수적 적용. Full Kelly는 단기 변동 너무 커 심리적 견디기 어려움 — 전문 헤지펀드도 보통 1/4~1/2 Kelly.",
+      },
+      {
+        emoji: "📈",
+        heading: "VaR · CVaR — 꼬리 위험",
+        body: "VaR(95%) = 95% 확신 구간에서 최대 손실. 1일 VaR 5% = 100일 중 5일은 더 큰 손실. CVaR(=ES, Expected Shortfall) = VaR 초과 시 평균 손실 — 2008 위기 후 Basel III 표준. 정규분포 가정이라 fat tail 사건 과소평가 주의.",
       },
     ],
     example: {
@@ -1747,7 +1807,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "🤔",
         heading: "Adaptive Markets Hypothesis",
-        body: "Andrew Lo: 시장은 진화. 알려진 anomaly는 사라지고 새로운 게 나타남. 효율은 시기·자산에 따라 다름.",
+        body: "Andrew Lo: 시장은 진화. 알려진 anomaly는 사라지고 새로운 게 나타남. 효율은 시기·자산에 따라 다름. 한국 같은 신흥국 시장은 미국보다 비효율 — 정보 비대칭 + 외국인 자금 흐름의 큰 영향으로 기관 투자자 alpha 기회 더 많음.",
+      },
+      {
+        emoji: "🎓",
+        heading: "Grossman-Stiglitz Paradox",
+        body: "완전 효율적 시장은 불가능. 정보 수집에 비용이 드는데, 시장이 이미 반영했다면 누구도 정보 수집 안 함 → 결국 가격이 정보 반영 못함. 적절한 비효율이 정보 수집 인센티브 제공 = 시장 작동의 필수 조건.",
       },
     ],
     example: {
@@ -1797,7 +1862,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "⚠️",
         heading: "한계",
-        body: "1) 단일 팩터 — Fama-French 3/5 factor 로 확장. 2) 정적 베타 가정 — 실제 변동. 3) 정규분포 — fat tail 과소평가.",
+        body: "1) 단일 팩터 — Fama-French 3/5 factor 로 확장. 2) 정적 베타 가정 — 실제 변동. 3) 정규분포 — fat tail 과소평가. 4) 시장 포트폴리오 정의 모호 (Roll Critique 1977).",
+      },
+      {
+        emoji: "🇰🇷",
+        heading: "한국 시장 베타의 특수성",
+        body: "한국은 외국인 비중 33%로 글로벌 자금 흐름에 민감. 'Korea Discount'로 KOSPI 평균 PER이 미국 대비 낮음(주가 저평가). 한국 종목 베타 추정 시 KOSPI 외에 MSCI EM, S&P500도 같이 회귀 — multi-market beta로 더 정확.",
       },
     ],
     example: {
@@ -1852,7 +1922,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "🌐",
         heading: "섹터 로테이션",
-        body: "금리 인상기: 금융, 가치주. 인하기: 기술/성장, 부동산. 침체 우려: 필수소비재, 헬스케어. 회복기: 산업재, 소재.",
+        body: "금리 인상기: 금융, 가치주. 인하기: 기술/성장, 부동산. 침체 우려: 필수소비재, 헬스케어. 회복기: 산업재, 소재. Investment Clock(Merrill Lynch) 모델이 거시 사이클별 4분면 자산 배분 가이드.",
+      },
+      {
+        emoji: "🌐",
+        heading: "Macro Surprise Index",
+        body: "Citi Economic Surprise Index — 발표 지표가 예상 대비 surprise한 정도. 0 위 = 경제 데이터가 예상보다 좋음. 주가는 'Better than expected' 에 반응 → CESI 상승 시 위험자산 강세. 한국용 KESI도 비슷한 개념.",
       },
     ],
     example: {
@@ -1912,7 +1987,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "🛡️",
         heading: "방어 — 시스템화",
-        body: "손절가/익절가 미리 기록. DCA 자동화. 비중 룰. 거래일지 + 정기 리뷰.",
+        body: "손절가/익절가 미리 기록. DCA 자동화. 비중 룰. 거래일지 + 정기 리뷰. Daniel Kahneman의 'System 1 vs System 2' — 빠른 직관(편향) vs 느린 분석. 매매 결정은 의도적으로 System 2 영역에 두는 룰 셋업이 핵심.",
+      },
+      {
+        emoji: "🎲",
+        heading: "Prospect Theory — 효용 함수의 비대칭",
+        body: "Kahneman-Tversky 1979. 사람의 효용은 절대 부 아닌 'reference point 대비 변화'에 반응. 손실 영역은 risk-seeking(만회 시도), 이익은 risk-averse(빨리 실현). 매수가 reference로 쓰이는 게 disposition effect 원인.",
       },
     ],
     example: {
@@ -1972,7 +2052,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "🎚️",
         heading: "Smart Beta ETF",
-        body: "MSCI Quality/Value/Momentum, KODEX 모멘텀 Plus, TIGER 가치주 등. 단일 팩터 노출 + 인덱스보다 약간 비싼 수수료.",
+        body: "MSCI Quality/Value/Momentum, KODEX 모멘텀 Plus, TIGER 가치주 등. 단일 팩터 노출 + 인덱스보다 약간 비싼 수수료. 다중 팩터 ETF (예: iShares MSCI Multifactor)는 4~5 팩터 결합 — 단일 팩터보다 안정적이지만 alpha는 희석.",
+      },
+      {
+        emoji: "🇰🇷",
+        heading: "한국 시장에서의 팩터 — 학술 검증",
+        body: "Eom-Choi-Kim(KAIST) 등 연구로 한국에선 Value(저PBR) + Size 효과 강함. Momentum은 미국보다 약함 — 단기 reversal이 더 흔함. 분기 발표 시즌의 PEAD(Post-Earnings Announcement Drift)는 한국에서도 유효.",
       },
     ],
     example: {
@@ -2027,7 +2112,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "⚠️",
         heading: "한계",
-        body: "GIGO (Garbage In, Garbage Out). 미래 FCF 예측이 핵심인데 그게 가장 어려움. 그래서 다른 방법 (P/E, EV/EBITDA, 시장 multiple) 과 같이 보는 게 정석.",
+        body: "GIGO (Garbage In, Garbage Out). 미래 FCF 예측이 핵심인데 그게 가장 어려움. 그래서 다른 방법 (P/E, EV/EBITDA, 시장 multiple) 과 같이 보는 게 정석. Buffett: 'DCF는 정확한 답을 위한 게 아니라 사고 framework'.",
+      },
+      {
+        emoji: "🔄",
+        heading: "Reverse DCF — 시장 가격에서 역산",
+        body: "현재 주가에서 출발해 어떤 성장률·할인율이 정당화되는지 역산. 시장이 이 회사의 영구성장률을 5% 가정 중 → 현실적인가? 5% 영구성장은 명목 GDP 수준이라 우량 회사 외엔 무리. 비교적 자의적인 forecasting 대신 'implied' 분석으로 sanity check.",
       },
     ],
     example: {
@@ -2082,7 +2172,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "📈",
         heading: "확장 모델",
-        body: "Heston (stochastic vol), Local Volatility, Jump Diffusion (Merton 1976) 등. 실무는 BS를 기본으로 IV smile 보정.",
+        body: "Heston (stochastic vol), Local Volatility, Jump Diffusion (Merton 1976) 등. 실무는 BS를 기본으로 IV smile 보정. 한국 LIBOR 폐지 → KOFR(Korea Overnight Financing Rate) 전환으로 무위험금리 정의도 변화.",
+      },
+      {
+        emoji: "📐",
+        heading: "Put-Call Parity — 가격 일치 원리",
+        body: "C − P = S − K·e^(−rT). 같은 행사가/만기의 콜·풋과 주식·채권 사이의 무차익 관계. 깨지면 즉시 차익거래 가능. 옵션 매매 시 IV smile + parity 동시 검증으로 mispricing 잡음. 헷지 포지션 구성에도 핵심.",
       },
     ],
     example: {
@@ -2141,7 +2236,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "💹",
         heading: "변동성 자체 거래",
-        body: "Variance Swap, VIX Futures/ETF (VXX), Straddle/Strangle. 방향 베팅 아닌 변동성 베팅. 입문자는 ETF 형태 (VIXY) 정도.",
+        body: "Variance Swap, VIX Futures/ETF (VXX), Straddle/Strangle. 방향 베팅 아닌 변동성 베팅. 입문자는 ETF 형태 (VIXY) 정도. VIX 선물의 contango로 VXX 장기 보유는 매년 -50%+ 손실 발생 — 단기 헤지 도구.",
+      },
+      {
+        emoji: "🌊",
+        heading: "Volatility Term Structure",
+        body: "만기별 IV 그린 곡선. 정상은 우상향(장기 IV 더 높음, 시간 risk premium). 역전(단기 > 장기) = 단기 위기 신호. 2020 코로나 시 1주일 IV가 6개월 IV보다 30%p+ 높았음 — 패닉 정점 탐지에 유용.",
       },
     ],
     example: {
@@ -2200,7 +2300,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "🇰🇷",
         heading: "한국 시장 특성",
-        body: "동시호가 제도 (장 시작/종료 시 단일가 매매). 가격제한폭 ±30% (코스피/코스닥). HFT 비중 미국보다 작지만 외국인 알고 매매 큰 영향.",
+        body: "동시호가 제도 (장 시작/종료 시 단일가 매매). 가격제한폭 ±30% (코스피/코스닥). HFT 비중 미국보다 작지만 외국인 알고 매매 큰 영향. NXT(차세대거래소) 출범으로 한국에도 ATS(대체거래소) 등장 — spread 경쟁 본격화.",
+      },
+      {
+        emoji: "🧪",
+        heading: "Almgren-Chriss — 최적 체결 모델",
+        body: "큰 주문을 시간에 어떻게 분할할지 수학적 최적화. 빠르게 = market impact 비용 ↑, 느리게 = 가격변동 risk ↑. 둘의 trade-off 최소화. 기관 OMS/EMS 시스템의 기본 알고리즘 — VWAP/TWAP 보다 진보된 형태.",
       },
     ],
     example: {
@@ -2254,7 +2359,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "🤖",
         heading: "현대 Stat Arb",
-        body: "단순 pair → 수백 종목 동시 (basket arb). PCA로 팩터 추출 → 잔차 거래. 머신러닝 (RNN/LSTM) 으로 비선형 관계 포착. Citadel, Renaissance 핵심 전략.",
+        body: "단순 pair → 수백 종목 동시 (basket arb). PCA로 팩터 추출 → 잔차 거래. 머신러닝 (RNN/LSTM) 으로 비선형 관계 포착. Citadel, Renaissance 핵심 전략. Renaissance Medallion Fund는 1988년 이후 연 평균 70%+ 수익률 — 사실상 통계적 차익거래의 정점.",
+      },
+      {
+        emoji: "📡",
+        heading: "Kalman Filter — 동적 헤지비율",
+        body: "고정 β 대신 시간에 따라 변하는 β를 Bayesian 방식으로 추정. 두 종목의 cointegration 관계가 천천히 변하는 경우(예: 신한/KB금융 시장점유율 변화) 더 정확. 잔차의 stationarity 유지 + 새로운 정보 반영. quant 실무 표준.",
       },
     ],
     example: {
@@ -2314,7 +2424,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "💱",
         heading: "거래 전략",
-        body: "Curve Steepener: 단기 매도 + 장기 매수 (curve 가팔라질 베팅). Flattener: 반대. Roll-down: 시간 흐를수록 채권 만기 짧아져 yield curve 따라 자연 수익.",
+        body: "Curve Steepener: 단기 매도 + 장기 매수 (curve 가팔라질 베팅). Flattener: 반대. Roll-down: 시간 흐를수록 채권 만기 짧아져 yield curve 따라 자연 수익. 보통 헤지펀드 fixed income 데스크의 핵심 전략.",
+      },
+      {
+        emoji: "📊",
+        heading: "Term Spread 지표 — 10Y-3M",
+        body: "10년물−3개월물 스프레드가 가장 신뢰받는 침체 선행지표. NY Fed의 'Probability of Recession' 모형도 이 스프레드 기반. 음수 6개월 지속 → 12~18개월 후 침체 확률 70%+. 2022~23 미국 -1.5%p까지 역전 → 2024 둔화 우려.",
       },
     ],
     example: {
@@ -2374,7 +2489,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
       {
         emoji: "🏆",
         heading: "성공 사례 vs 환상",
-        body: "성공: Renaissance Medallion (35% 수수료 후 연 39%, 30년+) — 단 폐쇄형. RIM 의 짧은 시계열 + 통계 우위. 환상: '주가 예측 LSTM' — 일반 사용 불가능, 거의 다 random walk보다 못함.",
+        body: "성공: Renaissance Medallion (35% 수수료 후 연 39%, 30년+) — 단 폐쇄형. RIM 의 짧은 시계열 + 통계 우위. 환상: '주가 예측 LSTM' — 일반 사용 불가능, 거의 다 random walk보다 못함. Two Sigma, DE Shaw 같은 quant 펀드도 매년 alpha 줄어드는 추세.",
+      },
+      {
+        emoji: "🧠",
+        heading: "LLM의 등장 — Sentiment & Signal Discovery",
+        body: "GPT/Claude로 earnings call transcript, 10-K, 뉴스 자동 요약 + sentiment 추출. 전통 NLP보다 nuance 잡음. Bloomberg Terminal에 LLM 통합, BloombergGPT(50B 파라미터, 금융 특화). 단 hallucination + 비용 + 데이터 누출(미래 데이터 학습) risk 있음. 사람의 final review 필수.",
       },
     ],
     example: {
