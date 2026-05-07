@@ -28,7 +28,7 @@ class StockController(
         if (depth > 7) return Mono.just(emptyList())
         val d = date.format(seoulFmt)
         return client.get()
-            .uri("$aiUrl/api/ai/stock/market?date=$d&market=KOSPI")
+            .uri("$aiUrl/api/ai/stock/market?date=$d&market=ALL")
             .retrieve()
             .bodyToMono(Map::class.java)
             .flatMap { resp ->

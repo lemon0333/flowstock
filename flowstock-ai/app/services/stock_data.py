@@ -110,18 +110,19 @@ class StockDataService:
         return results
 
     # ── 전체 시장 시세 (시가총액 top, 거래량 desc 정렬) ───
-    # market="ALL" 이면 KOSPI + KOSDAQ 각 page 1~2 (400+400=800 종목) 합쳐서 반환
-    # market="KOSPI" / "KOSDAQ" 이면 해당 시장만 page 1~2 (400)
+    # Naver API: pageSize 최대 100 (200은 HTTP 400) → page 1~4 fetch.
+    # market="ALL"  : KOSPI 400 + KOSDAQ 400 = 800
+    # market="KOSPI"/"KOSDAQ" : 해당 시장만 400
     def get_market_ohlcv(self, date: str | None = None, market: str = "ALL") -> list[dict]:
         markets = ["KOSPI", "KOSDAQ"] if market == "ALL" else [market]
         if not all(m in ("KOSPI", "KOSDAQ") for m in markets):
             return []
         results: list[dict] = []
         for mkt in markets:
-            for page in (1, 2):
+            for page in (1, 2, 3, 4):
                 try:
                     data = _get_json(
-                        f"https://m.stock.naver.com/api/stocks/marketValue/{mkt}?pageSize=200&page={page}"
+                        f"https://m.stock.naver.com/api/stocks/marketValue/{mkt}?pageSize=100&page={page}"
                     )
                 except Exception as e:
                     logger.error("Naver %s page=%d 실패: %s", mkt, page, e)

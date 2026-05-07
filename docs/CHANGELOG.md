@@ -7,7 +7,7 @@ GitHub commit 보단 이쪽이 한눈에 봄. epic 단위 그룹.
 
 ## 🚧 진행 중 / TODO
 
-- [ ] 학습 콘텐츠 풍부화 R1 — kid 14 토픽 sections body 확장 (예시·비유·구체 수치 추가)
+- [ ] 학습 콘텐츠 풍부화 R1 — kid 14 토픽 (6/14 완료, 8개 남음)
 - [ ] 학습 콘텐츠 풍부화 R2 — student 18 토픽
 - [ ] 학습 콘텐츠 풍부화 R3 — pro 13 토픽
 - [ ] 챗봇 RAG 재도입 (가벼운 임베딩 옵션 검토 — ONNX/외부 API/사이드카)
@@ -18,6 +18,22 @@ GitHub commit 보단 이쪽이 한눈에 봄. epic 단위 그룹.
 ---
 
 ## 2026-05-07
+
+### 🐛 매수/매도 안 됨 fix — Naver pageSize 200 → 100
+- Naver API가 `pageSize=200` 거부 (HTTP 400) → `/api/stocks` 빈 배열 → PortfolioPage 종목 list 0개.
+- pageSize=100 + page 1~4 fetch (KOSPI 400 + KOSDAQ 400 = 800 종목 그대로).
+- Backend StockController도 `?market=KOSPI` → `?market=ALL`로 변경 (KOSDAQ도 포함).
+- 병렬 fork(R1/R2/R3) 권한 fail로 직접 진행 중 발견.
+
+### 📚 학습 R1 진행 중 (6/14)
+- kid 트랙 첫 6 토픽 풍부화: what-is-stock, why-stocks-rise, how-companies-earn,
+  save-vs-invest, compound-interest, kospi-vs-kosdaq.
+- 각 토픽 intro 확장 + 핵심 sections body 1.5~2배 + 신규 section 1개 추가
+  + example body에 FlowStock 활용 팁.
+- 패턴: 구체 수치 (삼성전자 60억 주, 카카오 5만→17만), 한국 회사 예시,
+  실제 사례(2008 금융위기, 2017 한진해운).
+- 나머지 8개 토픽(market-cap, candle-chart, diversification, inflation,
+  dividend-basics, ipo-basics, market-hours, risk-vs-return) 다음 라운드.
 
 ### 📊 모의투자 종목 확장 + 시장정보 사이드 패널
 - `43c52b0` — 종목 400 → **800** (KOSPI 400 + KOSDAQ 400, page 1+2 fetch).
