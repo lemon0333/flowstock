@@ -3,7 +3,7 @@
  */
 
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { Send, RotateCcw, X, Loader2 } from "lucide-react";
+import { Send, RotateCcw, Loader2 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useChatbotStore } from "@/stores/useChatbotStore";
 import { useChatbotStream } from "@/hooks/useChatbotStream";
@@ -63,24 +63,14 @@ export default function ChatbotPanel() {
               주린이 도움 챗봇
             </span>
           </SheetTitle>
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={handleReset}
-              title="대화 초기화"
-              className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground"
-            >
-              <RotateCcw className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={close}
-              title="닫기"
-              className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleReset}
+            title="대화 초기화"
+            className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground mr-7"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </button>
         </SheetHeader>
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 bg-background">

@@ -48,10 +48,16 @@ export function useChatbotStream() {
           } else if (ev.type === "source") {
             addSources(assistantId, [{ topic: ev.data.topic, slug: ev.data.slug }]);
           } else if (ev.type === "error") {
-            const msg =
-              ev.data.code === "RATE_LIMIT"
-                ? "잠시 후 다시 시도해주세요 (요청이 너무 많아요)"
-                : `에러: ${ev.data.message || ev.data.code}`;
+            const code = ev.data.code;
+            const raw = ev.data.message || "";
+            let msg: string;
+            if (code === "RATE_LIMIT") {
+              msg = "잠시 후 다시 시도해주세요 (요청이 너무 많아요)";
+            } else if (raw.includes("CLINotFound") || raw.includes("NotFound")) {
+              msg = "스톡이는 지금 잠시 점검 중이에요 🔧 곧 돌아올게요. 그동안은 학습(/learn) 페이지나 모의투자를 둘러봐주세요!";
+            } else {
+              msg = `잠깐, 답변하다 문제가 생겼어. 다시 물어봐줄래? (사유: ${raw || code})`;
+            }
             appendDelta(assistantId, `\n\n⚠️ ${msg}`);
             setError(msg);
             break;
