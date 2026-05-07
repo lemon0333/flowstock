@@ -35,6 +35,7 @@ const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
 const LearnIndexPage = lazy(() => import("./pages/LearnIndexPage"));
 const LearnTopicPage = lazy(() => import("./pages/LearnTopicPage"));
+const ChatbotFab = lazy(() => import("./components/chatbot/ChatbotFab"));
 
 const queryClient = new QueryClient();
 
@@ -84,6 +85,7 @@ const App = () => (
             <Route path="/alerts" element={<AlertsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <ChatbotFab />
         </Suspense>
       </BrowserRouter>
     </TooltipProvider>

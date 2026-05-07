@@ -105,9 +105,7 @@
 
     /* ── 폰트 ── */
     --font-sans: 'MaruBuri', 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    --font-mono: 'SF Mono', 'Fira Code', monospace;
-    /* 데이터(숫자)는 가독성 위해 Pretendard 강제 */
-    --font-numeric: 'Pretendard Variable', -apple-system, system-ui, sans-serif;
+    --font-mono: 'MaruBuri', 'Pretendard Variable', -apple-system, system-ui, sans-serif;
   }
 
   /* ── Dark mode tokens ── */
@@ -190,16 +188,14 @@
 
 /* ── 유틸리티 클래스 ── */
 @layer utilities {
-  /* 모노스페이스 숫자 표시용 */
+  /* 데이터/숫자 표시용 — 마루부리 통일 + 자릿수 정렬 */
   .font-data {
-    font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
   }
-
-  /* 숫자 가독성용 — 마루부리 본문 안에서 숫자만 Pretendard로 */
   .font-num {
-    font-family: var(--font-numeric);
     font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
   }
 
   /* 상승/하락 색상 유틸리티 */

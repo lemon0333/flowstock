@@ -16,6 +16,10 @@ numpy>=1.26
 pytest>=8.0
 httpx>=0.27
 
+# Chatbot RAG — 다국어(한국어 OK) 임베딩 모델 (118MB, mini PC 14GB OK)
+sentence-transformers>=3.0.0
+sse-starlette>=2.1.0
+
 # OpenTelemetry — Jaeger 트레이싱 (성능 진단용)
 opentelemetry-api==1.27.0
 opentelemetry-sdk==1.27.0

@@ -3,9 +3,14 @@ package com.flowstock.infra.ai
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.ParameterizedTypeReference
+import org.springframework.http.MediaType
+import org.springframework.http.codec.ServerSentEvent
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
+import reactor.core.publisher.Flux
+import java.time.Duration
 
 @Component
 class AiServiceClient(
@@ -95,5 +100,21 @@ class AiServiceClient(
             .bodyValue(request)
             .retrieve()
             .awaitBody()
+    }
+
+    /**
+     * 챗봇 SSE 스트리밍 — AI service `/api/ai/chatbot/stream` 응답을 그대로 릴레이.
+     * 반환 Flux는 ServerSentEvent<String> (data는 JSON string).
+     */
+    fun streamChat(body: Map<String, Any?>): Flux<ServerSentEvent<String>> {
+        val sseType = object : ParameterizedTypeReference<ServerSentEvent<String>>() {}
+        return webClient.post()
+            .uri("/api/ai/chatbot/stream")
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.TEXT_EVENT_STREAM)
+            .bodyValue(body)
+            .retrieve()
+            .bodyToFlux(sseType)
+            .timeout(Duration.ofSeconds(60))
     }
 }

@@ -5,7 +5,8 @@ from fastapi import FastAPI
 from app.config import settings
 from app.database import Base, engine
 from app.observability import setup_tracing
-from app.routers import chart, economy, graph, news, stock
+from app.routers import chart, chatbot, economy, graph, news, stock
+from app.services import learn_index
 
 logging.basicConfig(
     level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
@@ -28,6 +29,7 @@ app.include_router(chart.router)
 app.include_router(graph.router)
 app.include_router(stock.router)
 app.include_router(economy.router)
+app.include_router(chatbot.router)
 
 
 @app.on_event("startup")
@@ -37,6 +39,13 @@ async def startup():
         logger.info("MySQL tables created/verified successfully")
     except Exception as e:
         logger.warning(f"MySQL connection failed: {e} — running without DB logging")
+
+    # 챗봇 RAG 인덱스 warmup (블로킹 OK — 시작 시 1회)
+    try:
+        learn_index.warmup()
+        logger.info("RAG learn_index warmup OK (%d topics)", learn_index.get_index().topic_count())
+    except Exception as e:
+        logger.warning("RAG warmup failed: %s — chatbot will work without RAG", e)
 
 
 @app.get("/health")
