@@ -19,6 +19,13 @@ GitHub commit 보단 이쪽이 한눈에 봄. epic 단위 그룹.
 
 ## 2026-05-07
 
+### 🔤 폰트 마루부리 → 나눔고딕 (가독성 우선)
+- 사용자 요청 — 마루부리(명조 계열)는 본문/숫자 가독성이 살짝 약함
+- NanumGothic OTF 4 weights (Light 300 / Regular 400 / Bold 700 / ExtraBold 800)
+- public/fonts/ 마루부리 4개 삭제, NanumGothic 4개로 교체
+- index.css `--font-sans` / `--font-mono` 모두 NanumGothic first
+- 본문/숫자 모두 NanumGothic 통일 (tabular-nums 정렬 유지)
+
 ### 🐛 매수/매도 안 됨 fix — Naver pageSize 200 → 100
 - Naver API가 `pageSize=200` 거부 (HTTP 400) → `/api/stocks` 빈 배열 → PortfolioPage 종목 list 0개.
 - pageSize=100 + page 1~4 fetch (KOSPI 400 + KOSDAQ 400 = 800 종목 그대로).

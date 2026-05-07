@@ -1,33 +1,33 @@
 @import url('https://fonts.googleapis.com/css2?family=Pretendard+Variable:wght@300;400;500;600;700&display=swap');
 
-/* ── 마루부리 (네이버 클로바) — 본문/헤딩 한글 폰트 ── */
+/* ── 나눔고딕 — 본문/헤딩 한글 폰트 (가독성 우수) ── */
 @font-face {
-  font-family: 'MaruBuri';
+  font-family: 'NanumGothic';
   font-weight: 300;
   font-style: normal;
   font-display: swap;
-  src: url('/fonts/MaruBuri-Light.otf') format('opentype');
+  src: url('/fonts/NanumGothicLight.otf') format('opentype');
 }
 @font-face {
-  font-family: 'MaruBuri';
+  font-family: 'NanumGothic';
   font-weight: 400;
   font-style: normal;
   font-display: swap;
-  src: url('/fonts/MaruBuri-Regular.otf') format('opentype');
+  src: url('/fonts/NanumGothic.otf') format('opentype');
 }
 @font-face {
-  font-family: 'MaruBuri';
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-  src: url('/fonts/MaruBuri-SemiBold.otf') format('opentype');
-}
-@font-face {
-  font-family: 'MaruBuri';
+  font-family: 'NanumGothic';
   font-weight: 700;
   font-style: normal;
   font-display: swap;
-  src: url('/fonts/MaruBuri-Bold.otf') format('opentype');
+  src: url('/fonts/NanumGothicBold.otf') format('opentype');
+}
+@font-face {
+  font-family: 'NanumGothic';
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/NanumGothicExtraBold.otf') format('opentype');
 }
 
 @tailwind base;
@@ -104,8 +104,8 @@
     --shadow-elevated: 0 8px 32px hsl(218 25% 13% / 0.10);
 
     /* ── 폰트 ── */
-    --font-sans: 'MaruBuri', 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    --font-mono: 'MaruBuri', 'Pretendard Variable', -apple-system, system-ui, sans-serif;
+    --font-sans: 'NanumGothic', 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --font-mono: 'NanumGothic', 'Pretendard Variable', -apple-system, system-ui, sans-serif;
   }
 
   /* ── Dark mode tokens ── */
