@@ -10,8 +10,8 @@ GitHub commit 보단 이쪽이 한눈에 봄. epic 단위 그룹.
 - [x] 학습 콘텐츠 풍부화 R1 — kid 14 토픽 ✅ 완료
 - [ ] 학습 콘텐츠 풍부화 R2 — student 18 토픽
 - [ ] 학습 콘텐츠 풍부화 R3 — pro 13 토픽
-- [ ] **🔥 챗봇 CLINotFoundError** — AI service 컨테이너에 claude CLI 없음.
-      옵션: (A) Anthropic API 키 + anthropic SDK 전환  (B) Dockerfile에 Node+CLI 설치+credential PVC mount  (C) 챗봇 비활성
+- [x] **챗봇 CLINotFoundError fix** ✅ Dockerfile에 Node+claude CLI 설치 +
+      호스트 ~/.claude.json/.claude/ hostPath mount → 컨테이너 안 claude가 호스트 인증 그대로 사용
 - [ ] 챗봇 RAG 재도입 (가벼운 임베딩 옵션 검토 — ONNX/외부 API/사이드카)
 - [ ] (선택) Bucket4j-Lettuce(Redis)로 분산 rate limit 마이그레이션
 - [ ] (외부) Naver/Google OAuth 검수 신청
@@ -20,6 +20,17 @@ GitHub commit 보단 이쪽이 한눈에 봄. epic 단위 그룹.
 ---
 
 ## 2026-05-07
+
+### 🔧 챗봇 CLINotFoundError 진짜 fix — Node + Claude CLI 설치 + 호스트 인증 mount
+- 진단: 호스트(미니PC)엔 `/usr/bin/claude` 있는데 ai-service 컨테이너 안엔 없음 (격리)
+- Dockerfile: Node 20 + `@anthropic-ai/claude-code` 글로벌 설치 추가
+- ai-service deployment: hostPath volume 두 개
+  - `/home/lemon/.claude.json` → `/root/.claude.json` (인증 토큰)
+  - `/home/lemon/.claude/` → `/root/.claude/` (cache, backups)
+  - `HOME=/root` env 추가 — claude CLI가 $HOME 기준으로 credential 찾음
+- 단일 노드 k3s라 항상 mini PC에 스케줄 → hostPath 안전
+- 결과: 컨테이너 안 claude가 호스트와 동일 인증 사용 → claude-code-sdk 정상 동작
+- note: 이미지 +200MB(node+claude), 첫 pull 길어짐. 이후 cache hit 빠름.
 
 ### 🐛 챗봇 X 두 개 겹침 fix + 친절 에러 메시지
 - ChatbotPanel 헤더에 X 버튼 두 개(내가 추가한 거 + shadcn Sheet 기본) 보임 → 내 X 제거

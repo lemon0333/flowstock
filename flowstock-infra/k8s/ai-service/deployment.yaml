@@ -15,11 +15,29 @@ spec:
       labels:
         app: ai-service
     spec:
+      # nodeSelector/affinity 없으니 단일 노드 k3s에서는 항상 mini PC에 스케줄됨
+      # 호스트의 claude credential을 컨테이너에 mount → 컨테이너 안 claude도 동일 인증 사용
+      volumes:
+        - name: claude-config
+          hostPath:
+            path: /home/lemon/.claude.json
+            type: File
+        - name: claude-dir
+          hostPath:
+            path: /home/lemon/.claude
+            type: Directory
       containers:
         - name: ai-service
           image: ghcr.io/lemon0333/flowstock-ai:latest
           ports:
             - containerPort: 8000
+          volumeMounts:
+            - name: claude-config
+              mountPath: /root/.claude.json
+              readOnly: false   # claude CLI가 가끔 cache update
+            - name: claude-dir
+              mountPath: /root/.claude
+              readOnly: false
           env:
             - name: LOG_LEVEL
               value: "INFO"
@@ -36,6 +54,8 @@ spec:
                   key: MYSQL_PASSWORD
             - name: MYSQL_DATABASE
               value: "flowstock_ai"
+            - name: HOME
+              value: "/root"
           resources:
             requests:
               memory: "512Mi"
