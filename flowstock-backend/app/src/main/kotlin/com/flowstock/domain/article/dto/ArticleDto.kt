@@ -3,6 +3,7 @@ package com.flowstock.domain.article.dto
 import com.flowstock.domain.article.entity.Article
 import com.flowstock.domain.article.entity.ArticleCategory
 import com.flowstock.domain.article.entity.Comment
+import com.flowstock.global.util.EmailMasker
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import java.time.LocalDateTime
@@ -24,7 +25,7 @@ data class ArticleSummary(
             title = a.title,
             category = a.category,
             authorId = a.member.id,
-            authorName = a.member.nickname,
+            authorName = EmailMasker.authorLabel(a.member.nickname, a.member.email, isDefault = !a.member.isProfileCompleted),
             viewCount = a.viewCount,
             likeCount = a.likeCount,
             commentCount = a.comments.size,
@@ -55,7 +56,7 @@ data class ArticleDetail(
                 content = a.content,
                 category = a.category,
                 authorId = a.member.id,
-                authorName = a.member.nickname,
+                authorName = EmailMasker.authorLabel(a.member.nickname, a.member.email, isDefault = !a.member.isProfileCompleted),
                 viewCount = a.viewCount,
                 likeCount = a.likeCount,
                 likedByMe = likedByMe,
@@ -77,7 +78,7 @@ data class CommentDto(
         fun from(c: Comment): CommentDto = CommentDto(
             id = c.id,
             authorId = c.member.id,
-            authorName = c.member.nickname,
+            authorName = EmailMasker.authorLabel(c.member.nickname, c.member.email, isDefault = !c.member.isProfileCompleted),
             content = c.content,
             createdAt = c.createdAt,
         )

@@ -1,12 +1,16 @@
 package com.flowstock.global.util
 
 /**
- * 이메일 마스킹 — 앞 3자만 남기고 나머지는 *.
- * 도메인 그대로 유지.
+ * 작성자 표시 — 닉네임이 default(이메일 prefix)가 아니면 닉네임 그대로 노출,
+ * default면 이메일 마스킹 폴백.
+ *
+ * 정책 (사용자 결정):
+ * - 닉네임을 사용자가 직접 수정한 경우 → 닉네임 그대로 노출 (마스킹 X)
+ * - 닉네임이 OAuth 가입 시 자동 생성된 default(이메일 또는 이메일 prefix와 동일)면 → 이메일 마스킹
  *
  * 예: andyhyunbin@gmail.com → and***@gmail.com
  *     ab@x.com               → ab***@x.com
- *     a@x.com                → a***@x.com
+ *     "현빈손"(직접 수정한 닉네임)  → "현빈손" (그대로)
  */
 object EmailMasker {
     fun mask(email: String?): String {
@@ -20,16 +24,16 @@ object EmailMasker {
     }
 
     /**
-     * 닉네임 마스킹 — 앞 1-2자만 남기고 나머지는 *.
-     * 한글은 1글자 의미 단위라 1자만 노출.
+     * 작성자 라벨 결정 — 닉네임 수정 여부에 따라 닉네임 그대로 vs 이메일 마스킹.
+     *
+     * @param nickname 회원 닉네임 (현재값)
+     * @param email 회원 이메일
+     * @param isDefault 닉네임이 default(자동 생성)인지 (Member.isProfileCompleted == false 등으로 판단 가능)
      */
-    fun maskNickname(nickname: String?): String {
-        if (nickname.isNullOrBlank()) return "익명"
-        val len = nickname.length
-        return when {
-            len <= 1 -> nickname
-            len <= 3 -> nickname.take(1) + "*".repeat(len - 1)
-            else -> nickname.take(2) + "*".repeat(len - 2)
+    fun authorLabel(nickname: String?, email: String?, isDefault: Boolean): String {
+        if (isDefault || nickname.isNullOrBlank()) {
+            return mask(email)
         }
+        return nickname
     }
 }

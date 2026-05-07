@@ -39,7 +39,9 @@ data class FeedbackResponse(
             currentMemberId: Long?,
             likedByMe: Boolean,
         ): FeedbackResponse {
+            val nickname = runCatching { f.member.nickname }.getOrNull()
             val email = runCatching { f.member.email }.getOrNull()
+            val isDefault = runCatching { !f.member.isProfileCompleted }.getOrDefault(true)
             return FeedbackResponse(
                 id = f.id,
                 title = f.title,
@@ -47,7 +49,7 @@ data class FeedbackResponse(
                 status = f.status,
                 likeCount = f.likeCount,
                 likedByMe = likedByMe,
-                authorMasked = EmailMasker.mask(email),
+                authorMasked = EmailMasker.authorLabel(nickname, email, isDefault),
                 isMine = currentMemberId != null && currentMemberId == f.member.id,
                 createdAt = f.createdAt,
                 updatedAt = f.updatedAt,

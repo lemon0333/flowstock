@@ -513,13 +513,19 @@ export default function PortfolioPage() {
                     dataKey="value"
                     nameKey="name"
                     outerRadius={90}
-                    label={(e) => e.name}
+                    label={(e) => `${e.name} ${(e.percent * 100).toFixed(1)}%`}
                   >
                     {allocation.map((d, i) => (
                       <Cell key={i} fill={d.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(v: number) => `${v.toLocaleString()}원`} />
+                  <Tooltip
+                    formatter={(v: number, _name, ctx) => {
+                      const total = allocation.reduce((s, a) => s + a.value, 0);
+                      const pct = total > 0 ? ((v / total) * 100).toFixed(1) : "0";
+                      return [`${v.toLocaleString()}원 (${pct}%)`, ctx.payload?.name as string];
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             )}
