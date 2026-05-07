@@ -8,7 +8,7 @@ GitHub commit 보단 이쪽이 한눈에 봄. epic 단위 그룹.
 ## 🚧 진행 중 / TODO
 
 - [x] 학습 콘텐츠 풍부화 R1 — kid 14 토픽 ✅ 완료
-- [ ] 학습 콘텐츠 풍부화 R2 — student 18 토픽
+- [ ] 학습 콘텐츠 풍부화 R2 — student 18 토픽 (7/18 완료)
 - [ ] 학습 콘텐츠 풍부화 R3 — pro 13 토픽
 - [x] **챗봇 CLINotFoundError fix** ✅ Dockerfile에 Node+claude CLI 설치 +
       호스트 ~/.claude.json/.claude/ hostPath mount → 컨테이너 안 claude가 호스트 인증 그대로 사용
