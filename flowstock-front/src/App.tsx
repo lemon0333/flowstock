@@ -63,7 +63,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <main className="flex-1 px-4 md:px-6 py-6 max-w-[1400px] w-full mx-auto">
+      <main className="flex-1 px-4 md:px-6 py-6 max-w-[1400px] w-full mx-auto overflow-x-hidden">
         {showCategorySidebar ? (
           <div className="md:grid md:grid-cols-[200px_minmax(0,1fr)] md:gap-8">
             <CategorySidebar />

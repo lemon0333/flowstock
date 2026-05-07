@@ -16,7 +16,9 @@ spec:
         app: ai-service
     spec:
       # nodeSelector/affinity 없으니 단일 노드 k3s에서는 항상 mini PC에 스케줄됨
-      # 호스트의 claude credential을 컨테이너에 mount → 컨테이너 안 claude도 동일 인증 사용
+      # 호스트의 claude credential + binary 자체를 컨테이너에 mount
+      # → 컨테이너 안 npm으로 깐 binary는 빌드 환경 차이로 Bun baseline build segfault.
+      #   호스트 binary는 안 죽으니 그걸 그대로 사용.
       volumes:
         - name: claude-config
           hostPath:
@@ -25,6 +27,10 @@ spec:
         - name: claude-dir
           hostPath:
             path: /home/lemon/.claude
+            type: Directory
+        - name: claude-cli
+          hostPath:
+            path: /usr/lib/node_modules/@anthropic-ai/claude-code
             type: Directory
       containers:
         - name: ai-service
@@ -38,6 +44,9 @@ spec:
             - name: claude-dir
               mountPath: /root/.claude
               readOnly: false
+            - name: claude-cli
+              mountPath: /usr/lib/node_modules/@anthropic-ai/claude-code
+              readOnly: true
           env:
             - name: LOG_LEVEL
               value: "INFO"
