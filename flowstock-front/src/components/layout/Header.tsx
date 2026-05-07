@@ -1,78 +1,20 @@
 /**
  * ============================================================
- * 헤더 네비게이션 — 13개 → 5개 카테고리 드롭다운으로 정리
+ * 헤더 — 토스 패턴: 4개 카테고리 단순 링크 (드롭다운 X).
+ * sub 항목은 CategorySidebar(좌측 평면)에서 처리.
  *
- * 데스크탑(md+): 카테고리 hover 드롭다운
- * 모바일(<md): 햄버거 + Sheet 사이드 패널 (카테고리별 섹션)
+ * 데스크탑(md+): 4 카테고리 탭 (defaultPath로 진입)
+ * 모바일(<md): 햄버거 + Sheet (그룹/항목 트리 — 발견성 유지)
  * ============================================================
  */
 
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import {
-  TrendingUp, Newspaper, Briefcase, LogIn, LogOut, BarChart3,
-  LineChart, Gamepad2, Bell, Sun, Moon, Menu,
-  Filter, GitCompareArrows, Grid3x3, FlaskConical, Globe, Calendar, Users,
-  ChevronDown, BookOpen, Lightbulb, type LucideIcon,
-} from "lucide-react";
+import { TrendingUp, LogIn, LogOut, Sun, Moon, Menu } from "lucide-react";
 import { useStore } from "@/stores/useStore";
 import { useTheme } from "@/components/theme-provider";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
-interface NavItem {
-  path: string;
-  label: string;
-  icon: LucideIcon;
-  authRequired?: boolean;
-}
-interface NavGroup {
-  label: string;
-  items: NavItem[];
-}
-
-const NAV_GROUPS: NavGroup[] = [
-  {
-    label: "시장",
-    items: [
-      { path: "/", label: "홈", icon: BarChart3 },
-      { path: "/economy", label: "경제지표", icon: LineChart },
-      { path: "/macro", label: "거시", icon: Globe },
-      { path: "/sectors", label: "섹터", icon: Grid3x3 },
-    ],
-  },
-  {
-    label: "종목",
-    items: [
-      { path: "/screener", label: "스크리너", icon: Filter },
-      { path: "/compare", label: "비교", icon: GitCompareArrows },
-      { path: "/backtest", label: "백테스트", icon: FlaskConical },
-      { path: "/earnings", label: "실적 캘린더", icon: Calendar },
-    ],
-  },
-  {
-    label: "콘텐츠",
-    items: [
-      { path: "/news", label: "뉴스", icon: Newspaper },
-      { path: "/articles", label: "커뮤니티", icon: Users },
-      { path: "/learn", label: "주식 공부", icon: BookOpen },
-      { path: "/feedback", label: "개선 제안", icon: Lightbulb },
-    ],
-  },
-  {
-    label: "내 거",
-    items: [
-      { path: "/portfolio", label: "모의투자", icon: Briefcase, authRequired: true },
-      { path: "/portfolio/game", label: "투자 게임", icon: Gamepad2, authRequired: true },
-      { path: "/alerts", label: "알림", icon: Bell, authRequired: true },
-    ],
-  },
-];
+import { NAV_GROUPS, isItemActive, findActiveGroup } from "./nav-config";
 
 export default function Header() {
   const location = useLocation();
@@ -80,16 +22,11 @@ export default function Header() {
   const { resolved, setTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // 라우트 변경 시 모바일 시트 자동 닫기
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
 
-  const isPathActive = (path: string) =>
-    path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
-
-  const isGroupActive = (group: NavGroup) =>
-    group.items.some((it) => isPathActive(it.path));
+  const activeGroup = findActiveGroup(location.pathname);
 
   const Logo = (
     <Link to="/" className="flex items-center gap-2">
@@ -115,54 +52,29 @@ export default function Header() {
       <div className="flex items-center justify-between px-4 md:px-6 h-14 max-w-[1400px] mx-auto gap-2">
         {Logo}
 
-        {/* ── 데스크탑(md+) 카테고리 드롭다운 ── */}
+        {/* ── 데스크탑: 4 카테고리 단순 링크 ── */}
         <nav className="hidden md:flex items-center gap-1">
           {NAV_GROUPS.map((group) => {
-            const active = isGroupActive(group);
+            const active = activeGroup?.label === group.label;
             return (
-              <DropdownMenu key={group.label}>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className={`
-                      flex items-center gap-1 px-3 lg:px-4 py-2 text-sm font-medium rounded-full transition-colors
-                      ${active
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                      }
-                    `}
-                  >
-                    {group.label}
-                    <ChevronDown className="h-3.5 w-3.5 opacity-70" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
-                  {group.items.map(({ path, label, icon: Icon, authRequired }) => {
-                    const itemActive = isPathActive(path);
-                    return (
-                      <DropdownMenuItem key={path} asChild>
-                        <Link
-                          to={path}
-                          className={`
-                            flex items-center gap-2 cursor-pointer
-                            ${itemActive ? "bg-primary/10 text-primary" : ""}
-                          `}
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span className="flex-1">{label}</span>
-                          {authRequired && !isAuthenticated && (
-                            <span className="text-[10px] text-muted-foreground">로그인</span>
-                          )}
-                        </Link>
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Link
+                key={group.label}
+                to={group.defaultPath}
+                className={`
+                  px-4 py-2 text-sm font-medium rounded-full transition-colors
+                  ${active
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  }
+                `}
+              >
+                {group.label}
+              </Link>
             );
           })}
         </nav>
 
-        {/* ── 데스크탑(md+) 우측 ── */}
+        {/* ── 데스크탑 우측 ── */}
         <div className="hidden md:flex items-center gap-3">
           {ThemeBtn}
           {isAuthenticated ? (
@@ -193,7 +105,7 @@ export default function Header() {
           )}
         </div>
 
-        {/* ── 모바일(<md) 우측: 테마 + 햄버거 ── */}
+        {/* ── 모바일 우측 ── */}
         <div className="flex md:hidden items-center gap-1">
           {ThemeBtn}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -215,7 +127,7 @@ export default function Header() {
                         {group.label}
                       </div>
                       {group.items.map(({ path, label, icon: Icon, authRequired }) => {
-                        const active = isPathActive(path);
+                        const active = isItemActive(path, location.pathname);
                         return (
                           <Link
                             key={path}
