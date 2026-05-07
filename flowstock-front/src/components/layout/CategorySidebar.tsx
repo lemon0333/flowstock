@@ -1,8 +1,7 @@
 /**
  * 좌측 평면 카테고리 사이드바 (토스 패턴).
- * - 현재 경로가 NAV_GROUPS의 어떤 카테고리에 속하면 그 sub 항목들을 좌측에 평면 리스트로
- * - 미소속(/login, /stock/:id, /me 등)이면 null → Layout이 fullwidth로 폴백
- * - md 미만: 가로 스크롤 chip bar / md+: sticky 좌측 컬럼
+ * - 진입한 카테고리의 sub 항목을 좌측 평면 리스트로 — 큰 폰트, fill active.
+ * - md 미만: 가로 스크롤 chip / md+: sticky 좌측 컬럼
  */
 
 import { Link, useLocation } from "react-router-dom";
@@ -30,14 +29,14 @@ export default function CategorySidebar() {
               key={path}
               to={path}
               className={`
-                flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors
+                flex items-center gap-1.5 shrink-0 px-3.5 py-2 rounded-full text-sm font-semibold border transition-colors
                 ${active
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-card text-muted-foreground border-border hover:text-foreground hover:bg-accent"
                 }
               `}
             >
-              <Icon className="h-3.5 w-3.5" />
+              <Icon className="h-4 w-4" />
               <span>{label}</span>
               {authRequired && !isAuthenticated && (
                 <span className="text-[9px] opacity-70">·로그인</span>
@@ -47,13 +46,13 @@ export default function CategorySidebar() {
         })}
       </nav>
 
-      {/* 데스크탑: sticky 좌측 컬럼 */}
+      {/* 데스크탑: sticky 좌측 컬럼 — 토스 #43 패턴 */}
       <aside className="hidden md:block">
-        <div className="sticky top-20">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-3 pb-2">
+        <div className="sticky top-24">
+          <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-4 pb-3">
             {group.label}
           </div>
-          <ul className="space-y-0.5">
+          <ul className="space-y-1">
             {group.items.map(({ path, label, icon: Icon, authRequired }) => {
               const active = isItemActive(path, pathname);
               return (
@@ -61,17 +60,17 @@ export default function CategorySidebar() {
                   <Link
                     to={path}
                     className={`
-                      flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                      flex items-center gap-3 px-4 py-3 rounded-2xl text-[15px] font-semibold transition-colors
                       ${active
                         ? "bg-primary/10 text-primary"
                         : "text-muted-foreground hover:text-foreground hover:bg-accent"
                       }
                     `}
                   >
-                    <Icon className="h-4 w-4 shrink-0" />
+                    <Icon className="h-[18px] w-[18px] shrink-0" />
                     <span className="flex-1 truncate">{label}</span>
                     {authRequired && !isAuthenticated && (
-                      <span className="text-[10px] opacity-70">로그인</span>
+                      <span className="text-[10px] opacity-70 font-medium">로그인</span>
                     )}
                   </Link>
                 </li>

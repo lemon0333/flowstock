@@ -1,16 +1,16 @@
 /**
  * ============================================================
- * 주식 공부 인덱스 (/learn)
+ * 주식 공부 인덱스 (/learn) — 토스 "주식 골라보기" 패턴
  *
- * - 3 트랙 (kid / student / pro) audience 탭 필터
- * - 카드: 이모지 + level 배지 + audience 배지
- * - 첫 진입은 '전체' 보임 → 사용자 self-select
+ * - 좌측 사이드바: 대상별 필터 (전체/초등/대학/전공자) — sticky
+ * - 우측 메인: 선택된 트랙 토픽 그리드
+ * - 카테고리 사이드바는 nav-config.hasSelfLayout('/learn')으로 숨김
  * ============================================================
  */
 
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, BookOpen, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import {
   AUDIENCE_DESC,
@@ -55,72 +55,98 @@ export default function LearnIndexPage() {
     return c;
   }, []);
 
+  const headerLabel = tab === "all" ? "모든 토픽" : `${AUDIENCE_LABEL[tab as Audience]} 트랙`;
+  const headerDesc =
+    tab === "all"
+      ? "비유로 시작해 수식으로 끝나는 단계적 커리큘럼. 실제 데이터로 보고 짧은 퀴즈로 확인."
+      : AUDIENCE_DESC[tab as Audience];
+
   return (
     <Layout>
-      <div className="space-y-8">
-        {/* Hero */}
-        <section className="text-center max-w-2xl mx-auto pt-2 md:pt-4">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4">
-            <Sparkles className="h-3.5 w-3.5" />
-            대상별로 골라 배우세요
-          </div>
-          <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight leading-tight">
-            <span className="text-primary">{LEARN_TOPICS.length}개</span> 토픽으로 배우는 주식
-          </h1>
-          <p className="text-sm md:text-base text-muted-foreground mt-3 leading-relaxed">
-            초등생부터 전공자까지. 비유로 시작해 수식으로 끝나는 단계적 커리큘럼.
-            우리 사이트의 <strong className="text-foreground">실제 데이터</strong>로
-            예시를 보고, 짧은 퀴즈로 확인해요.
-          </p>
-        </section>
-
-        {/* Audience Tabs */}
-        <section className="flex flex-wrap gap-2 justify-center">
+      <div className="md:grid md:grid-cols-[220px_minmax(0,1fr)] md:gap-8">
+        {/* ── 좌측: 토스 #43 패턴 사이드바 ── */}
+        {/* 모바일: 가로 chip */}
+        <nav
+          aria-label="대상별 필터"
+          className="md:hidden -mx-4 px-4 mb-4 flex gap-2 overflow-x-auto pb-1 scrollbar-none"
+        >
           {TABS.map((t) => {
-            const isActive = tab === t.key;
+            const active = tab === t.key;
             const count = t.key === "all" ? LEARN_TOPICS.length : counts[t.key as Audience];
             return (
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
-                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card border border-border hover:bg-accent text-foreground"
-                }`}
+                className={`
+                  shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-semibold border transition-colors
+                  ${active
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-card text-muted-foreground border-border hover:text-foreground hover:bg-accent"
+                  }
+                `}
               >
                 <span>{t.emoji}</span>
                 {t.label}
-                <span
-                  className={`text-xs ${
-                    isActive ? "opacity-80" : "text-muted-foreground"
-                  }`}
-                >
+                <span className={`text-xs ${active ? "opacity-80" : "text-muted-foreground"}`}>
                   {count}
                 </span>
               </button>
             );
           })}
-        </section>
+        </nav>
 
-        {/* Tab description */}
-        {tab !== "all" && (
-          <section className="text-center max-w-xl mx-auto -mt-2">
-            <p className="text-sm text-muted-foreground">
-              {AUDIENCE_DESC[tab as Audience]}
-            </p>
-          </section>
-        )}
-
-        {/* Topics */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-primary" />
-              {tab === "all" ? "모든 토픽" : `${AUDIENCE_LABEL[tab as Audience]} 트랙`} (
-              {filtered.length})
-            </h2>
+        {/* 데스크탑: sticky 좌측 사이드바 */}
+        <aside className="hidden md:block">
+          <div className="sticky top-24">
+            <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-4 pb-3">
+              대상별
+            </div>
+            <ul className="space-y-1">
+              {TABS.map((t) => {
+                const active = tab === t.key;
+                const count =
+                  t.key === "all" ? LEARN_TOPICS.length : counts[t.key as Audience];
+                return (
+                  <li key={t.key}>
+                    <button
+                      onClick={() => setTab(t.key)}
+                      className={`
+                        w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[15px] font-semibold transition-colors
+                        ${active
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                        }
+                      `}
+                    >
+                      <span className="text-lg">{t.emoji}</span>
+                      <span className="flex-1 text-left truncate">{t.label}</span>
+                      <span
+                        className={`text-xs font-medium ${
+                          active ? "text-primary/80" : "text-muted-foreground"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
+        </aside>
+
+        {/* ── 우측: 메인 토픽 그리드 ── */}
+        <div className="min-w-0 space-y-5">
+          <header>
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center gap-2">
+              <BookOpen className="h-6 w-6 text-primary" />
+              {headerLabel}
+              <span className="text-base text-muted-foreground font-semibold">
+                {filtered.length}
+              </span>
+            </h1>
+            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{headerDesc}</p>
+          </header>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {filtered.map((t) => {
@@ -157,7 +183,9 @@ export default function LearnIndexPage() {
                     </div>
                   </div>
                   <h3 className="font-bold text-sm md:text-base">{t.title}</h3>
-                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{t.oneLiner}</p>
+                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                    {t.oneLiner}
+                  </p>
                   {isReady && (
                     <div className="mt-3 flex items-center gap-1 text-xs text-primary font-medium">
                       배우기
@@ -168,23 +196,23 @@ export default function LearnIndexPage() {
               );
             })}
           </div>
-        </section>
 
-        {/* CTA */}
-        <section className="bg-card/50 border border-border rounded-2xl p-6 text-center">
-          <h3 className="font-bold text-base mb-1">배운 걸 직접 해보고 싶다면</h3>
-          <p className="text-xs text-muted-foreground mb-4">
-            모의투자는 가상 잔고 1,000만원으로 실전처럼 매수/매도 연습할 수 있어요. 실제 돈은
-            오가지 않으니 마음껏 실수해도 괜찮아요.
-          </p>
-          <Link
-            to="/portfolio"
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90"
-          >
-            모의투자 시작하기
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </section>
+          {/* CTA */}
+          <section className="bg-card/50 border border-border rounded-2xl p-6 text-center">
+            <h3 className="font-bold text-base mb-1">배운 걸 직접 해보고 싶다면</h3>
+            <p className="text-xs text-muted-foreground mb-4">
+              모의투자는 가상 잔고 1,000만원으로 실전처럼 매수/매도 연습할 수 있어요. 실제 돈은
+              오가지 않으니 마음껏 실수해도 괜찮아요.
+            </p>
+            <Link
+              to="/portfolio"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              모의투자 시작하기
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </section>
+        </div>
       </div>
     </Layout>
   );

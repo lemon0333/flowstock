@@ -30,8 +30,8 @@ export default function Header() {
 
   const Logo = (
     <Link to="/" className="flex items-center gap-2">
-      <TrendingUp className="h-5 w-5 text-primary" />
-      <span className="font-bold text-base tracking-tight text-foreground">
+      <TrendingUp className="h-[22px] w-[22px] text-primary" />
+      <span className="font-bold text-lg tracking-tight text-foreground">
         Flow<span className="text-primary">Stock</span>
       </span>
     </Link>
@@ -49,7 +49,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur-md">
-      <div className="flex items-center justify-between px-4 md:px-6 h-14 max-w-[1400px] mx-auto gap-2">
+      <div className="flex items-center justify-between px-4 md:px-6 h-16 md:h-[68px] max-w-[1400px] mx-auto gap-2">
         {Logo}
 
         {/* ── 데스크탑: 4 카테고리 단순 링크 ── */}
@@ -61,7 +61,7 @@ export default function Header() {
                 key={group.label}
                 to={group.defaultPath}
                 className={`
-                  px-4 py-2 text-sm font-medium rounded-full transition-colors
+                  px-4 py-2.5 text-[15px] font-semibold rounded-full transition-colors
                   ${active
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:text-foreground hover:bg-accent"

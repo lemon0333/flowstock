@@ -84,3 +84,12 @@ export function findActiveGroup(currentPath: string): NavGroup | null {
   }
   return best?.group ?? null;
 }
+
+/**
+ * 자체 좌측 레이아웃을 가진 페이지 — 카테고리 사이드바를 숨김.
+ * (예: /learn은 자체 audience 필터 사이드바를 그림)
+ */
+const SELF_LAYOUT_PATHS = new Set<string>(["/learn"]);
+export function hasSelfLayout(currentPath: string): boolean {
+  return SELF_LAYOUT_PATHS.has(currentPath);
+}
