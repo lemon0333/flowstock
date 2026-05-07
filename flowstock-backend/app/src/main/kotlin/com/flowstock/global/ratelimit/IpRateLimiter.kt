@@ -1,51 +1,51 @@
 package com.flowstock.global.ratelimit
 
-import io.github.bucket4j.Bandwidth
-import io.github.bucket4j.Bucket
-import io.github.bucket4j.Refill
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.stereotype.Component
-import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * IP 기반 rate limiter — Bucket4j in-memory.
+ * IP 기반 rate limiter — 단순 sliding window (in-memory).
  *
- * 정책 (IP당, AND 조합):
- * - 분당 10
- * - 시간당 60
- * - 일 100
+ * 정책: IP당 분당 10회.
+ * 이상 어뷰징 차단 + 챗봇 정상 사용은 허용 수준.
  *
- * 멀티 replica 환경에서는 한도가 replica 수만큼 느슨해짐.
- * 실효 한도가 빡빡해지면 Bucket4j-Lettuce(Redis)로 마이그레이션.
+ * 구현: ip → 최근 1분 내 요청 timestamp 리스트.
+ * - 메모리: IP 수만큼 작은 list. inactive IP는 cleanup 안 함 (MVP).
+ *   운영 중 메모리 모니터링 후 필요하면 @Scheduled cleanup 추가.
+ * - 멀티 replica: 한도 ×replica 만큼 느슨해짐 (MVP 수용).
+ *   필요시 Redis 기반(Bucket4j-Lettuce 또는 Redisson)로 마이그레이션.
  */
 @Component
 class IpRateLimiter {
 
-    private val buckets = ConcurrentHashMap<String, Bucket>()
-
-    private fun newBucket(): Bucket {
-        return Bucket.builder()
-            .addLimit(Bandwidth.classic(10, Refill.intervally(10, Duration.ofMinutes(1))))
-            .addLimit(Bandwidth.classic(60, Refill.intervally(60, Duration.ofHours(1))))
-            .addLimit(Bandwidth.classic(100, Refill.intervally(100, Duration.ofDays(1))))
-            .build()
-    }
+    private val buckets = ConcurrentHashMap<String, MutableList<Long>>()
 
     /**
      * 1 토큰 소비 시도. true면 통과, false면 한도 초과.
      */
     fun tryConsume(ip: String): Boolean {
-        val bucket = buckets.computeIfAbsent(ip) { newBucket() }
-        return bucket.tryConsume(1)
+        val now = System.currentTimeMillis()
+        val cutoff = now - WINDOW_MS
+        val list = buckets.computeIfAbsent(ip) { mutableListOf() }
+        return synchronized(list) {
+            // 윈도우 밖 timestamp 제거
+            list.removeAll { it < cutoff }
+            if (list.size >= CAPACITY) {
+                false
+            } else {
+                list.add(now)
+                true
+            }
+        }
     }
 
-    /**
-     * 디버깅/모니터링용 — 현재 추적 중인 IP 수.
-     */
     fun trackedIpCount(): Int = buckets.size
 
     companion object {
+        private const val CAPACITY = 10
+        private const val WINDOW_MS: Long = 60_000
+
         /**
          * X-Forwarded-For (Cloudflare/k8s) → 첫 번째 IP. fallback: remoteAddr.
          */
