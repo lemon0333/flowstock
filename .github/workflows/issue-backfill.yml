@@ -1,0 +1,326 @@
+name: Issue Backfill (지금까지 작업 정리)
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "true면 issue 만들지 않고 목록만 출력"
+        required: false
+        default: "false"
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create epic issues from commit history
+        uses: actions/github-script@v7
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+        with:
+          script: |
+            const dryRun = process.env.DRY_RUN === "true";
+            const repo = `${context.repo.owner}/${context.repo.repo}`;
+            const cmt = (sha) => `[${sha}](https://github.com/${repo}/commit/${sha})`;
+
+            const issues = [
+              {
+                title: "🤖 챗봇 + RAG (스톡이) MVP",
+                labels: ["feature", "completed", "ai"],
+                body: [
+                  "## 요약",
+                  "주린이 대상 사이트 안내 챗봇 \"스톡이\" — RAG(검색증강) 기반.",
+                  "",
+                  "## 구성",
+                  "- **AI service**: SSE 스트림(`/api/ai/chatbot/stream`), claude-code-sdk async iterator, /learn 45토픽 임베딩 검색(paraphrase-multilingual-MiniLM-L12-v2), 시스템 프롬프트(`junior_investor.py`), 동시 query 5 semaphore",
+                  "- **Backend**: SSE 프록시(Reactor `Flux<ServerSentEvent<String>>`), IpRateLimiter(분당 10), `POST /api/chatbot/ask`",
+                  "- **Frontend**: 우측 하단 플로팅 버튼 + Sheet 사이드패널(모바일 풀폭), `useChatbotStream` SSE 훅, Zustand sessionStorage persist, /login 제외 모든 페이지",
+                  "",
+                  "## 관련 commit",
+                  `- ${cmt("756c114")} — 챗봇 + RAG MVP`,
+                  `- ${cmt("5f6fe5c")} — Bucket4j 의존성 제거 → ConcurrentHashMap sliding window`,
+                  `- ${cmt("89608cc")} — torch CPU-only + 모델 사전 다운로드 + rollout 20분`,
+                  "",
+                  "## 상태",
+                  "✅ MVP 배포",
+                  "",
+                  "## 향후 (2단계)",
+                  "- function calling 도구 (`get_market_index`, `search_news`, `get_top_movers`)",
+                  "- 실시간 데이터 답변 (코스피 시세, 최신 뉴스)",
+                  "- Bucket4j-Lettuce(Redis)로 분산 rate limit",
+                ].join("\n"),
+              },
+              {
+                title: "💡 서비스 개선 제안 게시판 + admin 권한 시스템",
+                labels: ["feature", "completed"],
+                body: [
+                  "## 요약",
+                  "사용자가 개선 아이디어/불만을 적고 좋아요/상태 트래킹할 수 있는 게시판.",
+                  "",
+                  "## 구성",
+                  "- DB: feedback + feedback_likes (Flyway V4)",
+                  "- API: GET 목록(비로그인 OK), POST 작성(인증), POST /like, PATCH /status(admin), DELETE",
+                  "- 작성자 마스킹: 이메일 앞 3자(예: `and***@gmail.com`)",
+                  "- AdminChecker: `app.admin.emails` 환경변수 또는 DB role=ADMIN",
+                  "- 운영자: `andyhyunbin@gmail.com` (env `ADMIN_EMAILS`)",
+                  "- Frontend: `/feedback` 페이지, 헤더 콘텐츠 메뉴, 상태 필터 5종, 페이지네이션",
+                  "",
+                  "## 관련 commit",
+                  `- ${cmt("619f922")} — 피드백 게시판 + admin 시스템`,
+                  "",
+                  "## 상태",
+                  "✅ Completed",
+                ].join("\n"),
+              },
+              {
+                title: "🎯 주린이 타깃 SEO + 색인 우회 + 마루부리 폰트",
+                labels: ["seo", "design", "completed"],
+                body: [
+                  "## 요약",
+                  "사이트 주 타깃을 \"주린이(주식 처음하는 초보)\"로 재정의 + Search Console 색인 캐시 우회 + 마루부리 폰트 적용.",
+                  "",
+                  "## 변경",
+                  "- `sitemap-2026.xml` 신규 (5/6 fail 캐시 우회) — 13페이지 발견 ✅",
+                  "- robots.txt에 새 sitemap 추가",
+                  "- 마루부리 OTF 4웨이트(Light/Regular/SemiBold/Bold), 본문/숫자 통일 (`tabular-nums`로 자릿수 정렬)",
+                  "- index.html 메타: title/description/keywords/OG/Twitter 모두 \"주린이/주식 입문\" 키워드",
+                  "- Index.tsx Hero: \"주식, 어렵지 않아요\" + 학습 CTA 우선 + 카드 순서 재배열",
+                  "- 또한 과거 fix: sitemap.xml의 X-Robots-Tag noindex 제거(Google이 sitemap 자체를 reject 했던 원인)",
+                  "",
+                  "## 관련 commit",
+                  `- ${cmt("826a8d5")} — sitemap-2026 + 마루부리 + 주린이 카피`,
+                  `- ${cmt("335c594")} — sitemap.xml의 X-Robots-Tag noindex 제거`,
+                  `- ${cmt("5044a59")} — sitemap.xml 페이지 확장`,
+                  "",
+                  "## 상태",
+                  "✅ Completed (sitemap-2026 색인 성공 13페이지)",
+                ].join("\n"),
+              },
+              {
+                title: "📚 /learn 45 토픽 (kid/student/pro 트랙)",
+                labels: ["feature", "content", "completed"],
+                body: [
+                  "## 요약",
+                  "주식 공부 페이지 — 대상별 3 트랙 × 총 45개 토픽으로 점진 확장.",
+                  "",
+                  "## 트랙",
+                  "- **kid** (초등/중) 14 토픽 — 비유 위주, 그림 이모지",
+                  "- **student** (대학/입문) 18 토픽 — 실전 시작, 용어/지표/전략",
+                  "- **pro** (전공/전문) 13 토픽 — 수식/이론/시장미시구조/팩터",
+                  "",
+                  "## 단계별 변화",
+                  "- 11 토픽 → 23 → 45 (3주 간 확장)",
+                  "- 재사용 PaginationControl 컴포넌트로 스크리너/커뮤니티 적용",
+                  "",
+                  "## 관련 commit",
+                  `- ${cmt("7cc8931")} — /learn 페이지 신규`,
+                  `- ${cmt("c9db5cb")} — 11 토픽 ready`,
+                  `- ${cmt("db71c34")} — audience 트랙 분리(kid/student/pro) + 12 토픽 추가, 23개`,
+                  `- ${cmt("980909d")} — 23 → 45 토픽 대확장`,
+                  `- ${cmt("490c11a")} — PaginationControl 컴포넌트`,
+                  "",
+                  "## 상태",
+                  "✅ Completed (45 토픽 라이브)",
+                ].join("\n"),
+              },
+              {
+                title: "🎨 Toss 디자인 + 한국 금융 컨벤션",
+                labels: ["design", "completed"],
+                body: [
+                  "## 요약",
+                  "전체 UI를 Toss 스타일로 리디자인 + 한국 금융 컨벤션 적용 (RED 상승 / BLUE 하락).",
+                  "",
+                  "## 변경",
+                  "- HSL 토큰 기반 디자인 시스템(`index.css`)",
+                  "- 토스 brand blue(#3182F6) primary, soft cool gray, 16~24px rounded, 부드러운 shadow",
+                  "- Pretendard Variable 본문(이후 마루부리로 교체)",
+                  "- Hero + 8 service showcase 카드 + 시장 + 데이터 출처/면책 4섹션 home 리디자인",
+                  "- EconomyPage 도넛: 하락 녹색 → 파랑 (한국 컨벤션 일치)",
+                  "",
+                  "## 관련 commit",
+                  `- ${cmt("38fa91b")} — Toss 디자인 시스템`,
+                  `- ${cmt("8b26ddf")} — service showcase 리디자인`,
+                  `- ${cmt("426ef7e")} — EconomyPage 한국 컨벤션`,
+                  "",
+                  "## 상태",
+                  "✅ Completed",
+                ].join("\n"),
+              },
+              {
+                title: "📊 Umami Analytics 자체 호스팅",
+                labels: ["infra", "completed"],
+                body: [
+                  "## 요약",
+                  "GA4 대신 Umami(오픈소스, GDPR 친화) 자체 호스팅 — 도메인 `analytics.flowstock.info`.",
+                  "",
+                  "## 구성",
+                  "- k3s deployment + service",
+                  "- Cloudflare Tunnel ingress",
+                  "- frontend에 트래커 스크립트 임베드 (UMAMI_WEBSITE_ID secret)",
+                  "",
+                  "## 관련 commit",
+                  `- ${cmt("f5b6e31")} — Umami 자체호스팅`,
+                  `- ${cmt("2cda91d")} — UMAMI_WEBSITE_ID 등록 + tracker 활성`,
+                  "",
+                  "## 상태",
+                  "✅ Completed",
+                ].join("\n"),
+              },
+              {
+                title: "🔗 뉴스↔뉴스 관계 그래프 + 종목 매핑 정확도",
+                labels: ["feature", "completed"],
+                body: [
+                  "## 요약",
+                  "뉴스 페이지에서 뉴스끼리의 연관관계도 그래프로. 종목 매핑에 銀/한자 보강.",
+                  "",
+                  "## 변경",
+                  "- @xyflow/react 네트워크 그래프 — 뉴스 노드 + 종목 노드 + 관계 엣지",
+                  "- news_stock_match 사전에 한자 별칭 추가",
+                  "",
+                  "## 관련 commit",
+                  `- ${cmt("e934e76")} — 뉴스↔뉴스 관계 그래프 + 종목 매핑 銀/한자 보강`,
+                  "",
+                  "## 상태",
+                  "✅ Completed",
+                ].join("\n"),
+              },
+              {
+                title: "📈 분석 도구 패키지 — 백테스터/스크리너/섹터/거시/실적/DART",
+                labels: ["feature", "completed"],
+                body: [
+                  "## 요약",
+                  "주린이 대시보드를 넘어 실전 분석 도구 패키지를 한 번에 추가.",
+                  "",
+                  "## 추가된 페이지",
+                  "- 종목 스크리너 (가격/등락률/거래량 필터)",
+                  "- 종목 비교 (4개까지 정규화 그래프 + Sharpe)",
+                  "- 백테스터 (MA/RSI/볼린저 전략)",
+                  "- 섹터 히트맵",
+                  "- 거시 대시보드 (ECOS — 금리/환율/CPI/M2)",
+                  "- 실적 캘린더 (분기 발표 일정)",
+                  "- 기술지표 차트",
+                  "- DART 재무 통합",
+                  "- 커뮤니티(article/comment/like)",
+                  "",
+                  "## 관련 commit",
+                  `- ${cmt("e678a5d")} — 8개 페이지 + DART 재무 통합`,
+                  `- ${cmt("d83f304")} — community + Map<String,Any?> 타입 fix`,
+                  "",
+                  "## 상태",
+                  "✅ Completed",
+                ].join("\n"),
+              },
+              {
+                title: "👤 OAuth 검수 자료 — /me, /privacy, /terms",
+                labels: ["feature", "compliance", "completed"],
+                body: [
+                  "## 요약",
+                  "Naver/Google OAuth 검수 통과 위해 필수 자료 페이지 + 마이페이지 + 면책 페이지.",
+                  "",
+                  "## 페이지",
+                  "- `/me` — 마이페이지 (인증 정보 표시)",
+                  "- `/privacy` — 개인정보 처리방침",
+                  "- `/terms` — 서비스 이용약관",
+                  "- 푸터에 링크",
+                  "",
+                  "## 관련 commit",
+                  `- ${cmt("95b0e4c")} — /me + /privacy + /terms`,
+                  `- ${cmt("17e2108")} — 푸터 추가 (링크 + 면책)`,
+                  "",
+                  "## 상태",
+                  "✅ Completed",
+                  "",
+                  "## TODO (사용자 작업, 외부)",
+                  "- Naver 검수 신청",
+                  "- Google OAuth verification 신청",
+                ].join("\n"),
+              },
+              {
+                title: "⚡ 성능 — Jaeger/OpenTelemetry + Web Vitals + 캐싱 + 배포 단축",
+                labels: ["performance", "observability", "completed"],
+                body: [
+                  "## 요약",
+                  "관측성 + 캐싱 + 배포 가속 패키지.",
+                  "",
+                  "## 변경",
+                  "- AI service OpenTelemetry → Jaeger OTLP 연동",
+                  "- RSS 병렬 fetch + TTL 캐시(60s)",
+                  "- frontend Web Vitals 측정 + Umami 전송",
+                  "- backend replica 2→1 + HPA 1~2 + readiness probe 가속",
+                  "- rollout 병렬 (backend + ai 동시)",
+                  "- docs/PERFORMANCE.md 측정 데이터 백필",
+                  "- DART real fetch + URL probes + brand logo + telemetry skill",
+                  "",
+                  "## 관련 commit",
+                  `- ${cmt("13b0d2a")} — OpenTelemetry + RSS 병렬 + TTL 캐시 + Web Vitals`,
+                  `- ${cmt("f46defb")} — replica/HPA/probe/rollout 가속`,
+                  `- ${cmt("1f64b0f")} — 실측 데이터 백필 (Before/After)`,
+                  `- ${cmt("726d1b4")} — DART real fetch + telemetry skill`,
+                  "",
+                  "## 상태",
+                  "✅ Completed",
+                ].join("\n"),
+              },
+              {
+                title: "🛠 CI/하네스 정비 — 권한/스킬/CI fix",
+                labels: ["infra", "harness", "completed"],
+                body: [
+                  "## 요약",
+                  "Claude Code 하네스 + GitHub Actions 안정화.",
+                  "",
+                  "## 변경",
+                  "- `.claude/settings.json` permission allowlist (read-only 패턴 등록)",
+                  "- 슬래시 커맨드 신규: `/ci-status`, `/ssh-mini`",
+                  "- daily-health.yml — yaml indent 충돌 fix (inline python heredoc 제거)",
+                  "- daily auto health check (npm audit + 24h CI 실패)",
+                  "- Docker single-stage build with pre-built jar",
+                  "- Node 20 → 22 (wrangler@latest 호환)",
+                  "",
+                  "## 관련 commit",
+                  `- ${cmt("5914cb9")} — permission allowlist + ci-status/ssh-mini skills + auto health check`,
+                  `- ${cmt("9115a9a")} — daily-health.yml inline python heredoc 제거`,
+                  `- ${cmt("594efec")} — Docker single-stage with pre-built jar`,
+                  `- ${cmt("df46c77")} — Node 20 → 22`,
+                  "",
+                  "## 상태",
+                  "✅ Completed",
+                ].join("\n"),
+              },
+            ];
+
+            console.log(`총 ${issues.length}개 epic issue 생성 예정`);
+            if (dryRun) {
+              for (const i of issues) {
+                console.log(`[DRY] ${i.title} (labels: ${i.labels.join(",")})`);
+              }
+              return;
+            }
+
+            for (const i of issues) {
+              try {
+                const res = await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: i.title,
+                  body: i.body,
+                  labels: i.labels,
+                });
+                core.info(`✅ #${res.data.number} ${i.title}`);
+              } catch (err) {
+                core.warning(`❌ "${i.title}" 실패: ${err.message}`);
+                // labels가 없으면 issue 생성은 되지만 label 자동 생성 X — 라벨 없이 재시도
+                if (String(err.message).includes("label")) {
+                  const res = await github.rest.issues.create({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    title: i.title,
+                    body: i.body,
+                  });
+                  core.info(`↪︎ #${res.data.number} 라벨 없이 생성: ${i.title}`);
+                }
+              }
+            }
+            core.info("Backfill done.");
