@@ -46,6 +46,8 @@ class SecurityConfig(
                     .requestMatchers(HttpMethod.GET, "/api/sectors/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/macro/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/articles", "/api/articles/*").permitAll()
+                    // 피드백 — 목록/상세는 비로그인도 OK (작성/좋아요/삭제는 인증)
+                    .requestMatchers(HttpMethod.GET, "/api/feedback", "/api/feedback/*").permitAll()
                     // 챗봇 — 비로그인 사용자도 사용 (IP rate limit으로 보호)
                     .requestMatchers(HttpMethod.POST, "/api/chatbot/**").permitAll()
                     // 개인 기능(포트폴리오, /me, 로그아웃 등)은 인증 필요

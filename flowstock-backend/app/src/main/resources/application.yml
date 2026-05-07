@@ -56,6 +56,11 @@ oauth:
 ai-service:
   url: ${AI_SERVICE_URL:http://localhost:8000}
 
+# ── 운영자 권한 — email 목록 (DB role과 무관하게 ADMIN 부여) ──
+app:
+  admin:
+    emails: ${ADMIN_EMAILS:andyhyunbin@gmail.com}
+
 # ── DART Open API (재무제표/공시) ──
 dart:
   api-key: ${DART_API_KEY:}

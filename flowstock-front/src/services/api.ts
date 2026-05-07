@@ -269,3 +269,41 @@ export const macroApi = {
   getDashboard: () =>
     api.get<ApiResponse<{ source: 'ecos' | 'mock'; series: MacroSeries[] }>>(`/macro/dashboard`),
 };
+
+// Feedback (서비스 개선 제안)
+export type FeedbackStatus = 'OPEN' | 'IN_PROGRESS' | 'DONE' | 'REJECTED';
+export interface FeedbackItem {
+  id: number;
+  title: string;
+  content: string;
+  status: FeedbackStatus;
+  likeCount: number;
+  likedByMe: boolean;
+  authorMasked: string;
+  isMine: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface FeedbackListResponse {
+  content: FeedbackItem[];
+  page: number;
+  size: number;
+  totalPages: number;
+  totalElements: number;
+}
+export const feedbackApi = {
+  list: (status?: FeedbackStatus, page = 0, size = 20) => {
+    const p = new URLSearchParams({ page: String(page), size: String(size) });
+    if (status) p.set('status', status);
+    return api.get<ApiResponse<FeedbackListResponse>>(`/feedback?${p.toString()}`);
+  },
+  get: (id: number) => api.get<ApiResponse<FeedbackItem>>(`/feedback/${id}`),
+  create: (body: { title: string; content: string }) =>
+    api.post<ApiResponse<FeedbackItem>>('/feedback', body),
+  remove: (id: number) =>
+    api.delete<ApiResponse<{ deleted: number }>>(`/feedback/${id}`),
+  toggleLike: (id: number) =>
+    api.post<ApiResponse<FeedbackItem>>(`/feedback/${id}/like`),
+  updateStatus: (id: number, status: FeedbackStatus) =>
+    api.patch<ApiResponse<FeedbackItem>>(`/feedback/${id}/status`, { status }),
+};
