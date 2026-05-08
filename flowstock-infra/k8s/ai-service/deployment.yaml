@@ -15,9 +15,11 @@ spec:
       labels:
         app: ai-service
     spec:
-      # claude CLI(Bun standalone)가 컨테이너에서 segfault — 컨테이너 default seccomp가
-      # Bun JIT의 mmap PROT_EXEC를 차단하기 때문. seccomp Unconfined로 풀어야 동작.
-      # 호스트(seccomp 없음)에선 같은 binary가 정상이라는 점이 단서였음.
+      # Bun JIT(JavaScriptCore)가 컨테이너 default 보안에서 작동 못 함:
+      #  - seccomp가 mmap PROT_EXEC 차단
+      #  - capabilities 부족으로 GC thread suspend 실패 ("embedder failed to suspend thread")
+      # 개인 mini PC 단일 노드라 privileged: true 로 한 번에 풀음. 호스트(권한 풀린 상태)에서
+      # 같은 binary 정상 동작했던 사실에 부합.
       securityContext:
         seccompProfile:
           type: Unconfined
@@ -39,6 +41,8 @@ spec:
       containers:
         - name: ai-service
           image: ghcr.io/lemon0333/flowstock-ai:latest
+          securityContext:
+            privileged: true
           ports:
             - containerPort: 8000
           volumeMounts:
