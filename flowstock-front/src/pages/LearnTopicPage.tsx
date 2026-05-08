@@ -115,7 +115,9 @@ export default function LearnTopicPage() {
           <section className="space-y-4">
             <h3 className="font-bold text-base">🧠 이해 확인</h3>
             {topic.quiz.map((q, qi) => (
-              <QuizCard key={qi} quiz={q} />
+              // key에 slug 포함 — 토픽 이동 시(컴포넌트 unmount 안 됨) 강제 remount하여
+              // useState(picked) 초기화. 안 그러면 다음 토픽 가도 이전 풀린 답이 박혀 있음.
+              <QuizCard key={`${topic.slug}-${qi}`} quiz={q} />
             ))}
           </section>
         )}

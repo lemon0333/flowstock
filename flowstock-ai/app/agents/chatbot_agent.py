@@ -111,27 +111,33 @@ async def stream_chat(
     )
 
     # 4. claude-code-sdk async stream
+    # claude-code 1.0.0의 SDK는 ResultMessage 받은 후 cleanup에서 exit code 1로
+    # raise하는 케이스가 있음 — 응답을 이미 받았으면 그 exception은 swallow.
+    got_response = False
     try:
         async for msg in query(prompt=prompt, options=options):
             msg_type = getattr(msg, "type", "")
-            # AssistantMessage: content가 ContentBlock[] (TextBlock.text)
             if msg_type == "assistant":
                 content = getattr(msg, "content", None)
                 if isinstance(content, list):
                     for block in content:
                         text = getattr(block, "text", None)
                         if text:
+                            got_response = True
                             yield {"type": "chunk", "data": {"delta": text}}
                 elif isinstance(content, str) and content:
+                    got_response = True
                     yield {"type": "chunk", "data": {"delta": content}}
-            # ResultMessage: 일부 환경에서 최종 텍스트만 result로 옴
             elif msg_type == "result":
-                # 이미 assistant로 emit한 경우 중복 방지 위해 result는 무시
-                # 만약 assistant가 한 번도 안 왔으면 result에서 추출
-                pass
+                # 정상 종료. iterator 더 안 돌리고 빠져나옴.
+                break
     except Exception as e:
-        logger.exception("claude-code-sdk 호출 실패")
-        yield {
-            "type": "error",
-            "data": {"code": "UPSTREAM", "message": f"AI 응답 실패: {type(e).__name__}"},
-        }
+        if got_response:
+            # 응답은 이미 받았고 cleanup만 깨진 케이스 — 사용자에겐 정상.
+            logger.warning("SDK cleanup 실패(응답은 정상 emit됨): %s", type(e).__name__)
+        else:
+            logger.exception("claude-code-sdk 호출 실패")
+            yield {
+                "type": "error",
+                "data": {"code": "UPSTREAM", "message": f"AI 응답 실패: {type(e).__name__}"},
+            }

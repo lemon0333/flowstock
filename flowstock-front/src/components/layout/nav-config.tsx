@@ -87,9 +87,9 @@ export function findActiveGroup(currentPath: string): NavGroup | null {
 
 /**
  * 자체 좌측 레이아웃을 가진 페이지 — 카테고리 사이드바를 숨김.
- * (예: /learn은 자체 audience 필터 사이드바를 그림)
+ * 현재는 없음. 콘텐츠 카테고리는 어떤 항목을 눌러도 같은 사이드바 유지(일관성).
  */
-const SELF_LAYOUT_PATHS = new Set<string>(["/learn"]);
+const SELF_LAYOUT_PATHS = new Set<string>();
 export function hasSelfLayout(currentPath: string): boolean {
   return SELF_LAYOUT_PATHS.has(currentPath);
 }

@@ -63,13 +63,22 @@ export default function LearnIndexPage() {
 
   return (
     <Layout>
-      <div className="md:grid md:grid-cols-[220px_minmax(0,1fr)] md:gap-8">
-        {/* ── 좌측: 토스 #43 패턴 사이드바 ── */}
-        {/* 모바일: 가로 chip */}
-        <nav
-          aria-label="대상별 필터"
-          className="md:hidden -mx-4 px-4 mb-4 flex gap-2 overflow-x-auto pb-1 scrollbar-none"
-        >
+      {/* 카테고리 사이드바는 RootShell이 그려줌(다른 콘텐츠 페이지와 일관성).
+          audience 필터는 페이지 내 hero 아래 가로 chip 으로. */}
+      <div className="space-y-5">
+        <header>
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center gap-2">
+            <BookOpen className="h-6 w-6 text-primary" />
+            {headerLabel}
+            <span className="text-base text-muted-foreground font-semibold">
+              {filtered.length}
+            </span>
+          </h1>
+          <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{headerDesc}</p>
+        </header>
+
+        {/* audience 필터 — 가로 chip */}
+        <nav aria-label="대상별 필터" className="flex flex-wrap gap-2">
           {TABS.map((t) => {
             const active = tab === t.key;
             const count = t.key === "all" ? LEARN_TOPICS.length : counts[t.key as Audience];
@@ -78,7 +87,7 @@ export default function LearnIndexPage() {
                 key={t.key}
                 onClick={() => setTab(t.key)}
                 className={`
-                  shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-semibold border transition-colors
+                  inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-semibold border transition-colors
                   ${active
                     ? "bg-primary text-primary-foreground border-primary"
                     : "bg-card text-muted-foreground border-border hover:text-foreground hover:bg-accent"
@@ -95,60 +104,7 @@ export default function LearnIndexPage() {
           })}
         </nav>
 
-        {/* 데스크탑: sticky 좌측 사이드바 */}
-        <aside className="hidden md:block">
-          <div className="sticky top-24">
-            <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-4 pb-3">
-              대상별
-            </div>
-            <ul className="space-y-1">
-              {TABS.map((t) => {
-                const active = tab === t.key;
-                const count =
-                  t.key === "all" ? LEARN_TOPICS.length : counts[t.key as Audience];
-                return (
-                  <li key={t.key}>
-                    <button
-                      onClick={() => setTab(t.key)}
-                      className={`
-                        w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[15px] font-semibold transition-colors
-                        ${active
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                        }
-                      `}
-                    >
-                      <span className="text-lg">{t.emoji}</span>
-                      <span className="flex-1 text-left truncate">{t.label}</span>
-                      <span
-                        className={`text-xs font-medium ${
-                          active ? "text-primary/80" : "text-muted-foreground"
-                        }`}
-                      >
-                        {count}
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </aside>
-
-        {/* ── 우측: 메인 토픽 그리드 ── */}
-        <div className="min-w-0 space-y-5">
-          <header>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center gap-2">
-              <BookOpen className="h-6 w-6 text-primary" />
-              {headerLabel}
-              <span className="text-base text-muted-foreground font-semibold">
-                {filtered.length}
-              </span>
-            </h1>
-            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{headerDesc}</p>
-          </header>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {filtered.map((t) => {
               const isReady = t.status === "ready";
               return (
@@ -211,8 +167,7 @@ export default function LearnIndexPage() {
               모의투자 시작하기
               <ArrowRight className="h-4 w-4" />
             </Link>
-          </section>
-        </div>
+        </section>
       </div>
     </Layout>
   );
