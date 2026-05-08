@@ -120,9 +120,15 @@ export const useStore = create<AppState>()(
         set({ user, token, isAuthenticated: true });
       },
       logout: () => {
+        // 다른 탭/zustand persist 캐시까지 깨끗하게 초기화하기 위해
+        // 명시적 navigate + 새로고침. 이 패턴 없으면 헤더가 옛 사용자 이름
+        // 표시하는 케이스 발생 (zustand 메모리 상태와 localStorage 불일치).
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         set({ user: null, token: null, isAuthenticated: false });
+        if (typeof window !== "undefined") {
+          window.location.href = "/";
+        }
       },
 
       // ── 모의투자 ──

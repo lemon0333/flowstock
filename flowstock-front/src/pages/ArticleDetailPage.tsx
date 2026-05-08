@@ -65,11 +65,16 @@ export default function ArticleDetailPage() {
     if (!text || !article) return;
     setSubmitting(true);
     try {
-      const res = await articleApi.addComment(articleId, text);
-      if (res.data) {
-        setArticle({ ...article, comments: [...article.comments, res.data] });
-        setComment("");
+      await articleApi.addComment(articleId, text);
+      // 등록 후 글 전체 refetch — 댓글 목록 + count 한 번에 신뢰 있게 갱신
+      const fresh = await articleApi.get(articleId);
+      if (fresh?.data) {
+        setArticle(fresh.data);
       }
+      setComment("");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "댓글 등록에 실패했어요";
+      alert(`댓글 등록에 실패했어요: ${msg}`);
     } finally {
       setSubmitting(false);
     }
@@ -77,8 +82,16 @@ export default function ArticleDetailPage() {
 
   const handleDeleteComment = async (commentId: number) => {
     if (!confirm("댓글을 삭제할까요?") || !article) return;
-    await articleApi.removeComment(commentId).catch(() => null);
-    setArticle({ ...article, comments: article.comments.filter((c) => c.id !== commentId) });
+    try {
+      await articleApi.removeComment(commentId);
+      setArticle({
+        ...article,
+        comments: article.comments.filter((c) => c.id !== commentId),
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "삭제 실패";
+      alert(`댓글 삭제에 실패했어요: ${msg}`);
+    }
   };
 
   const handleDeleteArticle = async () => {
