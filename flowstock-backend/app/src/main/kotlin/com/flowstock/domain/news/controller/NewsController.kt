@@ -33,6 +33,20 @@ class NewsController(
             .onErrorReturn(ApiResponse.success(emptyList()))
     }
 
+    @GetMapping("/global")
+    fun global(@RequestParam(defaultValue = "20") limit: Int): Mono<ApiResponse<List<Map<String, Any?>>>> {
+        return client.get()
+            .uri("$aiUrl/api/ai/news/global?limit=$limit")
+            .retrieve()
+            .bodyToMono(Map::class.java)
+            .map { resp ->
+                @Suppress("UNCHECKED_CAST")
+                val data = (resp["data"] as? List<Map<String, Any?>>) ?: emptyList()
+                ApiResponse.success(data)
+            }
+            .onErrorReturn(ApiResponse.success(emptyList()))
+    }
+
     @GetMapping("/search")
     fun search(
         @RequestParam keyword: String,

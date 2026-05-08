@@ -8,6 +8,7 @@ from app.agents.news_analyzer import analyze_news
 from app.database import get_db
 from app.models.entities import AnalysisRequestLog, NewsAnalysisLog
 from app.models.schemas import NewsAnalysisRequest, NewsAnalysisResponse
+from app.services.global_news import get_global_news
 from app.services.news_feed import (
     get_latest_news_async,
     get_stock_news_async,
@@ -20,6 +21,12 @@ router = APIRouter(prefix="/api/ai/news", tags=["news"])
 async def list_latest_news(limit: int = 30):
     """주요 한국 경제 뉴스 RSS 통합 응답 (4채널 병렬 + 60s 캐시)."""
     return {"data": await get_latest_news_async(limit=limit)}
+
+
+@router.get("/global")
+async def list_global_news(limit: int = 20):
+    """Reuters/Bloomberg/FT 헤드라인 + 한국어 번역 (5분 캐시)."""
+    return {"data": await get_global_news(limit=limit)}
 
 
 @router.get("/search")

@@ -8,18 +8,25 @@
 
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Clock, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Clock, TrendingUp, TrendingDown, Minus, Globe2, Loader2 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import NetworkGraph from "@/components/stock/NetworkGraph";
-import { newsApi, stockApi } from "@/services/api";
+import { newsApi, stockApi, type GlobalNewsItem } from "@/services/api";
 import { newsItemSchema, safeArray, stockSchema } from "@/services/schemas";
 
+type NewsMode = "domestic" | "global";
+
 export default function NewsPage() {
+  const [mode, setMode] = useState<NewsMode>("domestic");
   const [news, setNews] = useState<any[]>([]);
   const [stocks, setStocks] = useState<any[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const [globalNews, setGlobalNews] = useState<GlobalNewsItem[]>([]);
+  const [globalLoading, setGlobalLoading] = useState(false);
+  const [globalError, setGlobalError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,6 +53,16 @@ export default function NewsPage() {
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (mode !== "global" || globalNews.length > 0) return;
+    setGlobalLoading(true);
+    setGlobalError('');
+    newsApi.getGlobal(20)
+      .then((res) => setGlobalNews(res.data ?? []))
+      .catch((e) => setGlobalError(e instanceof Error ? e.message : '글로벌 뉴스 로드 실패'))
+      .finally(() => setGlobalLoading(false));
+  }, [mode, globalNews.length]);
 
   const toggleNews = (id: string) => {
     setSelectedIds((prev) =>
@@ -83,8 +100,96 @@ export default function NewsPage() {
     );
   }
 
+  const TabButton = ({ value, label, icon: Icon }: { value: NewsMode; label: string; icon: React.ComponentType<{ className?: string }> }) => (
+    <button
+      type="button"
+      onClick={() => setMode(value)}
+      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
+        mode === value
+          ? "bg-primary text-primary-foreground"
+          : "bg-muted text-muted-foreground hover:bg-muted/70"
+      }`}
+    >
+      <Icon className="h-3.5 w-3.5" />
+      {label}
+    </button>
+  );
+
+  if (mode === "global") {
+    return (
+      <Layout>
+        <div className="flex items-center gap-2 mb-4">
+          <TabButton value="domestic" label="한국 뉴스" icon={Clock} />
+          <TabButton value="global" label="글로벌 외신" icon={Globe2} />
+        </div>
+        <div>
+          <h2 className="text-base font-bold text-foreground mb-1">
+            Reuters · Bloomberg · Financial Times
+          </h2>
+          <p className="text-xs text-muted-foreground mb-4">
+            지난 24시간의 글로벌 경제 헤드라인을 한국어로 자동 번역해서 보여줍니다 (5분 캐시).
+          </p>
+          {globalLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-sm text-muted-foreground">번역 중... (첫 로드 ~10초)</span>
+            </div>
+          ) : globalError ? (
+            <p className="text-sm text-negative py-12 text-center">{globalError}</p>
+          ) : globalNews.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-12 text-center">
+              불러올 글로벌 뉴스가 없습니다.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {globalNews.map((item) => {
+                const dateStr = item.published_at
+                  ? new Date(item.published_at).toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short" })
+                  : "";
+                return (
+                  <a
+                    key={item.id}
+                    href={item.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block bg-card rounded-2xl px-5 py-4 hover:bg-accent/40 transition-colors"
+                    style={{ boxShadow: 'var(--shadow-card)' }}
+                  >
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-xs font-semibold text-primary">{item.source}</span>
+                      {dateStr && (
+                        <span className="text-xs text-muted-foreground">· {dateStr}</span>
+                      )}
+                    </div>
+                    <p className="text-base font-bold text-foreground leading-snug">
+                      {item.title_ko || item.title_en}
+                    </p>
+                    {item.title_ko && item.title_en && (
+                      <p className="text-xs text-muted-foreground mt-0.5 italic line-clamp-1">
+                        {item.title_en}
+                      </p>
+                    )}
+                    {(item.summary_ko || item.summary_en) && (
+                      <p className="text-sm text-foreground/80 mt-2 line-clamp-3">
+                        {item.summary_ko || item.summary_en}
+                      </p>
+                    )}
+                  </a>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
+      <div className="flex items-center gap-2 mb-4">
+        <TabButton value="domestic" label="한국 뉴스" icon={Clock} />
+        <TabButton value="global" label="글로벌 외신" icon={Globe2} />
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* ── 좌측: 뉴스 목록 ── */}
         <div className="lg:col-span-1">
