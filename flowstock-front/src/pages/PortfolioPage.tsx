@@ -73,6 +73,7 @@ export default function PortfolioPage() {
   const [formAction, setFormAction] = useState<"buy" | "sell">("buy");
   const [formError, setFormError] = useState("");
   const [search, setSearch] = useState("");
+  const [formMemo, setFormMemo] = useState("");
 
   // 30초마다 시세 polling — 탭이 hidden이면 멈춤
   useEffect(() => {
@@ -194,6 +195,7 @@ export default function PortfolioPage() {
       return;
     }
     const price = stock.price;
+    const memo = formMemo.trim() || undefined;
     const result =
       formAction === "buy"
         ? buyStock({
@@ -202,8 +204,9 @@ export default function PortfolioPage() {
             sector: "기타",
             quantity: qty,
             price,
+            memo,
           })
-        : sellStock({ stockId: stock.id, quantity: qty, price });
+        : sellStock({ stockId: stock.id, quantity: qty, price, memo });
 
     if (!result.ok) {
       setFormError(result.error ?? "거래에 실패했습니다.");
@@ -211,6 +214,7 @@ export default function PortfolioPage() {
     }
     setFormStockId("");
     setFormQuantity("");
+    setFormMemo("");
     setShowForm(false);
   };
 
@@ -532,6 +536,26 @@ export default function PortfolioPage() {
                       className="w-full bg-accent border border-border rounded-xl px-3 py-2.5 text-sm font-data"
                     />
                   </div>
+                  <div className="md:col-span-2">
+                    <label className="text-xs text-muted-foreground mb-1 block">
+                      {formAction === "buy" ? "왜 사는지 (선택)" : "왜 파는지 (선택)"}
+                      <span className="ml-1.5 text-[10px] opacity-70">
+                        — 나중에 AI가 복기 분석해줘요
+                      </span>
+                    </label>
+                    <textarea
+                      value={formMemo}
+                      onChange={(e) => setFormMemo(e.target.value)}
+                      placeholder={
+                        formAction === "buy"
+                          ? "예: 실적 호조 + 차트 정배열, 5% 빠진 김에"
+                          : "예: 목표가 도달, 매크로 악화로 손절"
+                      }
+                      maxLength={300}
+                      rows={2}
+                      className="w-full bg-accent border border-border rounded-xl px-3 py-2 text-sm resize-none"
+                    />
+                  </div>
                   <div className="flex items-end">
                     <button
                       onClick={handleSubmit}
@@ -556,8 +580,48 @@ export default function PortfolioPage() {
               보유 종목 ({holdings.length})
             </div>
             {holdings.length === 0 ? (
-              <div className="py-12 text-center text-sm text-muted-foreground">
-                아직 보유한 종목이 없습니다. 거래하기 버튼으로 매수해보세요.
+              <div className="px-5 py-8">
+                <div className="text-center mb-5">
+                  <div className="text-2xl mb-2">🌱</div>
+                  <h3 className="text-base font-bold mb-1">처음이세요? 1분이면 시작!</h3>
+                  <p className="text-xs text-muted-foreground">
+                    1,000만원 가상 잔고로 실수해도 괜찮은 연습장이에요.
+                  </p>
+                </div>
+                <ol className="space-y-2.5 max-w-md mx-auto text-sm">
+                  <li className="flex gap-2.5">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold flex items-center justify-center">1</span>
+                    <span className="text-foreground">
+                      위 <strong className="text-primary">+ 거래하기</strong> 버튼 누르기
+                    </span>
+                  </li>
+                  <li className="flex gap-2.5">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold flex items-center justify-center">2</span>
+                    <span className="text-foreground">
+                      종목 검색해서 고르고 <strong>수량</strong> 입력 (1주부터 가능)
+                    </span>
+                  </li>
+                  <li className="flex gap-2.5">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold flex items-center justify-center">3</span>
+                    <span className="text-foreground">
+                      <strong>"왜 사는지"</strong> 메모 남기기 — 나중에 AI가 복기해줘요
+                    </span>
+                  </li>
+                </ol>
+                <div className="mt-5 flex flex-col sm:flex-row gap-2 justify-center">
+                  <button
+                    onClick={() => setShowForm(true)}
+                    className="px-5 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-semibold hover:bg-primary/90"
+                  >
+                    + 첫 매수해보기
+                  </button>
+                  <Link
+                    to="/learn"
+                    className="px-5 py-2.5 border border-border rounded-full text-sm font-medium hover:bg-accent text-center"
+                  >
+                    📚 먼저 주식 공부
+                  </Link>
+                </div>
               </div>
             ) : (
               <div>

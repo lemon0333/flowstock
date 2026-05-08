@@ -174,6 +174,21 @@ export default function InvestGamePage() {
           </p>
         </div>
 
+        {/* 첫 진입 가이드 — 게임 시작 전에만 보여줌 */}
+        {!started && (
+          <details className="bg-primary/5 border border-primary/20 rounded-2xl px-4 py-3 text-sm" open>
+            <summary className="cursor-pointer font-semibold flex items-center gap-2">
+              🎮 처음이세요? 게임 룰 30초 요약
+            </summary>
+            <ol className="mt-3 space-y-1.5 text-muted-foreground text-[13px] pl-1">
+              <li><strong className="text-foreground">1.</strong> 종목 + 기간 + 가릴 일수 선택 후 <strong>시작</strong></li>
+              <li><strong className="text-foreground">2.</strong> 차트는 일부만 보여요. <strong>그 시점의 뉴스</strong>를 보고 매수/매도 결정 — 미래는 안 보임</li>
+              <li><strong className="text-foreground">3.</strong> 하루씩 진행하면서 가격이 공개되고, 마지막에 <strong>Buy &amp; Hold</strong>(그냥 사두기)와 비교</li>
+              <li><strong className="text-foreground">4.</strong> 이긴 만큼이 <strong>"내 판단의 가치"</strong>. 못 이겨도 OK — 이게 학습 사이클</li>
+            </ol>
+          </details>
+        )}
+
         {!started ? (
           <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

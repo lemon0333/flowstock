@@ -139,6 +139,17 @@ export default function BacktestPage() {
           </p>
         </div>
 
+        <details className="bg-primary/5 border border-primary/20 rounded-2xl px-4 py-3 text-sm">
+          <summary className="cursor-pointer font-semibold flex items-center gap-2">
+            🤔 백테스트가 뭐예요?
+          </summary>
+          <div className="mt-3 text-muted-foreground text-[13px] space-y-1.5 pl-1">
+            <p><strong className="text-foreground">"이 전략을 과거에 썼으면 얼마 벌었을까?"</strong>를 시뮬레이션하는 도구.</p>
+            <p>예) <strong>MA 교차</strong>: 단기 이동평균선이 장기선 위로 올라오면 매수, 아래로 내려가면 매도. 이 룰을 5년치 차트에 그대로 돌려서 결과 보기.</p>
+            <p>👉 종목 → 전략 → 기간 선택 → 실행. 결과로 누적 수익률·MDD(최대 손실)·Sharpe(위험 대비 수익) 나옴.</p>
+          </div>
+        </details>
+
         {/* 파라미터 패널 */}
         <section className="bg-card border border-border rounded-2xl p-5 space-y-4">
           {/* 종목 선택 */}

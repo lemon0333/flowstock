@@ -25,8 +25,8 @@ interface Holding {
   sector: string;
 }
 
-/** 거래 내역 */
-interface Trade {
+/** 거래 내역 — 복기노트(memo) 옵셔널 */
+export interface Trade {
   id: string;
   type: "buy" | "sell";
   stockId: string;
@@ -35,6 +35,13 @@ interface Trade {
   price: number;
   total: number;
   at: string; // ISO timestamp
+  memo?: string; // 매수: 매수 이유 / 매도: 매도 회고
+  aiReview?: {
+    good: string;     // 잘한 점
+    concern: string;  // 아쉬운 점
+    lesson: string;   // 다음 교훈
+    at: string;       // 분석 시각
+  };
 }
 
 /** 알림 관심 종목 */
@@ -52,11 +59,13 @@ interface BuyInput {
   sector?: string;
   quantity: number;
   price: number;
+  memo?: string;
 }
 interface SellInput {
   stockId: string;
   quantity: number;
   price: number;
+  memo?: string;
 }
 interface TradeResult {
   ok: boolean;
@@ -117,7 +126,7 @@ export const useStore = create<AppState>()(
       holdings: [],
       trades: [],
 
-      buyStock: ({ stockId, stockName, sector = "기타", quantity, price }) => {
+      buyStock: ({ stockId, stockName, sector = "기타", quantity, price, memo }) => {
         if (quantity <= 0 || price <= 0) {
           return { ok: false, error: "수량과 가격은 0보다 커야 합니다." };
         }
@@ -152,6 +161,7 @@ export const useStore = create<AppState>()(
           price,
           total,
           at: new Date().toISOString(),
+          ...(memo ? { memo } : {}),
         };
         set({
           cash: state.cash - total,
@@ -161,7 +171,7 @@ export const useStore = create<AppState>()(
         return { ok: true };
       },
 
-      sellStock: ({ stockId, quantity, price }) => {
+      sellStock: ({ stockId, quantity, price, memo }) => {
         if (quantity <= 0 || price <= 0) {
           return { ok: false, error: "수량과 가격은 0보다 커야 합니다." };
         }
@@ -190,6 +200,7 @@ export const useStore = create<AppState>()(
           price,
           total,
           at: new Date().toISOString(),
+          ...(memo ? { memo } : {}),
         };
         set({
           cash: state.cash + total,
