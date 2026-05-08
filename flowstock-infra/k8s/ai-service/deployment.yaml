@@ -15,9 +15,10 @@ spec:
       labels:
         app: ai-service
     spec:
-      # 호스트의 claude credential을 컨테이너에 mount → 동일 인증 사용
-      # claude-code 1.0.0 (Bun standalone 도입 이전 버전) 시도 — 2.1.x의 Bun baseline
-      # build가 mini PC CPU에서 segfault. 1.0.0은 Node 기반 wrapper라 Bun 안 거침.
+      # 호스트의 claude credential + binary를 컨테이너에 mount.
+      # GitHub Actions runner에서 npm install된 binary는 baseline Bun build라 mini PC
+      # CPU에서 segfault. 호스트 binary는 mini PC에서 직접 install돼 native build라 OK.
+      # 인증도 호스트 ~/.claude.json 사용해 한 번에 해결.
       volumes:
         - name: claude-config
           hostPath:
@@ -26,6 +27,10 @@ spec:
         - name: claude-dir
           hostPath:
             path: /home/lemon/.claude
+            type: Directory
+        - name: claude-cli
+          hostPath:
+            path: /usr/lib/node_modules/@anthropic-ai/claude-code
             type: Directory
       containers:
         - name: ai-service
@@ -39,6 +44,9 @@ spec:
             - name: claude-dir
               mountPath: /root/.claude
               readOnly: false
+            - name: claude-cli
+              mountPath: /usr/lib/node_modules/@anthropic-ai/claude-code
+              readOnly: true
           env:
             - name: LOG_LEVEL
               value: "INFO"

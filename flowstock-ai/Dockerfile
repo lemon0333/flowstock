@@ -2,13 +2,17 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Node 20 + Claude Code CLI 설치
-# (claude-code-sdk Python 패키지가 내부적으로 `claude` CLI를 subprocess로 호출함)
+# Node 20 + claude 심볼릭 링크 placeholder 생성
+# (실제 binary는 deployment.yaml의 hostPath mount로 /usr/lib/node_modules/@anthropic-ai/claude-code/
+#  를 호스트에서 받음. 호스트 binary는 mini PC CPU에 맞게 native build로 install되어 있어
+#  Bun baseline build segfault 없음. GitHub Actions runner에서 npm install된 컨테이너 binary
+#  는 baseline 빌드라 mini PC에서 segfault — 그래서 컨테이너 install 자체 제거.)
 RUN apt-get update \
  && apt-get install -y --no-install-recommends curl ca-certificates gnupg \
  && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
  && apt-get install -y --no-install-recommends nodejs \
- && npm install -g @anthropic-ai/claude-code@1.0.0 \
+ && mkdir -p /usr/lib/node_modules/@anthropic-ai/claude-code/bin \
+ && ln -sf /usr/lib/node_modules/@anthropic-ai/claude-code/bin/claude.exe /usr/bin/claude \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
