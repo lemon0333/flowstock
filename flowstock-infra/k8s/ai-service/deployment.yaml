@@ -15,10 +15,14 @@ spec:
       labels:
         app: ai-service
     spec:
+      # claude CLI(Bun standalone)가 컨테이너에서 segfault — 컨테이너 default seccomp가
+      # Bun JIT의 mmap PROT_EXEC를 차단하기 때문. seccomp Unconfined로 풀어야 동작.
+      # 호스트(seccomp 없음)에선 같은 binary가 정상이라는 점이 단서였음.
+      securityContext:
+        seccompProfile:
+          type: Unconfined
       # 호스트의 claude credential + binary를 컨테이너에 mount.
-      # GitHub Actions runner에서 npm install된 binary는 baseline Bun build라 mini PC
-      # CPU에서 segfault. 호스트 binary는 mini PC에서 직접 install돼 native build라 OK.
-      # 인증도 호스트 ~/.claude.json 사용해 한 번에 해결.
+      # 인증도 호스트 ~/.claude.json 사용해 한 군데서 관리.
       volumes:
         - name: claude-config
           hostPath:
