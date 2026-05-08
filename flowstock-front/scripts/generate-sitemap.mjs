@@ -59,8 +59,13 @@ ${all
 </urlset>
 `;
 
-const outPath = path.join(root, "public/sitemap.xml");
-fs.writeFileSync(outPath, xml);
+// sitemap.xml — 일반 표준 위치 (다른 검색엔진/도구용, 그대로 유지)
+// sitemap-pages.xml — Google Search Console fresh URL용
+//   기존 sitemap.xml URL이 GSC negative cache에 박혀 "가져올 수 없음" 상태가 안 풀려서,
+//   같은 내용을 새 URL로 publish해서 우회.
+for (const file of ["sitemap.xml", "sitemap-pages.xml"]) {
+  fs.writeFileSync(path.join(root, "public", file), xml);
+}
 console.log(
-  `[sitemap] ${all.length} URLs (${STATIC_URLS.length} static + ${learnUrls.length} learn) → public/sitemap.xml`,
+  `[sitemap] ${all.length} URLs (${STATIC_URLS.length} static + ${learnUrls.length} learn) → public/sitemap.xml + sitemap-pages.xml`,
 );

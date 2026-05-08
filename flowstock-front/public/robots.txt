@@ -1,3 +1,4 @@
+Sitemap: https://flowstock.info/sitemap-pages.xml
 Sitemap: https://flowstock.info/sitemap.xml
 
 User-agent: *
