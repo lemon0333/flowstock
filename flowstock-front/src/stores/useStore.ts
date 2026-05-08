@@ -89,6 +89,10 @@ interface AppState {
   buyStock: (input: BuyInput) => TradeResult;
   sellStock: (input: SellInput) => TradeResult;
   resetSimulation: () => void;
+  /** Trade에 AI 복기 결과 저장 */
+  setTradeReview: (tradeId: string, review: NonNullable<Trade["aiReview"]>) => void;
+  /** Trade 메모 사후 수정 (복기 모달에서 비어있을 때 입력) */
+  updateTradeMemo: (tradeId: string, memo: string) => void;
 
   // ── 알림 관심 종목 ──
   watchlist: WatchlistItem[];
@@ -212,6 +216,20 @@ export const useStore = create<AppState>()(
 
       resetSimulation: () =>
         set({ cash: INITIAL_CASH, holdings: [], trades: [] }),
+
+      setTradeReview: (tradeId, review) =>
+        set((state) => ({
+          trades: state.trades.map((t) =>
+            t.id === tradeId ? { ...t, aiReview: review } : t,
+          ),
+        })),
+
+      updateTradeMemo: (tradeId, memo) =>
+        set((state) => ({
+          trades: state.trades.map((t) =>
+            t.id === tradeId ? { ...t, memo } : t,
+          ),
+        })),
 
       // ── 알림 관심 종목 ──
       watchlist: [],

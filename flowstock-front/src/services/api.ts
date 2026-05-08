@@ -148,6 +148,28 @@ export const economyApi = {
     ),
 };
 
+// Review (거래 복기) APIs
+export interface ReviewAnalyzeRequest {
+  stockName: string;
+  action: "buy" | "sell";
+  price: number;
+  quantity: number;
+  total: number;
+  at: string; // ISO
+  memo?: string;
+  avgBuyPrice?: number;
+  returnPct?: number;
+}
+export interface ReviewAnalyzeResult {
+  good: string;
+  concern: string;
+  lesson: string;
+}
+export const reviewApi = {
+  analyze: (req: ReviewAnalyzeRequest) =>
+    api.post<ApiResponse<ReviewAnalyzeResult>>("/review/analyze", req),
+};
+
 // Portfolio APIs
 export const portfolioApi = {
   getHoldings: () => api.get<ApiResponse<any[]>>('/portfolio'),

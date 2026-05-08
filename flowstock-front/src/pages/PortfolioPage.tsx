@@ -10,10 +10,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { Download, Plus, RefreshCw, Search, TrendingDown, TrendingUp, Newspaper, Globe, ArrowRight } from "lucide-react";
+import { Download, Plus, RefreshCw, Search, TrendingDown, TrendingUp, Newspaper, Globe, ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
-import { useStore } from "@/stores/useStore";
+import ReviewModal from "@/components/portfolio/ReviewModal";
+import { useStore, type Trade } from "@/stores/useStore";
 import { stockApi, marketApi, newsApi, macroApi } from "@/services/api";
 
 interface MarketIndexLite { id?: string; name: string; value: number; change: number; changePercent: number; }
@@ -74,6 +75,8 @@ export default function PortfolioPage() {
   const [formError, setFormError] = useState("");
   const [search, setSearch] = useState("");
   const [formMemo, setFormMemo] = useState("");
+  // 복기 모달
+  const [reviewTrade, setReviewTrade] = useState<Trade | null>(null);
 
   // 30초마다 시세 polling — 탭이 hidden이면 멈춤
   useEffect(() => {
@@ -731,30 +734,50 @@ export default function PortfolioPage() {
               {trades.slice(0, 50).map((t) => (
                 <div
                   key={t.id}
-                  className="flex items-center justify-between px-5 py-2.5 border-b border-border/30 last:border-0"
+                  className="flex items-center justify-between gap-3 px-5 py-2.5 border-b border-border/30 last:border-0"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     {t.type === "buy" ? (
-                      <TrendingUp className="h-4 w-4 text-positive" />
+                      <TrendingUp className="h-4 w-4 text-positive shrink-0" />
                     ) : (
-                      <TrendingDown className="h-4 w-4 text-negative" />
+                      <TrendingDown className="h-4 w-4 text-negative shrink-0" />
                     )}
-                    <div>
-                      <div className="text-sm font-medium">
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium truncate">
                         {t.type === "buy" ? "매수" : "매도"} · {t.stockName}
+                        {t.aiReview && (
+                          <span className="ml-1.5 text-[10px] text-primary">✓ 복기됨</span>
+                        )}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {new Date(t.at).toLocaleString("ko-KR")}
+                        {t.memo && (
+                          <span className="ml-1.5 italic opacity-80">"{t.memo.slice(0, 30)}{t.memo.length > 30 ? "…" : ""}"</span>
+                        )}
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm font-data font-semibold">
-                      {t.quantity.toLocaleString()}주 × {t.price.toLocaleString()}원
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="text-right">
+                      <div className="text-sm font-data font-semibold">
+                        {t.quantity.toLocaleString()}주 × {t.price.toLocaleString()}원
+                      </div>
+                      <div className="text-xs text-muted-foreground font-data">
+                        {t.total.toLocaleString()}원
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground font-data">
-                      {t.total.toLocaleString()}원
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setReviewTrade(t)}
+                      title={t.aiReview ? "복기 결과 보기" : "AI 복기 분석"}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        t.aiReview
+                          ? "text-primary bg-primary/10"
+                          : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+                      }`}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
               ))}
@@ -762,6 +785,16 @@ export default function PortfolioPage() {
           )}
         </div>
       </div>
+      <ReviewModal
+        trade={reviewTrade}
+        open={reviewTrade !== null}
+        onOpenChange={(o) => !o && setReviewTrade(null)}
+        avgBuyPrice={
+          reviewTrade?.type === "sell"
+            ? holdings.find((h) => h.stockId === reviewTrade.stockId)?.avgPrice
+            : undefined
+        }
+      />
     </Layout>
   );
 }
