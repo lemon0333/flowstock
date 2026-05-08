@@ -10,10 +10,11 @@
 
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { TrendingUp, LogIn, LogOut, Sun, Moon, Menu } from "lucide-react";
+import { TrendingUp, LogIn, LogOut, Sun, Moon, Menu, Search } from "lucide-react";
 import { useStore } from "@/stores/useStore";
 import { useTheme } from "@/components/theme-provider";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import CommandPalette from "@/components/CommandPalette";
 import { NAV_GROUPS, isItemActive, findActiveGroup } from "./nav-config";
 
 export default function Header() {
@@ -21,10 +22,23 @@ export default function Header() {
   const { isAuthenticated, user, logout } = useStore();
   const { resolved, setTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
+
+  // Cmd+K / Ctrl+K 단축키 — 글로벌 검색 토글
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const activeGroup = findActiveGroup(location.pathname);
 
@@ -48,6 +62,8 @@ export default function Header() {
   );
 
   return (
+    <>
+    <CommandPalette open={searchOpen} onOpenChange={setSearchOpen} />
     <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur-md">
       <div className="flex items-center justify-between px-4 md:px-6 h-16 md:h-[68px] max-w-[1400px] mx-auto gap-2">
         {Logo}
@@ -75,7 +91,19 @@ export default function Header() {
         </nav>
 
         {/* ── 데스크탑 우측 ── */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            aria-label="검색"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm text-muted-foreground hover:text-foreground hover:bg-accent border border-border transition-colors"
+          >
+            <Search className="h-4 w-4" />
+            <span className="hidden lg:inline">검색</span>
+            <kbd className="hidden lg:inline text-[10px] font-mono opacity-70 ml-1 px-1.5 py-0.5 rounded bg-muted border border-border">
+              ⌘K
+            </kbd>
+          </button>
           {ThemeBtn}
           {isAuthenticated ? (
             <>
@@ -107,6 +135,14 @@ export default function Header() {
 
         {/* ── 모바일 우측 ── */}
         <div className="flex md:hidden items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            aria-label="검색"
+            className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          >
+            <Search className="h-5 w-5" />
+          </button>
           {ThemeBtn}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
@@ -186,5 +222,6 @@ export default function Header() {
         </div>
       </div>
     </header>
+    </>
   );
 }
