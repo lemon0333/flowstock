@@ -71,11 +71,13 @@ spec:
               value: "/root"
           resources:
             requests:
-              memory: "512Mi"
-              cpu: "250m"
-            limits:
               memory: "1Gi"
               cpu: "500m"
+            limits:
+              # Bun JIT가 호스트 RAM(1.07GB)을 보고 큰 mmap 시도 — cgroup limit
+              # 1Gi에서 막혀 segfault. 4Gi로 여유 확보.
+              memory: "4Gi"
+              cpu: "2000m"
           readinessProbe:
             httpGet:
               path: /health
