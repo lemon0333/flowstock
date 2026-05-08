@@ -15,10 +15,9 @@ spec:
       labels:
         app: ai-service
     spec:
-      # nodeSelector/affinity 없으니 단일 노드 k3s에서는 항상 mini PC에 스케줄됨
-      # 호스트의 claude credential + binary 자체를 컨테이너에 mount
-      # → 컨테이너 안 npm으로 깐 binary는 빌드 환경 차이로 Bun baseline build segfault.
-      #   호스트 binary는 안 죽으니 그걸 그대로 사용.
+      # 호스트의 claude credential을 컨테이너에 mount → 동일 인증 사용
+      # claude-code 1.0.0 (Bun standalone 도입 이전 버전) 시도 — 2.1.x의 Bun baseline
+      # build가 mini PC CPU에서 segfault. 1.0.0은 Node 기반 wrapper라 Bun 안 거침.
       volumes:
         - name: claude-config
           hostPath:
@@ -28,10 +27,6 @@ spec:
           hostPath:
             path: /home/lemon/.claude
             type: Directory
-        - name: claude-cli
-          hostPath:
-            path: /usr/lib/node_modules/@anthropic-ai/claude-code
-            type: Directory
       containers:
         - name: ai-service
           image: ghcr.io/lemon0333/flowstock-ai:latest
@@ -40,13 +35,10 @@ spec:
           volumeMounts:
             - name: claude-config
               mountPath: /root/.claude.json
-              readOnly: false   # claude CLI가 가끔 cache update
+              readOnly: false
             - name: claude-dir
               mountPath: /root/.claude
               readOnly: false
-            - name: claude-cli
-              mountPath: /usr/lib/node_modules/@anthropic-ai/claude-code
-              readOnly: true
           env:
             - name: LOG_LEVEL
               value: "INFO"
