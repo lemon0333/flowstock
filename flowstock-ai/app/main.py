@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from app.config import settings
 from app.database import Base, engine
 from app.observability import setup_tracing
-from app.routers import chart, chatbot, economy, graph, news, stock
+from app.routers import chart, chatbot, economy, graph, news, review, stock
 from app.services import learn_index
 
 logging.basicConfig(
@@ -30,6 +30,7 @@ app.include_router(graph.router)
 app.include_router(stock.router)
 app.include_router(economy.router)
 app.include_router(chatbot.router)
+app.include_router(review.router)
 
 
 @app.on_event("startup")
