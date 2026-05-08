@@ -159,7 +159,7 @@ export default function Index() {
   return (
     <Layout>
       <SEO
-        title="주린이를 키우는 한국 주식 학습 사이트"
+        title="당신의 전략은 실전에서 통할까요? 여기서 먼저 검증하세요"
         path="/"
       />
       {/* ── 1. HERO ───────────────────────────────────────────── */}
@@ -167,15 +167,16 @@ export default function Index() {
         <div className="text-center max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4">
             <Sparkles className="h-3.5 w-3.5" />
-            주식 처음이세요? 주린이를 위한 사이트
+            주린이를 키우는 한국 주식 학습 사이트
           </div>
           <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-foreground leading-tight">
-            주식, <span className="text-primary">어렵지 않아요</span>
+            당신의 전략은<br className="md:hidden" /> <span className="text-primary">실전에서 통할까요?</span>
           </h1>
           <p className="text-sm md:text-base text-muted-foreground mt-4 leading-relaxed">
-            용어 설명부터 모의투자, 시장 흐름 읽기까지 —
-            <strong className="text-foreground"> 진짜 돈 안 잃고</strong> 안전하게 연습하세요.
-            로그인 없이도 둘러볼 수 있어요.
+            <strong className="text-foreground">여기서 먼저 검증하세요.</strong>
+            <br />
+            45개 학습 토픽 → 가상 1,000만원 모의투자 → AI 복기 분석까지 —
+            진짜 돈 안 잃고 안전하게 연습하는 주린이 학습 사이트.
           </p>
           <div className="flex flex-wrap gap-3 justify-center mt-6">
             <Link

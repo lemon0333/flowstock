@@ -10,9 +10,9 @@ export interface PageSEO {
 }
 
 export const DEFAULT_SEO: PageSEO = {
-  title: "주린이를 키우는 한국 주식 학습 사이트",
+  title: "당신의 전략은 실전에서 통할까요? 여기서 먼저 검증하세요",
   description:
-    "주식 1도 모르는 주린이부터 단계적으로 성장 — 비유로 시작하는 45개 학습 토픽, 1,000만원 가상 모의투자, 실시간 KOSPI/KOSDAQ 시세, 백테스트 게임.",
+    "당신의 전략은 실전에서 통할까요? 여기서 먼저 검증하세요. 45개 학습 토픽 + 가상 1,000만원 모의투자 + AI 복기 분석 — 주린이를 키우는 한국 주식 학습 사이트.",
 };
 
 export const SEO_BY_PATH: Record<string, PageSEO> = {
