@@ -103,6 +103,17 @@ class AiServiceClient(
     }
 
     /**
+     * 거래 복기 분석 — AI service `/api/ai/review/analyze` 호출, 동기 응답.
+     */
+    suspend fun analyzeReview(req: com.flowstock.domain.review.dto.ReviewRequest): com.flowstock.domain.review.dto.ReviewResponse {
+        return webClient.post()
+            .uri("/api/ai/review/analyze")
+            .bodyValue(req)
+            .retrieve()
+            .awaitBody()
+    }
+
+    /**
      * 챗봇 SSE 스트리밍 — AI service `/api/ai/chatbot/stream` 응답을 그대로 릴레이.
      * 반환 Flux는 ServerSentEvent<String> (data는 JSON string).
      */
