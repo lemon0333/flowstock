@@ -1,6 +1,12 @@
--- 첫 admin 부트스트랩.
--- 운영자 단일화: 이후 admin grant/revoke는 admin-only API로.
--- 같은 row가 이미 ADMIN이면 영향 없음 (멱등).
-UPDATE members
-SET role = 'ADMIN'
-WHERE email = 'andyhyunbin@gmail.com';
+-- 첫 admin 부트스트랩 placeholder.
+--
+-- 이 migration에는 이메일을 박지 않는다 — 권한 출처는 DB role 한 곳뿐이고,
+-- 부트스트랩 자체도 코드 history에 운영자 이메일을 남기지 않는다.
+--
+-- 첫 admin은 운영자가 직접 1회 SQL로 grant:
+--   ssh flowstock-mini-lan "k3s kubectl exec -n flowstock postgresql-0 -- \
+--     psql -U flowstock -d flowstock -c \
+--     \"UPDATE members SET role='ADMIN' WHERE email='<운영자 본인>';\""
+--
+-- 그 후 admin grant/revoke는 admin-only API (PATCH /api/admin/members/{id}/role)로.
+SELECT 1;

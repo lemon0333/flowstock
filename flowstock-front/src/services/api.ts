@@ -191,6 +191,7 @@ export const portfolioApi = {
 };
 
 // Admin APIs (Member.role == ADMIN 사용자만)
+export type UserRole = "USER" | "ADMIN";
 export interface AdminCountStat {
   total: number;
   last24h: number;
@@ -204,8 +205,20 @@ export interface AdminStats {
   totalRealizedPnl: number;
   generatedAt: string;
 }
+export interface MemberSummary {
+  memberId: number;
+  email: string;
+  nickname: string;
+  role: UserRole;
+  provider: string | null;
+  createdAt: string;
+}
 export const adminApi = {
   getStats: () => api.get<ApiResponse<AdminStats>>("/admin/stats"),
+  listMembers: (page = 0, size = 30) =>
+    api.get<ApiResponse<MemberSummary[]>>(`/admin/members?page=${page}&size=${size}`),
+  grantRole: (memberId: number, role: UserRole) =>
+    api.patch<ApiResponse<MemberSummary>>(`/admin/members/${memberId}/role`, { role }),
 };
 
 // Trade (공개 거래 + leaderboard) APIs

@@ -6,9 +6,9 @@
  */
 
 import { useEffect, useState } from "react";
-import { Loader2, ShieldAlert, Users, MessageSquare, Newspaper, TrendingUp } from "lucide-react";
+import { Loader2, ShieldAlert, Users, MessageSquare, Newspaper, TrendingUp, ShieldCheck, Shield } from "lucide-react";
 import Layout from "@/components/layout/Layout";
-import { adminApi, type AdminStats } from "@/services/api";
+import { adminApi, type AdminStats, type MemberSummary, type UserRole } from "@/services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 function formatKrw(value: number): string {
@@ -58,20 +58,26 @@ function StatCard({
 
 export default function AdminPage() {
   const [stats, setStats] = useState<AdminStats | null>(null);
+  const [members, setMembers] = useState<MemberSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [grantingId, setGrantingId] = useState<number | null>(null);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
-        const res = await adminApi.getStats();
-        if (alive) setStats(res.data ?? null);
+        const [statsRes, membersRes] = await Promise.all([
+          adminApi.getStats(),
+          adminApi.listMembers(0, 50),
+        ]);
+        if (!alive) return;
+        setStats(statsRes.data ?? null);
+        setMembers(membersRes.data ?? []);
       } catch (e) {
         if (!alive) return;
         const msg = e instanceof Error ? e.message : String(e);
-        // 403 / FORBIDDEN / ACCESS_DENIED → 권한 없음 화면
         if (/403|FORBIDDEN|ACCESS_DENIED|AUTH_004/i.test(msg)) {
           setDenied(true);
         } else {
@@ -85,6 +91,25 @@ export default function AdminPage() {
       alive = false;
     };
   }, []);
+
+  const toggleRole = async (member: MemberSummary) => {
+    const next: UserRole = member.role === "ADMIN" ? "USER" : "ADMIN";
+    setGrantingId(member.memberId);
+    try {
+      const res = await adminApi.grantRole(member.memberId, next);
+      const updated = res.data;
+      if (updated) {
+        setMembers((prev) =>
+          prev.map((m) => (m.memberId === member.memberId ? { ...m, role: updated.role } : m)),
+        );
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      alert(`권한 변경 실패: ${msg}`);
+    } finally {
+      setGrantingId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -178,6 +203,73 @@ export default function AdminPage() {
                 {stats.totalRealizedPnl >= 0 ? "+" : ""}
                 {formatKrw(stats.totalRealizedPnl)}원
               </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4" />
+              회원 권한 관리 (최근 가입 50명)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-xs text-muted-foreground">
+                    <th className="text-left px-4 py-2 font-medium">닉네임</th>
+                    <th className="text-left px-4 py-2 font-medium">이메일</th>
+                    <th className="text-left px-4 py-2 font-medium hidden md:table-cell">가입</th>
+                    <th className="text-left px-4 py-2 font-medium">권한</th>
+                    <th className="text-right px-4 py-2 font-medium">작업</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {members.map((m) => (
+                    <tr key={m.memberId} className="border-b last:border-0 hover:bg-muted/30">
+                      <td className="px-4 py-2 font-medium truncate max-w-[140px]">{m.nickname}</td>
+                      <td className="px-4 py-2 truncate max-w-[200px] text-muted-foreground">
+                        {m.email}
+                      </td>
+                      <td className="px-4 py-2 hidden md:table-cell text-xs text-muted-foreground">
+                        {m.provider ?? "-"} · {new Date(m.createdAt).toLocaleDateString("ko-KR")}
+                      </td>
+                      <td className="px-4 py-2">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
+                            m.role === "ADMIN"
+                              ? "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300"
+                              : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {m.role === "ADMIN" ? (
+                            <ShieldCheck className="h-3 w-3" />
+                          ) : (
+                            <Shield className="h-3 w-3" />
+                          )}
+                          {m.role}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                        <button
+                          type="button"
+                          disabled={grantingId === m.memberId}
+                          onClick={() => toggleRole(m)}
+                          className="text-xs px-3 py-1 rounded-md border hover:bg-muted transition disabled:opacity-50"
+                        >
+                          {grantingId === m.memberId
+                            ? "..."
+                            : m.role === "ADMIN"
+                              ? "USER로"
+                              : "ADMIN으로"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </CardContent>
         </Card>

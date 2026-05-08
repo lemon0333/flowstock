@@ -2,11 +2,19 @@ package com.flowstock.domain.admin.service
 
 import com.flowstock.domain.admin.dto.AdminStatsResponse
 import com.flowstock.domain.admin.dto.CountStat
+import com.flowstock.domain.admin.dto.MemberSummary
+import com.flowstock.domain.admin.dto.RoleGrantResponse
 import com.flowstock.domain.article.repository.ArticleRepository
 import com.flowstock.domain.article.repository.CommentRepository
+import com.flowstock.domain.member.entity.Member
+import com.flowstock.domain.member.entity.Role
 import com.flowstock.domain.member.repository.MemberRepository
 import com.flowstock.domain.trade.repository.TradeRepository
+import com.flowstock.global.exception.BusinessException
+import com.flowstock.global.exception.ErrorCode
 import java.time.LocalDateTime
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -17,6 +25,36 @@ class AdminService(
     private val articleRepository: ArticleRepository,
     private val commentRepository: CommentRepository,
 ) {
+
+    @Transactional
+    fun grantRole(targetMemberId: Long, role: Role): RoleGrantResponse {
+        val member = memberRepository.findById(targetMemberId).orElseThrow {
+            BusinessException(ErrorCode.USER_NOT_FOUND)
+        }
+        member.role = role
+        val saved = memberRepository.save(member)
+        return RoleGrantResponse(
+            memberId = saved.id,
+            email = saved.email,
+            nickname = saved.nickname,
+            role = saved.role,
+        )
+    }
+
+    @Transactional(readOnly = true)
+    fun listMembers(page: Int, size: Int): List<MemberSummary> {
+        val pageable = PageRequest.of(page, size.coerceIn(1, 100), Sort.by(Sort.Direction.DESC, "createdAt"))
+        return memberRepository.findAll(pageable).content.map(::toSummary)
+    }
+
+    private fun toSummary(member: Member) = MemberSummary(
+        memberId = member.id,
+        email = member.email,
+        nickname = member.nickname,
+        role = member.role,
+        provider = member.provider,
+        createdAt = member.createdAt.toString(),
+    )
 
     @Transactional(readOnly = true)
     fun getStats(): AdminStatsResponse {
