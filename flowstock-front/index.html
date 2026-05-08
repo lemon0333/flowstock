@@ -3,29 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FlowStock — 주식 처음? 주린이를 위한 한국 주식 입문 가이드</title>
-    <meta name="description" content="주식 처음 시작하는 주린이를 위한 사이트. 쉬운 용어 설명, 실시간 코스피/코스닥, 1,000만원 가상 모의투자, 뉴스로 흐름 읽기, 백테스트 게임으로 안전하게 연습." />
+    <!-- 페이지별 title/description은 react-helmet-async(SEO 컴포넌트)가 라우트마다 덮어씀.
+         아래 메타는 fallback (JS 미실행 환경 / 첫 페인트 전 봇 크롤링 대비) -->
+    <title>FlowStock — 주린이를 키우는 한국 주식 학습 사이트</title>
+    <meta name="description" content="주식 1도 모르는 주린이부터 단계적으로 성장 — 비유로 시작하는 45개 학습 토픽, 1,000만원 가상 모의투자, 실시간 KOSPI/KOSDAQ 시세, 백테스트 게임." />
+    <meta name="keywords" content="주린이, 주식 입문, 주식 처음, 주식 공부, 주식 초보, 주식 학습, 주린이 사이트, 주식 용어, 모의투자, 백테스트, 코스피, 코스닥, KOSPI, KOSDAQ" />
     <meta name="author" content="FlowStock" />
-    <meta name="keywords" content="주린이, 주식 입문, 주식 초보, 주식 공부, 모의투자, KOSPI, KOSDAQ, 코스피, 코스닥, 주식 용어, 주식 시세, 주식 뉴스, PER, 백테스트" />
     <meta name="theme-color" content="#3B82F6" />
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="alternate icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="canonical" href="https://flowstock.info/" />
 
-    <!-- Open Graph -->
+    <!-- Open Graph (fallback) -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="FlowStock" />
-    <meta property="og:title" content="FlowStock — 주식 처음? 주린이를 위한 입문 가이드" />
-    <meta property="og:description" content="쉬운 용어 설명, 실시간 시세, 모의투자, 백테스트 게임. 주식 처음 시작하는 주린이를 위한 한 페이지." />
+    <meta property="og:title" content="FlowStock — 주린이를 키우는 한국 주식 학습 사이트" />
+    <meta property="og:description" content="주식 1도 모르는 주린이부터 단계적으로 성장. 45개 학습 토픽, 가상 모의투자, 실시간 시세." />
     <meta property="og:url" content="https://flowstock.info/" />
     <meta property="og:image" content="https://flowstock.info/og-image.svg" />
     <meta property="og:locale" content="ko_KR" />
 
-    <!-- Twitter -->
+    <!-- Twitter (fallback) -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="FlowStock — 주식 처음? 주린이를 위한 입문 가이드" />
-    <meta name="twitter:description" content="쉬운 용어 설명, 실시간 시세, 모의투자, 백테스트 게임. 주린이를 위한 한 페이지." />
+    <meta name="twitter:title" content="FlowStock — 주린이를 키우는 한국 주식 학습 사이트" />
+    <meta name="twitter:description" content="주식 1도 모르는 주린이부터 단계적으로 성장. 45개 학습 토픽, 가상 모의투자, 실시간 시세." />
     <meta name="twitter:image" content="https://flowstock.info/og-image.svg" />
   </head>
 

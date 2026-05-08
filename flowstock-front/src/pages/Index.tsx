@@ -18,6 +18,7 @@ import {
   Database, Sparkles, BookOpen, Briefcase,
 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
+import SEO from "@/components/SEO";
 import MarketIndexCard from "@/components/home/MarketIndexCard";
 import TopMovers from "@/components/home/TopMovers";
 import NewsSummary from "@/components/home/NewsSummary";
@@ -157,6 +158,10 @@ export default function Index() {
 
   return (
     <Layout>
+      <SEO
+        title="주린이를 키우는 한국 주식 학습 사이트"
+        path="/"
+      />
       {/* ── 1. HERO ───────────────────────────────────────────── */}
       <section className="mb-10 md:mb-14 pt-2 md:pt-6">
         <div className="text-center max-w-3xl mx-auto">

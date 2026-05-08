@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import { ThemeProvider } from "@/components/theme-provider";
 import { initWebVitals } from "@/lib/web-vitals";
@@ -6,9 +7,11 @@ import { initUmami } from "@/lib/umami";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
-  <ThemeProvider>
-    <App />
-  </ThemeProvider>,
+  <HelmetProvider>
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
+  </HelmetProvider>,
 );
 
 // Core Web Vitals 측정 시작 (DevTools 콘솔에서 [web-vitals] 로그 확인)

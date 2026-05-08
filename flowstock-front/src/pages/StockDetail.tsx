@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Bot, FileText, TrendingDown, TrendingUp } from "lucide-react";
 import Layout from "@/components/layout/Layout";
+import SEO from "@/components/SEO";
 import NetworkGraph from "@/components/stock/NetworkGraph";
 import TechnicalChart from "@/components/stock/TechnicalChart";
 import StockFinancials from "@/components/stock/StockFinancials";
@@ -131,6 +132,11 @@ export default function StockDetail() {
 
   return (
     <Layout>
+      <SEO
+        title={`${stock?.name ?? id} (${stock?.ticker ?? id}) — 주가/차트/뉴스`}
+        description={`${stock?.name ?? id} 종목의 실시간 시세, 기술지표 차트, 관련 뉴스 네트워크. 주린이도 한눈에 보는 종목 페이지.`}
+        path={`/stock/${id}`}
+      />
       {/* ── 상단: 뒤로가기 + 종목 요약 ── */}
       <div className="flex items-center gap-4 mb-6">
         <Link

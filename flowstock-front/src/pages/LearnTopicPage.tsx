@@ -14,6 +14,7 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, XCircle } from "lucide-react";
 import Layout from "@/components/layout/Layout";
+import SEO from "@/components/SEO";
 import {
   AUDIENCE_EMOJI,
   AUDIENCE_LABEL,
@@ -46,6 +47,11 @@ export default function LearnTopicPage() {
 
   return (
     <Layout>
+      <SEO
+        title={`${topic.title} — 주린이도 이해하는 ${AUDIENCE_LABEL[topic.audience]} 트랙`}
+        description={`${topic.oneLiner} · ${topic.intro.slice(0, 100)}…`}
+        path={`/learn/${topic.slug}`}
+      />
       <div className="max-w-2xl mx-auto space-y-7">
         <Link
           to="/learn"
