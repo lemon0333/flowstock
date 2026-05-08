@@ -15,11 +15,15 @@ interface ArticleRepository : JpaRepository<Article, Long> {
 
     @Query("SELECT a FROM Article a JOIN FETCH a.member WHERE a.id = :id")
     fun findByIdWithMember(id: Long): Article?
+
+    fun countByCreatedAtAfter(threshold: java.time.LocalDateTime): Long
 }
 
 interface CommentRepository : JpaRepository<Comment, Long> {
     @Query("SELECT c FROM Comment c JOIN FETCH c.member WHERE c.article.id = :articleId ORDER BY c.createdAt ASC")
     fun findByArticleIdWithMember(articleId: Long): List<Comment>
+
+    fun countByCreatedAtAfter(threshold: java.time.LocalDateTime): Long
 }
 
 interface ArticleLikeRepository : JpaRepository<ArticleLike, Long> {

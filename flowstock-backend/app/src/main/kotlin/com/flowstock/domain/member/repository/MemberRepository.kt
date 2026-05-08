@@ -1,6 +1,7 @@
 package com.flowstock.domain.member.repository
 
 import com.flowstock.domain.member.entity.Member
+import java.time.LocalDateTime
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface MemberRepository : JpaRepository<Member, Long> {
@@ -12,4 +13,6 @@ interface MemberRepository : JpaRepository<Member, Long> {
     fun findByGoogleId(googleId: String): Member?
 
     fun findByNaverId(naverId: String): Member?
+
+    fun countByCreatedAtAfter(threshold: LocalDateTime): Long
 }

@@ -121,11 +121,23 @@ export const stockApi = {
 };
 
 // News APIs
+export interface GlobalNewsItem {
+  id: string;
+  title_en: string;
+  title_ko: string;
+  summary_en: string;
+  summary_ko: string;
+  link: string;
+  source: string;
+  published_at: string;
+}
 export const newsApi = {
   getLatest: (limit = 30) =>
     api.get<ApiResponse<any>>(`/news?limit=${limit}`),
   getGraph: (newsId: string) =>
     api.get<ApiResponse<any>>(`/news/${newsId}/graph`),
+  getGlobal: (limit = 20) =>
+    api.get<ApiResponse<GlobalNewsItem[]>>(`/news/global?limit=${limit}`),
   search: (keyword: string, from?: string, to?: string, limit = 10) => {
     const p = new URLSearchParams({ keyword, limit: String(limit) });
     if (from) p.set("from", from);
@@ -176,6 +188,67 @@ export const portfolioApi = {
   addHolding: (holding: any) => api.post<ApiResponse<any>>('/portfolio', holding),
   removeHolding: (stockId: string) => api.delete<ApiResponse<void>>(`/portfolio/${stockId}`),
   getSectors: () => api.get<ApiResponse<any[]>>('/portfolio/sectors'),
+};
+
+// Admin APIs (Member.role == ADMIN 사용자만)
+export interface AdminCountStat {
+  total: number;
+  last24h: number;
+}
+export interface AdminStats {
+  members: AdminCountStat;
+  trades: AdminCountStat;
+  articles: AdminCountStat;
+  comments: AdminCountStat;
+  publicTrades: number;
+  totalRealizedPnl: number;
+  generatedAt: string;
+}
+export const adminApi = {
+  getStats: () => api.get<ApiResponse<AdminStats>>("/admin/stats"),
+};
+
+// Trade (공개 거래 + leaderboard) APIs
+export type TradeAction = "BUY" | "SELL";
+export interface TradeRecord {
+  id: number;
+  memberId: number;
+  nickname: string;
+  stockCode: string;
+  stockName: string;
+  action: TradeAction;
+  price: number;
+  quantity: number;
+  realizedPnl: number | null;
+  memo: string | null;
+  isPublic: boolean;
+  createdAt: string;
+}
+export interface LeaderboardEntry {
+  rank: number;
+  memberId: number;
+  nickname: string;
+  totalPnl: number;
+  tradeCount: number;
+}
+export interface TradeCreateBody {
+  stockCode: string;
+  stockName: string;
+  action: TradeAction;
+  price: number;
+  quantity: number;
+  realizedPnl?: number | null;
+  memo?: string;
+  isPublic?: boolean;
+}
+export const tradeApi = {
+  create: (body: TradeCreateBody) => api.post<ApiResponse<TradeRecord>>("/trades", body),
+  listPublic: (page = 0, size = 20) =>
+    api.get<ApiResponse<TradeRecord[]>>(`/trades/public?page=${page}&size=${size}`),
+  listMine: (page = 0, size = 50) =>
+    api.get<ApiResponse<TradeRecord[]>>(`/trades/me?page=${page}&size=${size}`),
+  leaderboard: (limit = 20) =>
+    api.get<ApiResponse<LeaderboardEntry[]>>(`/trades/leaderboard?limit=${limit}`),
 };
 
 // DART (재무제표/밸류에이션)

@@ -42,6 +42,7 @@ const TermsPage = lazy(() => import("./pages/TermsPage"));
 const LearnIndexPage = lazy(() => import("./pages/LearnIndexPage"));
 const LearnTopicPage = lazy(() => import("./pages/LearnTopicPage"));
 const FeedbackPage = lazy(() => import("./pages/FeedbackPage"));
+const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
 const ChatbotFab = lazy(() => import("./components/chatbot/ChatbotFab"));
 
 const queryClient = new QueryClient({
@@ -107,6 +108,7 @@ const App = () => (
               <Route path="/learn" element={<LearnIndexPage />} />
               <Route path="/learn/:slug" element={<LearnTopicPage />} />
               <Route path="/feedback" element={<FeedbackPage />} />
+              <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route
                 path="/me"
                 element={
