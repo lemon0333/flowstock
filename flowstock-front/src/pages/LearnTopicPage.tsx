@@ -170,14 +170,16 @@ function QuizCard({ quiz }: { quiz: NonNullable<ReturnType<typeof getTopic>>["qu
           const isPicked = picked === i;
           const isCorrect = i === correctIdx;
           const showResult = picked !== null;
+          // 한국 주식 컨벤션(positive=빨강/negative=파랑)과 별개로 퀴즈는
+          // 일반 UI 컨벤션 — 정답=초록(emerald), 오답=빨강(rose).
           let cls =
             "w-full text-left px-4 py-2.5 rounded-xl text-sm border transition-colors ";
           if (!showResult) {
             cls += "border-border hover:bg-accent";
           } else if (isCorrect) {
-            cls += "border-positive/40 bg-positive/10 text-positive";
+            cls += "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
           } else if (isPicked) {
-            cls += "border-negative/40 bg-negative/10 text-negative";
+            cls += "border-rose-500/40 bg-rose-500/10 text-rose-700 dark:text-rose-300";
           } else {
             cls += "border-border opacity-60";
           }

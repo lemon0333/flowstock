@@ -54,7 +54,7 @@ export default function ChatbotPanel() {
     <Sheet open={isOpen} onOpenChange={(o) => (o ? null : close())}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-md p-0 flex flex-col gap-0"
+        className="w-full sm:max-w-md p-0 flex flex-col gap-0 h-[100dvh]"
       >
         <SheetHeader className="px-4 py-3 border-b border-border flex flex-row items-center justify-between space-y-0">
           <SheetTitle className="text-base font-semibold">
@@ -108,8 +108,9 @@ export default function ChatbotPanel() {
               rows={1}
               maxLength={500}
               disabled={isStreaming}
-              className="flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50 max-h-32"
-              style={{ minHeight: 38 }}
+              // text-base(16px) 강제 — 14px 미만이면 iOS Safari가 input focus 시 자동 줌인 → 패널 깨짐
+              className="flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50 max-h-32"
+              style={{ minHeight: 38, fontSize: "max(16px, 0.875rem)" }}
             />
             <button
               type="button"
