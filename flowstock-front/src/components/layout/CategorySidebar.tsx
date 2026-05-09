@@ -46,8 +46,10 @@ export default function CategorySidebar() {
         })}
       </nav>
 
-      {/* 데스크탑: sticky 좌측 컬럼 — 토스 #43 패턴 */}
-      <aside className="hidden md:block">
+      {/* 데스크탑: sticky 좌측 컬럼 — 토스 #43 패턴.
+          min-h를 직접 박아 grid row가 페이지 컨텐츠 길이와 무관하게 일정.
+          → 짧은 페이지/긴 페이지 모두 sticky 자연 위치가 같음 (viewport 좌표 일관). */}
+      <aside className="hidden md:block md:min-h-[calc(100vh-12rem)]">
         <div className="sticky top-24">
           <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-4 pb-3">
             {group.label}

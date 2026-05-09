@@ -175,6 +175,7 @@ export default function EconomyPage() {
   // ── 상승/하락 종목 비율 (도넛, KOSPI 우선) ──
   const ud = data.up_down?.KOSPI;
   // 한국 컨벤션: 상한가/상승 = 빨강, 보합 = 회색, 하락/하한가 = 파랑
+  // 0 종목인 카테고리는 슬라이스 자체를 제외 — 라벨 중첩(상한가/하한가가 0에 가까울 때) 방지.
   const upDownPie = ud
     ? [
         { name: "상한가", value: ud.upper, color: "#DC2626" },
@@ -182,7 +183,7 @@ export default function EconomyPage() {
         { name: "보합", value: ud.steady, color: "#9CA3AF" },
         { name: "하락", value: ud.fall, color: "#2563EB" },
         { name: "하한가", value: ud.lower, color: "#1E40AF" },
-      ]
+      ].filter((d) => d.value > 0)
     : [];
 
   // ── 52주 고저 대비 현재 위치 ──
@@ -292,20 +293,29 @@ export default function EconomyPage() {
           <p className="text-xs text-muted-foreground mb-4">
             시장 폭(market breadth) — 지수만큼이나 중요한 시장 강도 지표
           </p>
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
                 data={upDownPie}
                 dataKey="value"
                 nameKey="name"
                 outerRadius={100}
-                label={(e) => `${e.name} ${e.value}`}
+                // 5% 미만 슬라이스는 라벨을 숨김(인접 라벨 중첩 방지). Legend로 식별 가능.
+                label={(e: { name?: string; value?: number; percent?: number }) =>
+                  e.percent && e.percent >= 0.05 ? `${e.name} ${e.value}` : ""
+                }
+                labelLine={false}
               >
                 {upDownPie.map((d, i) => (
-                  <Cell key={i} fill={COLORS_UPDOWN[i]} />
+                  <Cell key={i} fill={d.color} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip formatter={(v: number, n: string) => [`${v}종목`, n]} />
+              <Legend
+                verticalAlign="bottom"
+                iconType="circle"
+                wrapperStyle={{ fontSize: 12 }}
+              />
             </PieChart>
           </ResponsiveContainer>
         </section>
