@@ -68,7 +68,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
       {/* min-h reserved → 페이지 전환 시 footer/sidebar sticky 좌표가 점프하지 않음 */}
       <main className="flex-1 px-4 md:px-6 py-6 max-w-[1400px] w-full mx-auto overflow-x-hidden min-h-[calc(100vh-12rem)]">
         {showCategorySidebar ? (
-          <div className="md:grid md:grid-cols-[200px_minmax(0,1fr)] md:gap-8">
+          // min-h-full → 짧은 페이지(ArticlesPage 1건)도 긴 페이지(LearnIndexPage)도
+          // grid row가 main 높이 가득. 사이드바 sticky 자연 위치가 페이지마다 점프 X.
+          <div className="md:grid md:grid-cols-[200px_minmax(0,1fr)] md:gap-8 md:min-h-full">
             <CategorySidebar />
             <div className="min-w-0">{children}</div>
           </div>
