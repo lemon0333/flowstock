@@ -36,6 +36,13 @@ resource "aws_ses_email_identity" "sender" {
   email = var.ses_email
 }
 
+# Grafana alert 수신 이메일 — sandbox 상태에서도 verified identity로 발송 가능.
+# apply 후 AWS가 각 주소에 verification 메일 보냄 → 받은 메일 link 클릭 1회.
+resource "aws_ses_email_identity" "alert_recipients" {
+  for_each = toset(var.alert_recipient_emails)
+  email    = each.value
+}
+
 # ─────────────────────────────────────────
 # Secrets Manager — API 키 관리
 # ─────────────────────────────────────────

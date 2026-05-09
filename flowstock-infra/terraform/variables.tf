@@ -20,3 +20,9 @@ variable "ses_email" {
   description = "SES 발신 이메일"
   type        = string
 }
+
+variable "alert_recipient_emails" {
+  description = "Grafana alert 수신 이메일 목록. SES sandbox에서 발송 가능하려면 verified identity 필요. .env의 TF_VAR_alert_recipient_emails로 주입 (이메일 코드 하드코딩 회피)."
+  type        = list(string)
+  default     = []
+}
