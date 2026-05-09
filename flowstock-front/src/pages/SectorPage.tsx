@@ -60,25 +60,32 @@ export default function SectorPage() {
           </div>
         ) : (
           <section className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-            {rows.map((s) => (
-              <button
-                key={s.code}
-                onClick={() => setSelected(s)}
-                className="rounded-xl p-4 text-left transition-transform hover:scale-[1.03] border border-border"
-                style={{ background: color(s.changeRate) }}
-              >
-                <div className="text-sm font-semibold">{s.name}</div>
-                <div
-                  className={`font-data text-lg font-bold mt-1 ${
-                    s.changeRate >= 0 ? "text-positive" : "text-negative"
-                  }`}
+            {rows.map((s) => {
+              // 진한 배경(절대 등락률 ≥ 2.5%)에서는 빨강/파랑 텍스트가 같은 색 배경에 묻힘 → 흰 글자.
+              const strongBg = Math.abs(s.changeRate) >= 2.5;
+              const valueClass = strongBg
+                ? "text-white"
+                : s.changeRate >= 0
+                  ? "text-red-600 dark:text-red-400"
+                  : "text-blue-600 dark:text-blue-400";
+              const nameClass = strongBg ? "text-white" : "text-foreground";
+              const subClass = strongBg ? "text-white/85" : "text-muted-foreground";
+              return (
+                <button
+                  key={s.code}
+                  onClick={() => setSelected(s)}
+                  className="rounded-xl p-4 text-left transition-transform hover:scale-[1.03] border border-border"
+                  style={{ background: color(s.changeRate) }}
                 >
-                  {s.changeRate >= 0 ? "+" : ""}
-                  {s.changeRate.toFixed(2)}%
-                </div>
-                <div className="text-[11px] text-muted-foreground mt-1">{s.count}종목</div>
-              </button>
-            ))}
+                  <div className={`text-sm font-semibold ${nameClass}`}>{s.name}</div>
+                  <div className={`font-data text-lg font-bold mt-1 ${valueClass}`}>
+                    {s.changeRate >= 0 ? "+" : ""}
+                    {s.changeRate.toFixed(2)}%
+                  </div>
+                  <div className={`text-[11px] mt-1 ${subClass}`}>{s.count}종목</div>
+                </button>
+              );
+            })}
           </section>
         )}
 
