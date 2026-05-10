@@ -7,12 +7,14 @@
  */
 
 import { lazy, Suspense } from "react";
+import { Loader2 } from "lucide-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import CategorySidebar from "@/components/layout/CategorySidebar";
@@ -84,10 +86,14 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Suspense fallback — 페이지 lazy chunk 다운로드 동안 영역을 reserve.
- * fallback={null}로 두면 컨텐츠가 0 height → footer가 위로 점프했다 다시 내려가면서 jitter.
+ * Suspense fallback — 페이지 lazy chunk 다운로드 동안 영역 reserve + 로딩 표시.
+ * fallback={null}이면 빈 화면처럼 보임 → 작은 spinner라도 노출해 "응답이 살아있다" 신호.
  */
-const PageFallback = () => <div className="min-h-[60vh]" />;
+const PageFallback = () => (
+  <div className="min-h-[60vh] flex items-center justify-center" aria-label="페이지 로드 중">
+    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+  </div>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -95,9 +101,10 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <RootShell>
-          <Suspense fallback={<PageFallback />}>
-            <Routes>
+        <ErrorBoundary>
+          <RootShell>
+            <Suspense fallback={<PageFallback />}>
+              <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/" element={<Index />} />
               <Route path="/stock/:id" element={<StockDetail />} />
@@ -140,8 +147,9 @@ const App = () => (
               <Route path="/alerts" element={<AlertsPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </Suspense>
-        </RootShell>
+            </Suspense>
+          </RootShell>
+        </ErrorBoundary>
         <Suspense fallback={null}>
           <ChatbotFab />
         </Suspense>
