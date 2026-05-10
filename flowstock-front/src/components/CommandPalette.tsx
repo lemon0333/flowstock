@@ -38,7 +38,7 @@ export default function CommandPalette({ open, onOpenChange }: Props) {
   useEffect(() => {
     if (!open || stocks.length > 0) return;
     stockApi
-      .getMarket()
+      .getAll()
       .then((res) => {
         const list = (res?.data ?? []) as Array<Record<string, unknown>>;
         setStocks(
