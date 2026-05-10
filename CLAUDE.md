@@ -268,6 +268,7 @@ flowstock-ai/
 - 엔티티: `BaseEntity` 상속 (createdAt, updatedAt 자동 관리)
 - 프론트 컴포넌트: shadcn/ui 기반, `cn()` 유틸로 클래스 병합
 - 인증: OAuth Only (Google/Naver), 이메일 가입/로그인 없음
+- UX 카피: 토스 보이스톤 — 해요체/능동/긍정/캐주얼 경어. 자세한 규칙은 `.claude/rules/ux-writing.md`
 
 ## 하네스 엔지니어링 (자동화 워크플로우)
 

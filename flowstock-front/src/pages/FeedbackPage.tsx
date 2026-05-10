@@ -100,7 +100,7 @@ export default function FeedbackPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("정말 삭제할까요?")) return;
+    if (!confirm("이 의견을 삭제할까요?")) return;
     try {
       await feedbackApi.remove(id);
       await load();

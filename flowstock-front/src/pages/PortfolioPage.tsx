@@ -251,7 +251,7 @@ export default function PortfolioPage() {
           </div>
           <button
             onClick={() => {
-              if (confirm("정말 초기화 하시겠습니까? (잔고/보유/거래내역 모두 삭제)")) {
+              if (confirm("모두 초기화할까요? 잔고와 보유 종목, 거래 내역이 함께 사라져요.")) {
                 resetSimulation();
               }
             }}
