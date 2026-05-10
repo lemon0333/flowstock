@@ -33,11 +33,15 @@ async def get_ohlcv(
 @router.get("/market", response_model=MarketOHLCVResponse)
 async def get_market_ohlcv(
     date: str = Query(..., description="조회 날짜 (yyyymmdd)", min_length=8, max_length=8),
-    market: str = Query("KOSPI", description="시장 구분 (KOSPI/KOSDAQ)"),
+    market: str = Query("ALL", description="시장 구분 (KOSPI/KOSDAQ/ALL)"),
 ):
-    """특정 날짜의 전체 시장 시세를 조회한다."""
-    if market not in ("KOSPI", "KOSDAQ"):
-        raise HTTPException(status_code=400, detail="market은 KOSPI 또는 KOSDAQ만 허용됩니다.")
+    """특정 날짜의 전체 시장 시세를 조회한다.
+
+    market=ALL이면 KOSPI+KOSDAQ 합쳐 반환 (service 레이어에서 처리).
+    backend StockController가 'ALL'로 호출 → 종목 검색 dropdown 채움.
+    """
+    if market not in ("KOSPI", "KOSDAQ", "ALL"):
+        raise HTTPException(status_code=400, detail="market은 KOSPI, KOSDAQ, ALL만 허용됩니다.")
     try:
         data = stock_data_service.get_market_ohlcv(date, market=market)
         return MarketOHLCVResponse(date=date, market=market, data=data, count=len(data))
