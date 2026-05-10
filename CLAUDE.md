@@ -12,6 +12,7 @@
 - **DB (AI)**: MySQL 8 — 분석 결과 캐싱
 - **캐시**: Redis 7 (k3s StatefulSet, 5Gi)
 - **모니터링**: Prometheus + Grafana + kube-state-metrics + node-exporter (`flowstock-monitoring` ns)
+- **로그 집계**: Loki(monolithic, filesystem 7일 보존) + Promtail DaemonSet — Grafana Explore에서 LogQL
 - **분산추적**: Jaeger all-in-one (OTLP gRPC/HTTP, 메모리 storage)
 - **API 문서**: Springdoc OpenAPI + Swagger UI (`/swagger-ui.html`)
 - **인프라**: 온프레미스 k3s (mini PC) + Cloudflare Tunnel ingress, GitHub Actions CI/CD
@@ -224,7 +225,9 @@ flowstock-ai/
 - **Ingress**: **Cloudflare Tunnel** (Traefik 비활성). 라우팅은 `cloudflared/cloudflared.yaml`의 ingress rules로
 - **모니터링** (`monitoring/` 디렉토리, 분할 파일):
   - `prometheus.yaml` (RBAC + Deployment + 30s scrape)
-  - `grafana.yaml` (PVC 2Gi, datasource provision)
+  - `grafana.yaml` (PVC 2Gi, datasource provision — Prometheus/Loki/Jaeger)
+  - `loki.yaml` (StatefulSet, PVC 10Gi, retention 7d)
+  - `promtail.yaml` (DaemonSet, flowstock+flowstock-monitoring ns만 수집)
   - `kube-state-metrics.yaml`, `node-exporter.yaml` (DaemonSet)
 - **분산추적**: `jaeger/jaeger.yaml` — all-in-one, OTLP gRPC(4317)/HTTP(4318)
 - 관리자 도메인 (Cloudflare DNS CNAME 필요):

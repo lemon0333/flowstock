@@ -31,6 +31,12 @@ data:
         type: jaeger
         access: proxy
         url: http://jaeger-query.flowstock-monitoring.svc.cluster.local:16686
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://loki.flowstock-monitoring.svc.cluster.local:3100
+        jsonData:
+          maxLines: 5000
 ---
 apiVersion: apps/v1
 kind: Deployment
