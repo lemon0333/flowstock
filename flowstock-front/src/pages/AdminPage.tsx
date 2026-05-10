@@ -139,7 +139,7 @@ export default function AdminPage() {
     return (
       <Layout>
         <p className="text-sm text-destructive py-12 text-center">
-          {error ?? "통계를 불러올 수 없습니다."}
+          {error ?? "통계를 불러오지 못했어요."}
         </p>
       </Layout>
     );

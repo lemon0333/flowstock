@@ -161,8 +161,8 @@ export default function AlertsPage() {
               {perm === "denied" ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
               <span className="text-sm">
                 {perm === "denied"
-                  ? "브라우저 알림이 차단됨 — 사이트 설정에서 허용해야 알림이 옵니다."
-                  : "알림을 받으려면 브라우저 권한 허용이 필요합니다."}
+                  ? "브라우저 알림이 막혀 있어요. 사이트 설정에서 켜야 알림이 와요."
+                  : "알림을 받으려면 브라우저 권한을 켜야 해요."}
               </span>
             </div>
             {perm !== "denied" && (

@@ -68,7 +68,7 @@ export default function InvestGamePage() {
       const data = (res.data ?? []) as OHLCV[];
       // 최소 20일 이상이어야 게임 가능
       if (data.length < 20) {
-        alert("이 기간 데이터가 부족합니다. 더 긴 기간을 선택해주세요.");
+        alert("이 기간은 데이터가 모자라요. 좀 더 긴 기간을 골라 보세요.");
         setLoading(false);
         return;
       }

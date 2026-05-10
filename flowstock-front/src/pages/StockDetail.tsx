@@ -105,7 +105,7 @@ export default function StockDetail() {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center py-20">
-          <p className="text-muted-foreground">{error || "종목을 찾을 수 없습니다."}</p>
+          <p className="text-muted-foreground">{error || "종목을 찾지 못했어요."}</p>
           <Link to="/" className="text-primary text-sm mt-2 hover:underline font-medium">
             홈으로 돌아가기
           </Link>

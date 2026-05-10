@@ -95,7 +95,7 @@ export default function ArticleDetailPage() {
   };
 
   const handleDeleteArticle = async () => {
-    if (!confirm("게시글을 삭제할까요? 되돌릴 수 없습니다.")) return;
+    if (!confirm("게시글을 삭제할까요? 한 번 지우면 되돌릴 수 없어요.")) return;
     const res = await articleApi.remove(articleId).catch(() => null);
     if (res) navigate("/articles");
   };
@@ -112,7 +112,7 @@ export default function ArticleDetailPage() {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center py-20">
-          <p className="text-muted-foreground">{error || "게시글을 찾을 수 없습니다."}</p>
+          <p className="text-muted-foreground">{error || "게시글을 찾지 못했어요."}</p>
           <Link to="/articles" className="text-primary text-sm mt-2 hover:underline">
             목록으로
           </Link>

@@ -13,7 +13,7 @@ const renderInRouter = (ui: React.ReactNode) =>
 describe("NewsSummary", () => {
   it("뉴스가 빈 배열일 때 빈 안내 메시지 노출", () => {
     renderInRouter(<NewsSummary news={[]} disclosures={[]} />);
-    expect(screen.getByText("불러올 뉴스가 없습니다")).toBeInTheDocument();
+    expect(screen.getByText("아직 불러올 뉴스가 없어요")).toBeInTheDocument();
   });
 
   it("news/disclosures가 undefined여도 throw 안 함", () => {

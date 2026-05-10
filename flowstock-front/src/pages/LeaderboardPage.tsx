@@ -51,7 +51,7 @@ export default function LeaderboardPage() {
         setTrades(feedRes.data ?? []);
       } catch (e) {
         if (!alive) return;
-        setError(e instanceof Error ? e.message : "불러오기에 실패했습니다.");
+        setError(e instanceof Error ? e.message : "불러오기에 실패했어요.");
       } finally {
         if (alive) setLoading(false);
       }

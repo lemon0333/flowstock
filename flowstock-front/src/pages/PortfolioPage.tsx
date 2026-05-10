@@ -212,7 +212,7 @@ export default function PortfolioPage() {
         : sellStock({ stockId: stock.id, quantity: qty, price, memo });
 
     if (!result.ok) {
-      setFormError(result.error ?? "거래에 실패했습니다.");
+      setFormError(result.error ?? "거래를 처리하지 못했어요.");
       return;
     }
     setFormStockId("");

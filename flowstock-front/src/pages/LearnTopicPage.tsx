@@ -125,8 +125,8 @@ export default function LearnTopicPage() {
         {/* Status badge for soon topics */}
         {topic.status === "soon" && (
           <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 text-sm">
-            <strong>준비 중인 토픽입니다.</strong> 본문이 곧 채워질 예정이에요. 그동안
-            모의투자에서 직접 매수해보면서 익혀보세요.
+            <strong>아직 준비 중인 토픽이에요.</strong> 본문이 곧 채워질 거예요. 그동안
+            모의투자에서 직접 사 보면서 감을 잡아 보세요.
           </div>
         )}
 

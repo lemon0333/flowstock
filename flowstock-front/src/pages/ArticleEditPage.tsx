@@ -58,7 +58,7 @@ export default function ArticleEditPage() {
     const t = title.trim();
     const c = content.trim();
     if (!t || !c) {
-      setError("제목과 본문을 입력하세요.");
+      setError("제목과 본문을 적어 주세요.");
       return;
     }
     setSubmitting(true);
@@ -74,7 +74,7 @@ export default function ArticleEditPage() {
         else navigate("/articles");
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "저장에 실패했습니다.");
+      setError(e instanceof Error ? e.message : "저장에 실패했어요.");
     } finally {
       setSubmitting(false);
     }

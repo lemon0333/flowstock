@@ -80,7 +80,7 @@ export default function NewsSummary({ news, disclosures, stocks = [] }: Props) {
         <div className="divide-y divide-border/50">
           {newsItems.length === 0 ? (
             <div className="py-10 text-center text-sm text-muted-foreground">
-              불러올 뉴스가 없습니다
+              아직 불러올 뉴스가 없어요
             </div>
           ) : (
             newsItems.slice(0, 4).map((item) => {

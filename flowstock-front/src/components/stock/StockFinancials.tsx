@@ -142,7 +142,7 @@ export default function StockFinancials({ ticker, price }: Props) {
   if (error || !data) {
     return (
       <div className="bg-card border border-border rounded-2xl p-5 text-sm text-muted-foreground">
-        {error || "재무 데이터가 없습니다."}
+        {error || "재무 데이터가 아직 없어요."}
       </div>
     );
   }
