@@ -432,14 +432,24 @@ export default function PortfolioPage() {
                     value={formStockId}
                     onChange={(e) => setFormStockId(e.target.value)}
                     className="w-full bg-accent border border-border rounded-xl px-3 py-2.5 text-sm"
+                    disabled={formAction === "buy" && stocks.length === 0}
                   >
-                    <option value="">선택 ({(formAction === "buy" ? buySelectable : sellSelectable).length}개)</option>
+                    <option value="">
+                      {formAction === "buy" && stocks.length === 0
+                        ? "종목 목록을 불러오는 중…"
+                        : `선택 (${(formAction === "buy" ? buySelectable : sellSelectable).length}개)`}
+                    </option>
                     {(formAction === "buy" ? buySelectable : sellSelectable).map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name} ({s.price.toLocaleString()}원)
                       </option>
                     ))}
                   </select>
+                  {formAction === "buy" && stocks.length === 0 && !loading && (
+                    <p className="text-[11px] text-muted-foreground mt-1.5">
+                      장 마감 시간에는 종목 목록이 잠시 비어 있을 수 있어요. 30초 뒤 자동으로 다시 받아와요.
+                    </p>
+                  )}
                 </div>
 
                 {/* ── 매수/매도 컨텍스트 정보 + 퀵 버튼 ── */}

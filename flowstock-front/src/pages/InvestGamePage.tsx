@@ -198,14 +198,22 @@ export default function InvestGamePage() {
                   value={selectedTicker}
                   onChange={(e) => setSelectedTicker(e.target.value)}
                   className="w-full bg-accent border border-border rounded-xl px-3 py-2.5 text-sm"
+                  disabled={stocks.length === 0}
                 >
-                  <option value="">종목 선택</option>
+                  <option value="">
+                    {stocks.length === 0 ? "종목 목록을 불러오는 중…" : "종목 선택"}
+                  </option>
                   {stocks.map((s) => (
                     <option key={s.id} value={s.ticker || s.id}>
                       {s.name} ({s.ticker || s.id})
                     </option>
                   ))}
                 </select>
+                {stocks.length === 0 && (
+                  <p className="text-[11px] text-muted-foreground mt-1.5">
+                    장 마감 시간에는 데이터가 잠시 비어 있을 수 있어요. 잠시 후 다시 시도해 보세요.
+                  </p>
+                )}
               </div>
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">기간 (일)</label>
