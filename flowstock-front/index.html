@@ -15,6 +15,12 @@
     <link rel="alternate icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="canonical" href="https://flowstock.info/" />
 
+    <!-- Preconnect — 첫 화면에서 곧바로 호출하는 backend / analytics 도메인 TLS handshake 미리 -->
+    <link rel="preconnect" href="https://api.flowstock.info" crossorigin />
+    <link rel="dns-prefetch" href="https://api.flowstock.info" />
+    <link rel="preconnect" href="https://analytics.flowstock.info" crossorigin />
+    <link rel="dns-prefetch" href="https://analytics.flowstock.info" />
+
     <!-- Open Graph (fallback) -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="FlowStock" />

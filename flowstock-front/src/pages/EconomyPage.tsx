@@ -106,49 +106,72 @@ const COLORS_DEAL = ["#3B82F6", "#10B981", "#F59E0B"];
 // 한국 컨벤션: 상한가/상승 = 빨강 계열, 하락/하한가 = 파랑 계열, 보합 = 회색
 const COLORS_UPDOWN = ["#DC2626", "#EF4444", "#9CA3AF", "#2563EB", "#1E40AF"];
 
+// 한 호출이 hang해도 N초 후 fallback으로 resolve — networkidle/loading 무한 대기 방지.
+// (전역 ApiClient에 AbortController 박는 게 더 정통. 이건 EconomyPage 한정 patch.)
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
+
+const API_TIMEOUT_MS = 8000;
+
 export default function EconomyPage() {
   const [data, setData] = useState<DashboardData>({});
   const [corr, setCorr] = useState<CorrelationData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
+    let alive = true;
+
     (async () => {
-      try {
-        const res = await economyApi.getDashboard();
-        setData(res.data ?? {});
-      } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : "데이터를 불러오지 못했습니다.");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+      // Promise.allSettled — 한 endpoint 실패/timeout 해도 다른 데이터는 렌더
+      const [dashRes, corrRes] = await Promise.allSettled([
+        withTimeout(
+          economyApi.getDashboard(),
+          API_TIMEOUT_MS,
+          { success: false, data: {} as DashboardData },
+        ),
+        withTimeout(
+          economyApi.getCorrelation("KOSPI", 10, 60),
+          API_TIMEOUT_MS,
+          { success: false, data: null as CorrelationData | null },
+        ),
+      ]);
 
-  useEffect(() => {
-    economyApi
-      .getCorrelation("KOSPI", 10, 60)
-      .then((res) => setCorr(res.data ?? null))
-      .catch(() => setCorr(null));
+      if (!alive) return;
+
+      if (dashRes.status === "fulfilled" && dashRes.value?.data) {
+        setData(dashRes.value.data);
+      }
+      if (corrRes.status === "fulfilled") {
+        setCorr(corrRes.value?.data ?? null);
+      }
+      setLoading(false);
+    })();
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
   if (loading) {
     return (
       <Layout>
-        <div className="text-center py-20 text-muted-foreground">로딩 중...</div>
-      </Layout>
-    );
-  }
-  if (error) {
-    return (
-      <Layout>
-        <div className="text-center py-20 text-negative">
-          데이터를 불러오지 못했습니다.
-          <div className="text-xs text-muted-foreground mt-2">잠시 후 다시 시도해주세요.</div>
+        <div className="space-y-4 py-6 max-w-3xl mx-auto" aria-label="경제 지표 로딩 중">
+          <div className="h-7 w-48 bg-muted/60 rounded animate-pulse" />
+          <div className="h-32 bg-muted/40 rounded-2xl animate-pulse" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="h-48 bg-muted/40 rounded-2xl animate-pulse" />
+            <div className="h-48 bg-muted/40 rounded-2xl animate-pulse" />
+          </div>
+          <div className="h-48 bg-muted/40 rounded-2xl animate-pulse" />
         </div>
       </Layout>
     );
   }
+
   const hasNoData =
     !data.fear_greed &&
     !(data.indices && data.indices.length) &&
@@ -157,8 +180,8 @@ export default function EconomyPage() {
     return (
       <Layout>
         <div className="text-center py-20 text-muted-foreground">
-          아직 시장 데이터를 받지 못했습니다.
-          <div className="text-xs mt-2">서비스가 준비되는 동안 잠시 기다려주세요.</div>
+          아직 시장 데이터를 받지 못했어요.
+          <div className="text-xs mt-2">잠시 후 새로고침하면 보통 풀려요.</div>
         </div>
       </Layout>
     );

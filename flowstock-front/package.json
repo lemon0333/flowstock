@@ -14,7 +14,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "qa:pages": "node scripts/qa-pages.mjs",
-    "qa:contract": "node scripts/qa-contract.mjs"
+    "qa:contract": "node scripts/qa-contract.mjs",
+    "qa:scenarios": "node scripts/qa-scenarios.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

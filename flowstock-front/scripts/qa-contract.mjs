@@ -19,7 +19,7 @@ const ENDPOINTS = [
   { path: "/api/market", expect: "array", minLen: 1, label: "시장 지수" },
   { path: "/api/economy/dashboard", expect: "object", minLen: 0, label: "경제 대시보드" },
   { path: "/api/sectors", expect: "array", minLen: 1, label: "섹터 히트맵" },
-  { path: "/api/macro", expect: "object", minLen: 0, label: "거시 지표" },
+  { path: "/api/macro/dashboard", expect: "object", minLen: 1, label: "거시 지표" },
   { path: "/api/articles", expect: "object", minLen: 0, label: "커뮤니티 글" },
   { path: "/api/feedback", expect: "object", minLen: 0, label: "피드백" },
   { path: "/api/trades/leaderboard", expect: "array", minLen: 0, label: "leaderboard" },
