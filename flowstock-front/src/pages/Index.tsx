@@ -161,9 +161,36 @@ export default function Index() {
       <SEO
         title="당신의 전략은 실전에서 통할까요? 여기서 먼저 검증하세요"
         path="/"
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "FlowStock",
+            alternateName: "플로우스톡",
+            url: "https://flowstock.info",
+            description:
+              "주식 1도 모르는 주린이부터 단계적으로 성장하는 한국 주식 학습 사이트. 45개 학습 토픽, 1,000만원 가상 모의투자, AI 복기 분석, 백테스트 게임.",
+            inLanguage: "ko-KR",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: "https://flowstock.info/learn?q={search_term_string}",
+              "query-input": "required name=search_term_string",
+            },
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "FlowStock",
+            url: "https://flowstock.info",
+            logo: "https://flowstock.info/favicon.svg",
+            description:
+              "주린이를 위한 한국 주식 학습 사이트 — 학습·모의투자·AI 복기까지 한 곳에서.",
+            sameAs: ["https://github.com/lemon0333/flowstock"],
+          },
+        ]}
       />
-      {/* ── 1. HERO ───────────────────────────────────────────── */}
-      <section className="mb-10 md:mb-14 pt-2 md:pt-6">
+      {/* HERO — min-h 명시로 첫 렌더에 layout 흔들림(CLS) 방지 */}
+      <section className="mb-10 md:mb-14 pt-2 md:pt-6 min-h-[340px] md:min-h-[380px]">
         <div className="text-center max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4">
             <Sparkles className="h-3.5 w-3.5" />

@@ -13,6 +13,8 @@ interface SEOProps {
   image?: string;
   /** 검색에서 제외 (로그인 등 보호 페이지) */
   noindex?: boolean;
+  /** schema.org JSON-LD — 페이지별 Article/Course/BreadcrumbList 등 */
+  jsonLd?: Record<string, unknown> | Array<Record<string, unknown>>;
 }
 
 const DEFAULT_DESC =
@@ -26,9 +28,11 @@ export default function SEO({
   path,
   image = DEFAULT_IMAGE,
   noindex,
+  jsonLd,
 }: SEOProps) {
   const fullTitle = `${title} | FlowStock`;
   const url = path ? `${ORIGIN}${path}` : undefined;
+  const ld = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 
   return (
     <Helmet>
@@ -45,6 +49,12 @@ export default function SEO({
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
+
+      {ld.map((obj, i) => (
+        <script key={i} type="application/ld+json">
+          {JSON.stringify(obj)}
+        </script>
+      ))}
     </Helmet>
   );
 }

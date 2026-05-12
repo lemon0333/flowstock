@@ -51,6 +51,55 @@ export default function LearnTopicPage() {
         title={`${topic.title} — 주린이도 이해하는 ${AUDIENCE_LABEL[topic.audience]} 트랙`}
         description={`${topic.oneLiner} · ${topic.intro.slice(0, 100)}…`}
         path={`/learn/${topic.slug}`}
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Article",
+            headline: topic.title,
+            description: topic.oneLiner,
+            inLanguage: "ko-KR",
+            articleSection: AUDIENCE_LABEL[topic.audience],
+            keywords: ["주식 학습", "주린이", topic.title, AUDIENCE_LABEL[topic.audience]],
+            mainEntityOfPage: {
+              "@type": "WebPage",
+              "@id": `https://flowstock.info/learn/${topic.slug}`,
+            },
+            author: { "@type": "Organization", name: "FlowStock" },
+            publisher: {
+              "@type": "Organization",
+              name: "FlowStock",
+              logo: {
+                "@type": "ImageObject",
+                url: "https://flowstock.info/favicon.svg",
+              },
+            },
+            image: "https://flowstock.info/og-image.svg",
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              {
+                "@type": "ListItem",
+                position: 1,
+                name: "홈",
+                item: "https://flowstock.info/",
+              },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: "주식 공부",
+                item: "https://flowstock.info/learn",
+              },
+              {
+                "@type": "ListItem",
+                position: 3,
+                name: topic.title,
+                item: `https://flowstock.info/learn/${topic.slug}`,
+              },
+            ],
+          },
+        ]}
       />
       <div className="max-w-2xl mx-auto space-y-7">
         <Link
