@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  로그 출력 패턴에 OpenTelemetry traceId/spanId 를 박는다.
+  - tracing-bridge-otel 이 자동으로 MDC 에 traceId/spanId 를 넣어주므로,
+    패턴에 %X{traceId} 만 추가하면 Loki 에서 "trace_id=..." 로 검색 → Jaeger 로 점프 가능.
+  - k3s 환경이므로 stdout 만 출력. Promtail DaemonSet 이 컨테이너 stdout 을 Loki 로 흘림.
+  - 색상 코드(%clr)는 ANSI escape 가 그대로 Loki 에 저장되어 노이즈가 되므로 사용 안 함.
+  - 로거별 레벨은 application.yml 의 logging.level 이 그대로 적용된다
+    (Spring Boot 가 logback-spring.xml 로드 후 LoggingApplicationListener 가 덮어씀).
+-->
+<configuration>
+  <springProperty scope="context" name="APP_NAME"
+                  source="spring.application.name"
+                  defaultValue="flowstock-backend"/>
+
+  <property name="LOG_PATTERN"
+            value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [trace_id=%X{traceId:-},span_id=%X{spanId:-}] %logger{36} - %msg%n"/>
+
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${LOG_PATTERN}</pattern>
+      <charset>UTF-8</charset>
+    </encoder>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+</configuration>
