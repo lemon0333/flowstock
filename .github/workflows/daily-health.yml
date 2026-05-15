@@ -86,7 +86,9 @@ jobs:
           done
           if [ -z "$FAILS" ]; then FAILS="CLEAN"; fi
           echo "probes<<EOF" >> $GITHUB_OUTPUT
-          printf '%b' "$FAILS" >> $GITHUB_OUTPUT
+          # %b 는 \n escape 해석. 끝에 \n 안 박으면 다음 "EOF" 라인이 같은 줄에 붙어
+          # $GITHUB_OUTPUT delimiter 가 안 닫혀 step 전체가 깨진다 (CLEAN 케이스에서 매번 발생).
+          printf '%b\n' "$FAILS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Setup Node
