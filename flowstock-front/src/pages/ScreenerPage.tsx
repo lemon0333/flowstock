@@ -7,9 +7,9 @@
  * ============================================================
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Filter } from "lucide-react";
+import { Filter, Search, X as XIcon } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import PaginationControl from "@/components/ui/pagination-control";
 import { stockApi } from "@/services/api";
@@ -43,6 +43,7 @@ export default function ScreenerPage() {
   const [sortKey, setSortKey] = useState<SortKey>("volume");
   const [page, setPage] = useState(0);
   const [sortDesc, setSortDesc] = useState(true);
+  const resultsRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     let alive = true;
@@ -123,16 +124,52 @@ export default function ScreenerPage() {
           </p>
         </div>
 
-        {/* 필터 패널 */}
-        <section className="bg-card border border-border rounded-2xl p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-          <FilterField label="키워드 (종목명/코드)">
+        {/* 검색 바 — Enter/검색 버튼은 form submit으로 IME 안전. 결과는 live 필터로 즉시 반영. */}
+        <form
+          role="search"
+          onSubmit={(e) => {
+            e.preventDefault();
+            resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
+          className="bg-card border border-border rounded-2xl p-3 sm:p-4 flex items-center gap-2"
+        >
+          <label htmlFor="screener-keyword" className="sr-only">
+            종목 이름이나 종목코드로 검색
+          </label>
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <input
+              id="screener-keyword"
+              type="search"
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              placeholder="삼성, 005930"
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background"
+              placeholder="종목 이름이나 코드로 찾기 (예: 삼성, 005930)"
+              autoComplete="off"
+              className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+              style={{ fontSize: "max(16px, 0.875rem)" }}
             />
-          </FilterField>
+            {keyword && (
+              <button
+                type="button"
+                onClick={() => setKeyword("")}
+                aria-label="검색어 지우기"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent"
+              >
+                <XIcon className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+          <button
+            type="submit"
+            className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90"
+          >
+            <Search className="h-4 w-4" />
+            <span className="hidden sm:inline">검색</span>
+          </button>
+        </form>
+
+        {/* 필터 패널 */}
+        <section className="bg-card border border-border rounded-2xl p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
           <FilterField label={`가격: ${minPrice.toLocaleString()} ~ ${maxPrice.toLocaleString()}원`}>
             <div className="flex gap-2">
               <input
@@ -195,7 +232,10 @@ export default function ScreenerPage() {
         </section>
 
         {/* 결과 테이블 */}
-        <section className="bg-card border border-border rounded-2xl overflow-hidden">
+        <section
+          ref={resultsRef}
+          className="bg-card border border-border rounded-2xl overflow-hidden scroll-mt-20"
+        >
           {loading ? (
             <div className="p-10 text-center text-sm text-muted-foreground">불러오는 중…</div>
           ) : sorted.length === 0 ? (

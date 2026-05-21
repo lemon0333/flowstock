@@ -67,23 +67,34 @@ export const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-/** 현재 path가 어떤 항목과 매칭되는지 — 가장 긴 prefix가 이김. */
-export function isItemActive(itemPath: string, currentPath: string): boolean {
+/** `/portfolio` ⊂ `/portfolio/game` 같은 prefix 충돌이 있어서, 단일 항목 매칭은 항상 가장 긴 매칭 1개만 active. */
+function matchesPath(itemPath: string, currentPath: string): boolean {
   if (itemPath === "/") return currentPath === "/";
   return currentPath === itemPath || currentPath.startsWith(itemPath + "/");
 }
 
-/** 현재 path가 속한 카테고리 — 가장 잘 맞는 항목 기준. 없으면 null. */
-export function findActiveGroup(currentPath: string): NavGroup | null {
-  let best: { group: NavGroup; len: number } | null = null;
+/** 모든 nav 항목 중 currentPath에 가장 잘 맞는(=가장 긴 prefix) 항목의 path. 없으면 null. */
+function bestMatchPath(currentPath: string): string | null {
+  let best: string | null = null;
   for (const g of NAV_GROUPS) {
     for (const it of g.items) {
-      if (!isItemActive(it.path, currentPath)) continue;
-      const len = it.path.length;
-      if (!best || len > best.len) best = { group: g, len };
+      if (!matchesPath(it.path, currentPath)) continue;
+      if (best === null || it.path.length > best.length) best = it.path;
     }
   }
-  return best?.group ?? null;
+  return best;
+}
+
+/** 현재 path가 어떤 항목과 매칭되는지 — sibling 충돌 시 가장 긴 prefix 하나만 active. */
+export function isItemActive(itemPath: string, currentPath: string): boolean {
+  return bestMatchPath(currentPath) === itemPath;
+}
+
+/** 현재 path가 속한 카테고리 — 가장 잘 맞는 항목의 그룹. 없으면 null. */
+export function findActiveGroup(currentPath: string): NavGroup | null {
+  const best = bestMatchPath(currentPath);
+  if (best === null) return null;
+  return NAV_GROUPS.find((g) => g.items.some((it) => it.path === best)) ?? null;
 }
 
 /**
