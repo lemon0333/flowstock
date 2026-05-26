@@ -3,6 +3,7 @@ package com.flowstock.domain.feedback.controller
 import com.flowstock.domain.feedback.dto.FeedbackCreateRequest
 import com.flowstock.domain.feedback.dto.FeedbackResponse
 import com.flowstock.domain.feedback.dto.FeedbackStatusUpdateRequest
+import com.flowstock.domain.feedback.dto.FeedbackUpdateRequest
 import com.flowstock.domain.feedback.entity.FeedbackStatus
 import com.flowstock.domain.feedback.service.FeedbackService
 import com.flowstock.global.response.ApiResponse
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -70,6 +72,13 @@ class FeedbackController(
         service.delete(id, requireCurrentMemberId())
         return ApiResponse.success(mapOf<String, Any?>("deleted" to id))
     }
+
+    @PutMapping("/{id}")
+    fun update(
+        @PathVariable id: Long,
+        @RequestBody @Valid req: FeedbackUpdateRequest,
+    ): ApiResponse<FeedbackResponse> =
+        ApiResponse.success(service.update(id, requireCurrentMemberId(), req.title, req.content))
 
     @PostMapping("/{id}/like")
     fun toggleLike(@PathVariable id: Long): ApiResponse<FeedbackResponse> =

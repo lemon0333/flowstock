@@ -86,6 +86,19 @@ class FeedbackService(
     }
 
     @Transactional
+    fun update(id: Long, memberId: Long, title: String, content: String): FeedbackResponse {
+        val f = feedbackRepository.findByIdWithMember(id)
+            ?: throw BusinessException(ErrorCode.RESOURCE_NOT_FOUND)
+        if (f.member.id != memberId) {
+            throw BusinessException(ErrorCode.ACCESS_DENIED)
+        }
+        f.title = title.trim()
+        f.content = content.trim()
+        val liked = feedbackLikeRepository.existsByFeedbackIdAndMemberId(id, memberId)
+        return FeedbackResponse.from(f, memberId, likedByMe = liked)
+    }
+
+    @Transactional
     fun updateStatus(id: Long, memberId: Long, status: FeedbackStatus): FeedbackResponse {
         val f = feedbackRepository.findByIdWithMember(id)
             ?: throw BusinessException(ErrorCode.RESOURCE_NOT_FOUND)

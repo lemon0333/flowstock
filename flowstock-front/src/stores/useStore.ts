@@ -8,6 +8,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { RiskProfileResult } from "@/lib/risk-profile";
 
 /** 사용자 정보 타입 */
 interface User {
@@ -99,6 +100,11 @@ interface AppState {
   addWatch: (item: Omit<WatchlistItem, "lastNotifiedAt">) => void;
   removeWatch: (ticker: string) => void;
   updateWatch: (ticker: string, updates: Partial<WatchlistItem>) => void;
+
+  // ── 투자성향 (MVP: localStorage only) ──
+  riskProfile: RiskProfileResult | null;
+  setRiskProfile: (result: RiskProfileResult) => void;
+  resetRiskProfile: () => void;
 
   // ── deprecated, 호환용 ──
   addHolding: (holding: Holding) => void;
@@ -237,6 +243,11 @@ export const useStore = create<AppState>()(
           ),
         })),
 
+      // ── 투자성향 ──
+      riskProfile: null,
+      setRiskProfile: (result) => set({ riskProfile: result }),
+      resetRiskProfile: () => set({ riskProfile: null }),
+
       // ── 알림 관심 종목 ──
       watchlist: [],
       addWatch: (item) =>
@@ -275,8 +286,9 @@ export const useStore = create<AppState>()(
         holdings: state.holdings,
         trades: state.trades,
         watchlist: state.watchlist,
+        riskProfile: state.riskProfile,
       }),
-      // 옛 스키마(holdings/trades/cash 만 저장)에서 hydrate될 때 watchlist 등 누락 방어
+      // 옛 스키마(holdings/trades/cash 만 저장)에서 hydrate될 때 누락 방어
       merge: (persisted, current) => ({
         ...current,
         ...(persisted as object),
@@ -288,6 +300,9 @@ export const useStore = create<AppState>()(
           (persisted as { trades?: Trade[] } | undefined)?.trades ?? current.trades,
         cash:
           (persisted as { cash?: number } | undefined)?.cash ?? current.cash,
+        riskProfile:
+          (persisted as { riskProfile?: RiskProfileResult | null } | undefined)?.riskProfile ??
+          current.riskProfile,
       }),
     },
   ),

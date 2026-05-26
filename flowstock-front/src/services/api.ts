@@ -422,6 +422,8 @@ export const feedbackApi = {
   get: (id: number) => api.get<ApiResponse<FeedbackItem>>(`/feedback/${id}`),
   create: (body: { title: string; content: string }) =>
     api.post<ApiResponse<FeedbackItem>>('/feedback', body),
+  update: (id: number, body: { title: string; content: string }) =>
+    api.put<ApiResponse<FeedbackItem>>(`/feedback/${id}`, body),
   remove: (id: number) =>
     api.delete<ApiResponse<{ deleted: number }>>(`/feedback/${id}`),
   toggleLike: (id: number) =>

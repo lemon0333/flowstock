@@ -7,7 +7,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { Lightbulb, Heart, Trash2, Send, Loader2, ShieldCheck } from "lucide-react";
+import { Lightbulb, Heart, Trash2, Send, Loader2, ShieldCheck, Pencil, X as XIcon, Check } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import PaginationControl from "@/components/ui/pagination-control";
 import { useStore } from "@/stores/useStore";
@@ -118,6 +118,14 @@ export default function FeedbackPage() {
       }
     } catch (e) {
       setError((e as Error).message || "상태 변경 실패");
+    }
+  };
+
+  const handleEdit = async (id: number, title: string, content: string) => {
+    const res = await feedbackApi.update(id, { title, content });
+    const updated = res.data;
+    if (updated) {
+      setItems((prev) => prev.map((it) => (it.id === id ? updated : it)));
     }
   };
 
@@ -236,6 +244,7 @@ export default function FeedbackPage() {
                 onLike={() => handleLike(it.id)}
                 onDelete={() => handleDelete(it.id)}
                 onStatusChange={(s) => handleStatusChange(it.id, s)}
+                onEdit={(title, content) => handleEdit(it.id, title, content)}
               />
             ))}
           </div>
@@ -264,86 +273,174 @@ interface CardProps {
   onLike: () => void;
   onDelete: () => void;
   onStatusChange: (s: FeedbackStatus) => void;
+  onEdit: (title: string, content: string) => Promise<void>;
 }
 
-function FeedbackCard({ item, isAuthenticated, onLike, onDelete, onStatusChange }: CardProps) {
-  // admin 여부는 응답에 안 옴 — status select는 본인이 admin이면 백엔드에서 변경 가능.
-  // 일단 "내 글 + 모든 사용자에게 status select 노출" 대신, 모든 사용자에게 노출하되
-  // admin 아니면 backend에서 403 반환 → 에러 메시지로 표시.
-  // 단순화: status select는 항상 표시하되 비-admin이 누르면 에러.
-  // 더 명확한 UX 위해 isAdmin 정보를 응답에 추가하는 게 좋지만 MVP에선 후순위.
+function FeedbackCard({ item, isAuthenticated, onLike, onDelete, onStatusChange, onEdit }: CardProps) {
+  const [editing, setEditing] = useState(false);
+  const [draftTitle, setDraftTitle] = useState(item.title);
+  const [draftContent, setDraftContent] = useState(item.content);
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  const startEdit = () => {
+    setDraftTitle(item.title);
+    setDraftContent(item.content);
+    setEditError(null);
+    setEditing(true);
+  };
+
+  const cancelEdit = () => {
+    setEditing(false);
+    setEditError(null);
+  };
+
+  const saveEdit = async () => {
+    const t = draftTitle.trim();
+    const c = draftContent.trim();
+    if (!t || !c) {
+      setEditError("제목과 내용을 모두 입력해요");
+      return;
+    }
+    if (t === item.title && c === item.content) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    setEditError(null);
+    try {
+      await onEdit(t, c);
+      setEditing(false);
+    } catch (e) {
+      setEditError((e as Error).message || "수정에 실패했어요");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <article className="bg-card border border-border rounded-2xl p-4 md:p-5">
-      <div className="flex items-start justify-between gap-3 mb-2">
-        <h3 className="font-semibold text-base text-foreground flex-1 break-words">
-          {item.title}
-        </h3>
-        <span className={`text-[11px] px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[item.status]}`}>
-          {STATUS_LABEL[item.status]}
-        </span>
-      </div>
-
-      <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words leading-relaxed mb-3">
-        {item.content}
-      </p>
-
-      <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <span>{item.authorMasked}</span>
-          <span>·</span>
-          <span>{new Date(item.createdAt).toLocaleDateString("ko-KR")}</span>
-          {item.isMine && (
-            <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px]">내 글</span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          {/* 좋아요 */}
-          <button
-            type="button"
-            onClick={onLike}
-            disabled={!isAuthenticated}
-            title={isAuthenticated ? "좋아요" : "로그인 필요"}
-            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-colors ${
-              item.likedByMe
-                ? "bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400"
-                : "bg-muted text-muted-foreground hover:bg-accent"
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
-          >
-            <Heart className={`h-3.5 w-3.5 ${item.likedByMe ? "fill-current" : ""}`} />
-            <span className="font-num">{item.likeCount}</span>
-          </button>
-
-          {/* 본인: 삭제 */}
-          {item.isMine && (
+      {editing ? (
+        <div className="space-y-3">
+          <input
+            type="text"
+            value={draftTitle}
+            onChange={(e) => setDraftTitle(e.target.value)}
+            maxLength={200}
+            disabled={saving}
+            placeholder="제목"
+            className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+          <textarea
+            value={draftContent}
+            onChange={(e) => setDraftContent(e.target.value)}
+            maxLength={5000}
+            rows={5}
+            disabled={saving}
+            placeholder="내용"
+            className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-y"
+          />
+          {editError && <p className="text-xs text-destructive">{editError}</p>}
+          <div className="flex items-center justify-end gap-2">
             <button
               type="button"
-              onClick={onDelete}
-              title="삭제"
-              className="p-1 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              onClick={cancelEdit}
+              disabled={saving}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-border hover:bg-accent disabled:opacity-50"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <XIcon className="h-3.5 w-3.5" /> 닫기
             </button>
-          )}
-
-          {/* admin: 상태 변경 (모든 로그인 사용자에게 노출, 권한 체크는 backend) */}
-          {isAuthenticated && (
-            <div className="relative inline-flex items-center" title="운영자 전용 — 상태 변경">
-              <ShieldCheck className="h-3 w-3 text-muted-foreground/60 mr-0.5" />
-              <select
-                value={item.status}
-                onChange={(e) => onStatusChange(e.target.value as FeedbackStatus)}
-                className="text-[10px] bg-transparent border border-border rounded px-1 py-0.5 text-muted-foreground"
-              >
-                {(Object.keys(STATUS_LABEL) as FeedbackStatus[]).map((s) => (
-                  <option key={s} value={s}>{STATUS_LABEL[s]}</option>
-                ))}
-              </select>
-            </div>
-          )}
+            <button
+              type="button"
+              onClick={saveEdit}
+              disabled={saving || !draftTitle.trim() || !draftContent.trim()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            >
+              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+              저장
+            </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <>
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <h3 className="font-semibold text-base text-foreground flex-1 break-words">
+              {item.title}
+            </h3>
+            <span className={`text-[11px] px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[item.status]}`}>
+              {STATUS_LABEL[item.status]}
+            </span>
+          </div>
+
+          <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words leading-relaxed mb-3">
+            {item.content}
+          </p>
+
+          <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span>{item.authorMasked}</span>
+              <span>·</span>
+              <span>{new Date(item.createdAt).toLocaleDateString("ko-KR")}</span>
+              {item.isMine && (
+                <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px]">내 글</span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={onLike}
+                disabled={!isAuthenticated}
+                title={isAuthenticated ? "좋아요" : "로그인 필요"}
+                className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-colors ${
+                  item.likedByMe
+                    ? "bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400"
+                    : "bg-muted text-muted-foreground hover:bg-accent"
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <Heart className={`h-3.5 w-3.5 ${item.likedByMe ? "fill-current" : ""}`} />
+                <span className="font-num">{item.likeCount}</span>
+              </button>
+
+              {item.isMine && (
+                <>
+                  <button
+                    type="button"
+                    onClick={startEdit}
+                    title="수정"
+                    className="p-1 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onDelete}
+                    title="삭제"
+                    className="p-1 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </>
+              )}
+
+              {isAuthenticated && (
+                <div className="relative inline-flex items-center" title="운영자 전용 — 상태 변경">
+                  <ShieldCheck className="h-3 w-3 text-muted-foreground/60 mr-0.5" />
+                  <select
+                    value={item.status}
+                    onChange={(e) => onStatusChange(e.target.value as FeedbackStatus)}
+                    className="text-[10px] bg-transparent border border-border rounded px-1 py-0.5 text-muted-foreground"
+                  >
+                    {(Object.keys(STATUS_LABEL) as FeedbackStatus[]).map((s) => (
+                      <option key={s} value={s}>{STATUS_LABEL[s]}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </article>
   );
 }

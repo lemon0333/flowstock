@@ -22,6 +22,7 @@ import SEO from "@/components/SEO";
 import MarketIndexCard from "@/components/home/MarketIndexCard";
 import TopMovers from "@/components/home/TopMovers";
 import NewsSummary from "@/components/home/NewsSummary";
+import RiskProfileBanner from "@/components/risk/RiskProfileBanner";
 import { marketApi, stockApi, newsApi } from "@/services/api";
 import {
   marketIndexSchema,
@@ -223,6 +224,11 @@ export default function Index() {
             </a>
           </div>
         </div>
+      </section>
+
+      {/* 투자성향 분석 진입점 (compact). 새 방문자에겐 CTA, 결과 있으면 배지. */}
+      <section className="mb-10 md:mb-12 max-w-3xl mx-auto">
+        <RiskProfileBanner variant="compact" />
       </section>
 
       {/* ── 2. SERVICE SHOWCASE ──────────────────────────────── */}

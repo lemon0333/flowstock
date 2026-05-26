@@ -362,20 +362,27 @@ export default function EconomyPage() {
           </ResponsiveContainer>
         </section>
 
-        {/* 5. 종목 상관관계 히트맵 */}
+        {/* 5. 종목 상관관계 히트맵
+            열 헤더는 ticker 6자리(짧고 회전 불필요), 행 헤더는 회사명(가독성 우선).
+            hover 시 tooltip에 회사명 풀로 노출. 이전엔 회사명이 vertical-rl로 회전돼 읽기 힘들었음. */}
         {corr && corr.tickers.length > 0 && (
           <section className="bg-card border border-border rounded-2xl p-5 overflow-x-auto">
             <h2 className="font-semibold mb-2">시가총액 Top 10 상관관계 (60일 일별 수익률)</h2>
             <p className="text-xs text-muted-foreground mb-4">
-              빨강일수록 함께 움직임(높은 상관), 파랑일수록 반대로 움직임 — 분산투자 효과 가늠
+              빨강일수록 함께 움직임(높은 상관), 파랑일수록 반대로 움직임 — 분산투자 효과 가늠.
+              열 헤더는 종목 코드, 행 헤더는 종목명.
             </p>
             <table className="text-xs font-data border-collapse">
               <thead>
                 <tr>
                   <th className="p-1"></th>
-                  {corr.names.map((n, i) => (
-                    <th key={i} className="p-1 text-left whitespace-nowrap" style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}>
-                      {n}
+                  {corr.tickers.map((t, i) => (
+                    <th
+                      key={i}
+                      className="px-2 py-1 text-center whitespace-nowrap font-mono text-[11px] text-muted-foreground"
+                      title={corr.names[i]}
+                    >
+                      {t}
                     </th>
                   ))}
                 </tr>
@@ -383,14 +390,19 @@ export default function EconomyPage() {
               <tbody>
                 {corr.matrix.map((row, r) => (
                   <tr key={r}>
-                    <td className="p-1 pr-2 whitespace-nowrap font-medium">{corr.names[r]}</td>
+                    <td
+                      className="px-2 py-1 whitespace-nowrap font-medium text-right"
+                      title={corr.tickers[r]}
+                    >
+                      {corr.names[r]}
+                    </td>
                     {row.map((v, c) => (
                       <td
                         key={c}
                         className="p-1 text-center"
                         style={{
                           backgroundColor: corrColor(v),
-                          minWidth: 36,
+                          minWidth: 44,
                           color: Math.abs(v) > 0.7 ? "white" : "inherit",
                         }}
                         title={`${corr.names[r]} ↔ ${corr.names[c]}: ${v.toFixed(2)}`}

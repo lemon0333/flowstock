@@ -14,6 +14,7 @@ import { Download, Plus, RefreshCw, Search, TrendingDown, TrendingUp, Newspaper,
 import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import ReviewModal from "@/components/portfolio/ReviewModal";
+import RiskProfileBanner from "@/components/risk/RiskProfileBanner";
 import { useStore, type Trade } from "@/stores/useStore";
 import { stockApi, marketApi, newsApi, macroApi } from "@/services/api";
 
@@ -260,6 +261,9 @@ export default function PortfolioPage() {
             <RefreshCw className="h-4 w-4" /> 초기화
           </button>
         </div>
+
+        {/* 투자성향 배너 — 결과 있으면 배지, 없으면 CTA */}
+        <RiskProfileBanner variant="compact" />
 
         {/* 자산 카드 */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

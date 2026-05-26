@@ -21,6 +21,16 @@ data class FeedbackStatusUpdateRequest(
     val status: FeedbackStatus,
 )
 
+data class FeedbackUpdateRequest(
+    @field:NotBlank
+    @field:Size(min = 1, max = 200, message = "제목은 1~200자")
+    val title: String,
+
+    @field:NotBlank
+    @field:Size(min = 1, max = 5000, message = "내용은 1~5000자")
+    val content: String,
+)
+
 data class FeedbackResponse(
     val id: Long,
     val title: String,

@@ -152,13 +152,22 @@ export default function BacktestPage() {
 
         {/* 파라미터 패널 */}
         <section className="bg-card border border-border rounded-2xl p-5 space-y-4">
-          {/* 종목 선택 */}
+          {/* 종목 선택 — 입력은 항상 search state로만 controlled. 현재 선택값은 label에 같이 표기.
+              (이전엔 value={search || selectedMeta.name}로 fallback → 입력 다 지우면 선택 종목명으로 snap back되는 버그) */}
           <div className="relative">
-            <label className="text-xs text-muted-foreground">종목</label>
+            <label className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
+              <span>종목</span>
+              {selectedMeta && (
+                <span className="text-foreground font-medium">
+                  현재: {selectedMeta.name}
+                  <span className="ml-1 text-muted-foreground font-normal">({selectedMeta.ticker})</span>
+                </span>
+              )}
+            </label>
             <input
-              value={search || selectedMeta?.name || ""}
+              value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="종목명 검색"
+              placeholder="다른 종목을 검색하려면 입력하세요"
               className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background"
             />
             {searchResults.length > 0 && (
