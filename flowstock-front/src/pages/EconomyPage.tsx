@@ -26,6 +26,7 @@ import {
   YAxis,
 } from "recharts";
 import Layout from "@/components/layout/Layout";
+import InfoTooltip from "@/components/ui/info-tooltip";
 import { economyApi } from "@/services/api";
 
 interface DealTrendItem {
@@ -99,6 +100,15 @@ const MOOD_COLOR: Record<FearGreed["mood"], string> = {
   neutral: "#9CA3AF",
   greed: "#F59E0B",
   extreme_greed: "#DC2626",
+};
+
+// mood별 주린이 톤 한 줄 해석 — 숫자만 보여주지 말고 "그래서 어쩌라고"까지 친절히
+const MOOD_HINT: Record<FearGreed["mood"], string> = {
+  extreme_fear: "모두가 무서워서 던질 때 — 역사적으론 오히려 매수 기회로 본 케이스가 많아요",
+  fear: "조심 분위기. 뉴스만 쫓아가지 말고 본인 시나리오로 판단할 때",
+  neutral: "딱히 한쪽으로 쏠리지 않은 보합. 가장 평범한 상태예요",
+  greed: "낙관 분위기. 분할 매수·익절 라인 미리 정해두는 게 좋아요",
+  extreme_greed: "과열 신호. 신규 매수보단 수익 챙기는 걸 고민해볼 시점",
 };
 
 // 매매주체 (개인/외국인/기관) — 의미적 mapping 자유, 토스 톤으로 정렬
@@ -253,31 +263,79 @@ export default function EconomyPage() {
           </p>
         </div>
 
-        {/* 0. Fear & Greed Index */}
+        {/* 0. Fear & Greed Index — 3단 노출: 큰 숫자 → 인라인 해석 한 줄 → "?" 클릭 시 풀이.
+            토스 스타일 학습 곡선: 보자마자 OK → 더 알고 싶으면 클릭 */}
         {fg && (
           <section
             className="rounded-2xl p-6 text-white"
             style={{ background: `linear-gradient(135deg, ${MOOD_COLOR[fg.mood]} 0%, ${MOOD_COLOR[fg.mood]}cc 100%)` }}
           >
             <div className="flex items-start justify-between flex-wrap gap-3">
-              <div>
-                <div className="text-xs opacity-80 uppercase tracking-wide">Fear &amp; Greed Index</div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <div className="text-xs opacity-80 uppercase tracking-wide">
+                    공포·탐욕 지수 (Fear &amp; Greed)
+                  </div>
+                  <InfoTooltip
+                    title="공포·탐욕 지수가 뭐예요?"
+                    className="text-white/80 hover:text-white"
+                    iconClassName="h-3.5 w-3.5"
+                  >
+                    오늘 KOSPI 투자자들이 얼마나 무서워하는지(공포) / 들떠있는지(탐욕)를
+                    0~100 한 숫자로 압축한 거예요.
+                    <br /><br />
+                    <strong className="text-foreground">계산 방식</strong>: 52주 가격 위치,
+                    오른 종목 비율(시장 폭), 외국인·기관 매매 흐름을 가중평균.
+                    <br /><br />
+                    <strong className="text-foreground">읽는 법</strong>: 25 아래는 극공포,
+                    25~45 공포, 45~55 중립, 55~75 탐욕, 75 위는 극탐욕. 0/100 가까울수록
+                    추세 반전 가능성 ↑.
+                  </InfoTooltip>
+                </div>
                 <div className="text-3xl font-extrabold mt-1">{fg.score} — {fg.label}</div>
-                <p className="text-xs opacity-80 mt-1">
-                  52주 모멘텀 / 시장 폭 / 매매주체 흐름 가중평균 (KOSPI 기준)
+                <p className="text-sm opacity-95 mt-1.5 leading-snug">
+                  {MOOD_HINT[fg.mood]}
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-3 text-xs">
                 <div className="bg-white/15 rounded-xl px-3 py-2 text-center min-w-[90px]">
-                  <div className="opacity-80">52주 위치</div>
+                  <div className="opacity-80 flex items-center justify-center gap-1">
+                    52주 위치
+                    <InfoTooltip
+                      title="52주 위치가 뭐예요?"
+                      className="text-white/70 hover:text-white"
+                      iconClassName="h-3 w-3"
+                    >
+                      지금 KOSPI 지수가 최근 1년 변동폭에서 어느 쯤 와있는지.
+                      0%면 1년 저점, 100%면 1년 고점.
+                    </InfoTooltip>
+                  </div>
                   <div className="text-lg font-bold mt-0.5">{fg.components.momentum_52w}%</div>
                 </div>
                 <div className="bg-white/15 rounded-xl px-3 py-2 text-center min-w-[90px]">
-                  <div className="opacity-80">시장 폭</div>
+                  <div className="opacity-80 flex items-center justify-center gap-1">
+                    시장 폭
+                    <InfoTooltip
+                      title="시장 폭이 뭐예요?"
+                      className="text-white/70 hover:text-white"
+                      iconClassName="h-3 w-3"
+                    >
+                      KOSPI 종목 중에 오늘 오른 게 몇 %인지. 지수가 올라도 시장 폭이 좁으면(예: 30%) 소수 대형주만 끌고가는 거라 진짜 강세장은 아니에요.
+                    </InfoTooltip>
+                  </div>
                   <div className="text-lg font-bold mt-0.5">{fg.components.market_breadth}%</div>
                 </div>
                 <div className="bg-white/15 rounded-xl px-3 py-2 text-center min-w-[90px]">
-                  <div className="opacity-80">스마트머니</div>
+                  <div className="opacity-80 flex items-center justify-center gap-1">
+                    스마트머니
+                    <InfoTooltip
+                      title="스마트머니가 뭐예요?"
+                      className="text-white/70 hover:text-white"
+                      iconClassName="h-3 w-3"
+                    >
+                      외국인·기관(=정보 빠른 큰손)의 매수 흐름. 양수면 큰손이 사고 있는 중, 음수면 팔고 나가는 중. 큰손 따라가는 게 능사는 아니지만 흐름 참고용으로 봐요.
+                    </InfoTooltip>
+                  </div>
                   <div className="text-lg font-bold mt-0.5">{fg.components.smart_money}</div>
                 </div>
               </div>
