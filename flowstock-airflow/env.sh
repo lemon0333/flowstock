@@ -23,6 +23,13 @@ export AIRFLOW__CORE__DAGS_FOLDER="$HERE/flowstock-airflow/dags"
 export AIRFLOW__CORE__LOAD_EXAMPLES=False
 export PATH="$HERE/.venv-airflow/bin:$PATH"
 
+# macOS Apple Silicon에서 airflow standalone(gunicorn fork worker)이 SIGSEGV로 죽는 이슈 회피.
+# fork() 후 Objective-C 런타임을 그대로 쓰면 macOS가 안전성 검사로 abort 시킴.
+# Airflow는 fork만 쓰므로 disable 해도 무해. airflow dags test는 fork 안 해서 영향 없음.
+export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+# grpc/macOS DNS resolver의 fork 이슈 회피 (보조)
+export NO_PROXY="*"
+
 echo "AIRFLOW_HOME=$AIRFLOW_HOME"
 echo "DAGS_FOLDER=$AIRFLOW__CORE__DAGS_FOLDER"
 echo "airflow: $(command -v airflow)"
