@@ -16,8 +16,12 @@
 # Python venv (테스트용)
 .venv/
 .venv-test/
+.venv-airflow/
 __pycache__/
 .pytest_cache/
+
+# Airflow runtime (DB, logs, cfg — repo에 안 박음)
+.airflow-home/
 
 # Node
 node_modules/
