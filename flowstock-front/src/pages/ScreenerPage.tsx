@@ -12,6 +12,7 @@ import { Link } from "react-router-dom";
 import { Filter, Search, X as XIcon } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import PaginationControl from "@/components/ui/pagination-control";
+import InfoTooltip from "@/components/ui/info-tooltip";
 import { stockApi } from "@/services/api";
 
 const PAGE_SIZE = 25;
@@ -246,17 +247,39 @@ export default function ScreenerPage() {
                 <thead className="bg-muted/50 text-xs text-muted-foreground">
                   <tr>
                     <th className="text-left py-2 px-4">종목</th>
-                    <th className="text-right py-2 px-4 cursor-pointer" onClick={() => toggleSort("price")}>
-                      현재가 {sortKey === "price" && (sortDesc ? "↓" : "↑")}
+                    <th className="text-right py-2 px-4">
+                      <span className="inline-flex items-center gap-1 cursor-pointer" onClick={() => toggleSort("price")}>
+                        현재가 {sortKey === "price" && (sortDesc ? "↓" : "↑")}
+                      </span>
+                      <InfoTooltip title="현재가가 뭐예요?" iconClassName="h-3 w-3">
+                        가장 최근에 체결된 1주의 가격(원). 장 중에는 실시간으로 바뀌고,
+                        장 마감 후엔 그날 종가로 고정돼요.
+                      </InfoTooltip>
                     </th>
-                    <th
-                      className="text-right py-2 px-4 cursor-pointer"
-                      onClick={() => toggleSort("changePercent")}
-                    >
-                      등락률 {sortKey === "changePercent" && (sortDesc ? "↓" : "↑")}
+                    <th className="text-right py-2 px-4">
+                      <span
+                        className="inline-flex items-center gap-1 cursor-pointer"
+                        onClick={() => toggleSort("changePercent")}
+                      >
+                        등락률 {sortKey === "changePercent" && (sortDesc ? "↓" : "↑")}
+                      </span>
+                      <InfoTooltip title="등락률은 어떻게 계산해요?" iconClassName="h-3 w-3">
+                        <strong className="text-foreground">(현재가 − 전일 종가) / 전일 종가 × 100</strong>.
+                        <br /><br />
+                        +면 상승, −면 하락. 한국 주식은 하루 ±30%까지만 움직일 수 있어요
+                        (상한가 +30% / 하한가 -30%). 한 종목이 갑자기 +29.9% 가 있으면 거의 상한가 직전.
+                      </InfoTooltip>
                     </th>
-                    <th className="text-right py-2 px-4 cursor-pointer" onClick={() => toggleSort("volume")}>
-                      거래량 {sortKey === "volume" && (sortDesc ? "↓" : "↑")}
+                    <th className="text-right py-2 px-4">
+                      <span className="inline-flex items-center gap-1 cursor-pointer" onClick={() => toggleSort("volume")}>
+                        거래량 {sortKey === "volume" && (sortDesc ? "↓" : "↑")}
+                      </span>
+                      <InfoTooltip title="거래량을 왜 봐요?">
+                        오늘 거래된 주식의 총 갯수(주). 거래량이 평소보다 갑자기 폭증하면 → 뉴스/이벤트가
+                        있다는 신호로 봐요.
+                        <br /><br />
+                        거래량 없이 가격만 오르는 종목은 "소문에 오르고 거래로는 안 따라옴" — 위태로운 상승이에요.
+                      </InfoTooltip>
                     </th>
                   </tr>
                 </thead>

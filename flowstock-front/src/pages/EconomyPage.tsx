@@ -345,9 +345,21 @@ export default function EconomyPage() {
 
         {/* 1. 매매주체별 동향 */}
         <section className="bg-card border border-border rounded-2xl p-5">
-          <h2 className="font-semibold mb-2">매매주체별 순매수 (억원)</h2>
+          <h2 className="font-semibold mb-2 flex items-center gap-1.5">
+            매매주체별 순매수 (억원)
+            <InfoTooltip title="매매주체가 뭐예요?">
+              주식 시장 참여자를 크게 셋으로 나눈 거예요.
+              <br /><br />
+              <strong className="text-foreground">개인</strong>: 우리 같은 일반 투자자.<br />
+              <strong className="text-foreground">외국인</strong>: 해외 펀드·기관. 보통 정보가 빠르고 자금이 큼.<br />
+              <strong className="text-foreground">기관</strong>: 국내 연기금·증권사·자산운용사.
+              <br /><br />
+              막대가 위로(+) 솟으면 그 주체가 그날 산 금액이 판 금액보다 많다는 뜻 = 순매수.
+              아래로(−) 가면 순매도. 개미만 사고 외국인·기관이 팔고 나가면 추세 약화 신호로 봐요.
+            </InfoTooltip>
+          </h2>
           <p className="text-xs text-muted-foreground mb-4">
-            누가 시장에 자금을 넣고/뺐는지 — 자본 흐름과 정보 비대칭의 지표
+            개인·외국인·기관 중 오늘 누가 사고 누가 팔았는지. 큰손 흐름 따라가는 힌트.
           </p>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={dealTrendBars}>
@@ -370,9 +382,20 @@ export default function EconomyPage() {
 
         {/* 2. 상승/하락 종목 분포 */}
         <section className="bg-card border border-border rounded-2xl p-5">
-          <h2 className="font-semibold mb-2">상승/하락 종목 비율 (KOSPI)</h2>
+          <h2 className="font-semibold mb-2 flex items-center gap-1.5">
+            상승/하락 종목 비율 (KOSPI)
+            <InfoTooltip title="이 도넛은 뭘 보여줘요?">
+              오늘 KOSPI 전체 종목을 상한가/상승/보합/하락/하한가로 나눠서 비율 표시.
+              <br /><br />
+              지수만 올랐다고 시장이 강한 게 아니에요. 예를 들어 KOSPI +1%인데 도넛이
+              "하락 70% / 상승 30%"면 → 소수 대형주가 끌고 간 거고 대부분 종목은 빠진 거.
+              이걸 <strong className="text-foreground">시장 폭(market breadth)</strong>이라고 해요.
+              <br /><br />
+              상승 비율이 60% 넘으면 광범위한 강세장, 30% 아래면 빈약한 상승(의심).
+            </InfoTooltip>
+          </h2>
           <p className="text-xs text-muted-foreground mb-4">
-            시장 폭(market breadth) — 지수만큼이나 중요한 시장 강도 지표
+            지수만 보면 놓치는 시장 전체 분위기 — 오늘 오른 종목이 정말 많았나?
           </p>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -403,9 +426,20 @@ export default function EconomyPage() {
 
         {/* 3. 52주 고저 대비 현재 위치 */}
         <section className="bg-card border border-border rounded-2xl p-5">
-          <h2 className="font-semibold mb-2">52주 모멘텀 (저점→고점 위치, %)</h2>
+          <h2 className="font-semibold mb-2 flex items-center gap-1.5">
+            52주 모멘텀 (저점→고점 위치, %)
+            <InfoTooltip title="52주 위치를 왜 봐요?">
+              지금 가격이 최근 1년 동안의 최저~최고 사이 어디쯤 와있는지 보는 거예요.
+              <br /><br />
+              <strong className="text-foreground">0%</strong> = 1년 저점에 붙어있음 (바닥).<br />
+              <strong className="text-foreground">100%</strong> = 1년 고점에 붙어있음 (천장).
+              <br /><br />
+              모멘텀 투자자는 50%↑(상승 추세 유지)을 좋아하고, 가치 투자자는 30%↓(저가 매수)를 선호해요.
+              지수가 50% 근처면 평범한 횡보장.
+            </InfoTooltip>
+          </h2>
           <p className="text-xs text-muted-foreground mb-4">
-            현재가가 1년 변동폭 어디 — 0%면 1년 저점, 100%면 1년 고점
+            지수가 1년 안에서 어디쯤 와있는지 — 바닥(0%)인지 천장(100%)인지
           </p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={fiftyTwoBars} layout="vertical">
@@ -422,13 +456,26 @@ export default function EconomyPage() {
 
         {/* 5. 종목 상관관계 히트맵
             열 헤더는 ticker 6자리(짧고 회전 불필요), 행 헤더는 회사명(가독성 우선).
-            hover 시 tooltip에 회사명 풀로 노출. 이전엔 회사명이 vertical-rl로 회전돼 읽기 힘들었음. */}
+            hover 시 tooltip에 회사명 풀로 노출. */}
         {corr && corr.tickers.length > 0 && (
           <section className="bg-card border border-border rounded-2xl p-5 overflow-x-auto">
-            <h2 className="font-semibold mb-2">시가총액 Top 10 상관관계 (60일 일별 수익률)</h2>
+            <h2 className="font-semibold mb-2 flex items-center gap-1.5">
+              시가총액 Top 10 상관관계 (60일 일별 수익률)
+              <InfoTooltip title="상관관계 표 어떻게 읽어요?">
+                두 종목이 <strong className="text-foreground">얼마나 비슷하게 움직였나</strong>를
+                -1 ~ +1 사이 숫자로 표시.
+                <br /><br />
+                <strong className="text-foreground">+1에 가까움(빨강)</strong>: 한 종목이 오르면 다른 것도 같이 오름.<br />
+                <strong className="text-foreground">0 근처</strong>: 따로 노는 종목 사이.<br />
+                <strong className="text-foreground">-1에 가까움(파랑)</strong>: 정반대로 움직임.
+                <br /><br />
+                <strong className="text-foreground">분산투자 핵심</strong>: 상관계수가 높은 종목들을 같이 사면
+                "여러 종목 들고 있는데 다 같이 빠짐". 분산 효과를 보려면 상관 낮은 종목 섞어야 해요.
+              </InfoTooltip>
+            </h2>
             <p className="text-xs text-muted-foreground mb-4">
-              빨강일수록 함께 움직임(높은 상관), 파랑일수록 반대로 움직임 — 분산투자 효과 가늠.
-              열 헤더는 종목 코드, 행 헤더는 종목명.
+              빨강이면 같이 움직이는 종목, 파랑이면 반대로 움직이는 종목. 분산투자 짤 때 참고.
+              열은 종목 코드, 행은 종목명.
             </p>
             <table className="text-xs font-data border-collapse">
               <thead>
@@ -477,9 +524,19 @@ export default function EconomyPage() {
 
         {/* 4. KOSPI/KOSDAQ 시계열 (정규화) */}
         <section className="bg-card border border-border rounded-2xl p-5">
-          <h2 className="font-semibold mb-2">KOSPI / KOSDAQ 1년 추세 (시작점 = 100)</h2>
+          <h2 className="font-semibold mb-2 flex items-center gap-1.5">
+            KOSPI / KOSDAQ 1년 추세 (시작점 = 100)
+            <InfoTooltip title="시작점이 왜 100이에요?">
+              KOSPI는 2,500선, KOSDAQ은 700선 근처라 그냥 그리면 KOSDAQ 선이 바닥에
+              깔려서 비교가 안 돼요. 그래서 두 지수를 <strong className="text-foreground">1년 전 = 100</strong>으로
+              맞춰서 그린 그래프.
+              <br /><br />
+              <strong className="text-foreground">읽는 법</strong>: 1년 사이 두 지수 중 어느 게 더 잘 갔는지
+              한눈에. 예를 들어 KOSPI는 105, KOSDAQ은 92라면 같은 기간 KOSPI가 +5%인 동안 KOSDAQ은 -8%였다는 뜻.
+            </InfoTooltip>
+          </h2>
           <p className="text-xs text-muted-foreground mb-4">
-            정규화하여 두 지수의 상대 성과를 비교 — 효율시장 가설 관점에서의 정보 반영 추세
+            지수 절대값이 달라서 같은 차트에 그리려고 둘 다 1년 전을 100으로 맞춤. 누가 더 잘 갔나 비교용.
           </p>
           <ResponsiveContainer width="100%" height={300}>
             <ReLineChart data={merged}>

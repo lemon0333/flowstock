@@ -6,7 +6,7 @@
  * ============================================================
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   CartesianGrid,
   Legend,
@@ -18,6 +18,7 @@ import {
   YAxis,
 } from "recharts";
 import Layout from "@/components/layout/Layout";
+import InfoTooltip from "@/components/ui/info-tooltip";
 import { stockApi } from "@/services/api";
 import { runBacktest, type Strategy } from "@/lib/backtest";
 import { type OHLCV } from "@/lib/indicators";
@@ -314,26 +315,106 @@ export default function BacktestPage() {
                 label="전략 수익률"
                 value={`${(result.totalReturn * 100).toFixed(2)}%`}
                 tone={result.totalReturn >= 0 ? "positive" : "negative"}
+                tooltipTitle="전략 수익률이 뭐예요?"
+                tooltipBody={
+                  <>
+                    설정한 전략(MA 교차/RSI/볼린저)을 과거 데이터에 적용했을 때 누적 수익률.
+                    수수료·슬리피지 모두 반영된 값. Buy & Hold 수익률보다 높아야 "전략이 일했다"고 볼 수 있어요.
+                  </>
+                }
               />
               <Stat
                 label="Buy & Hold 수익률"
                 value={`${((buyAndHold?.totalReturn ?? 0) * 100).toFixed(2)}%`}
                 tone={(buyAndHold?.totalReturn ?? 0) >= 0 ? "positive" : "negative"}
+                tooltipTitle="Buy & Hold가 뭐예요?"
+                tooltipBody={
+                  <>
+                    같은 기간 동안 "그냥 사서 안 팔고 들고 있었다면" 얼마 벌었을지.
+                    <br /><br />
+                    전략 수익률이 Buy & Hold보다 낮으면 → 사고팔며 신경 쓴 보람이 없다는 뜻.
+                    역사적으로 대부분의 단순 전략은 Buy & Hold를 못 이겨요.
+                  </>
+                }
               />
               <Stat
                 label="MDD"
                 value={`${(result.maxDrawdown * 100).toFixed(2)}%`}
                 tone="negative"
+                tooltipTitle="MDD가 뭐예요?"
+                tooltipBody={
+                  <>
+                    <strong className="text-foreground">최대 손실폭</strong>(Maximum Drawdown).
+                    백테스트 기간 중 가장 안 좋았던 시점에 얼마나 까였는지.
+                    <br /><br />
+                    예: MDD -30%면 1,000만원 → 700만원까지 빠졌다가 회복한 거. 멘탈로 버틸 수 있는
+                    수치인지 미리 보는 지표예요.
+                    20%↑면 일반인이 손절 욕구 참기 힘들어요.
+                  </>
+                }
               />
               <Stat
                 label="Sharpe"
                 value={result.sharpe.toFixed(2)}
                 tone={result.sharpe >= 0 ? "positive" : "negative"}
+                tooltipTitle="Sharpe Ratio가 뭐예요?"
+                tooltipBody={
+                  <>
+                    <strong className="text-foreground">위험 대비 수익</strong> 지표. 변동성(=흔들림) 1단위당 몇 % 벌었나.
+                    <br /><br />
+                    1↑ 우수, 2↑ 매우 우수, 3↑ 거의 사기. 음수면 변동성에 비해 손해.
+                    같은 수익률이어도 Sharpe가 높을수록 멘탈 덜 갈리며 번 거예요.
+                  </>
+                }
               />
-              <Stat label="CAGR" value={`${(result.cagr * 100).toFixed(2)}%`} />
-              <Stat label="총 거래" value={`${result.trades.length}회`} />
-              <Stat label="승률" value={`${(result.winRate * 100).toFixed(1)}%`} />
-              <Stat label="최종 자산" value={`${Math.round(result.finalValue).toLocaleString()}원`} />
+              <Stat
+                label="CAGR"
+                value={`${(result.cagr * 100).toFixed(2)}%`}
+                tooltipTitle="CAGR이 뭐예요?"
+                tooltipBody={
+                  <>
+                    <strong className="text-foreground">연복리 수익률</strong>(Compound Annual Growth Rate).
+                    "총 수익률을 1년 단위 복리로 환산하면 평균 몇 %?"
+                    <br /><br />
+                    예: 5년 동안 +60% = CAGR 약 9.86%. 기간이 달라도 비교 가능하게 만드는 표준 지표.
+                  </>
+                }
+              />
+              <Stat
+                label="총 거래"
+                value={`${result.trades.length}회`}
+                tooltipTitle="거래 횟수가 너무 많으면?"
+                tooltipBody={
+                  <>
+                    거래마다 수수료 + 슬리피지가 빠지므로 너무 자주 매매하면 수익이 깎여요.
+                    같은 수익률이면 거래 횟수가 적은 전략이 실전에서 더 강해요.
+                  </>
+                }
+              />
+              <Stat
+                label="승률"
+                value={`${(result.winRate * 100).toFixed(1)}%`}
+                tooltipTitle="승률만 보면 되는 거예요?"
+                tooltipBody={
+                  <>
+                    수익으로 끝난 거래 비율. 승률이 높아도 "이긴 거래는 +1%, 진 거래는 -10%"면 결국 손해.
+                    승률 + 평균 손익비를 같이 봐야 해요.
+                    <br /><br />
+                    추세추종 전략은 보통 승률 30~40%인데도 수익 — 한 번 크게 따고 여러 번 작게 잃는 구조.
+                  </>
+                }
+              />
+              <Stat
+                label="최종 자산"
+                value={`${Math.round(result.finalValue).toLocaleString()}원`}
+                tooltipTitle="초기 자금 대비 얼마나 늘었나"
+                tooltipBody={
+                  <>
+                    초기 자금에서 시작해 백테스트 끝난 시점에 남은 금액. 초기 자금을 1,000만원으로 둔
+                    상태에서 1,200만원이 되면 +20%.
+                  </>
+                }
+              />
             </section>
 
             <section className="bg-card border border-border rounded-2xl p-5">
@@ -434,12 +515,31 @@ function Param({
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone?: "positive" | "negative" }) {
+function Stat({
+  label,
+  value,
+  tone,
+  tooltipTitle,
+  tooltipBody,
+}: {
+  label: string;
+  value: string;
+  tone?: "positive" | "negative";
+  tooltipTitle?: string;
+  tooltipBody?: ReactNode;
+}) {
   const cls =
     tone === "positive" ? "text-positive" : tone === "negative" ? "text-negative" : "text-foreground";
   return (
     <div className="bg-card border border-border rounded-2xl p-3">
-      <div className="text-[11px] text-muted-foreground">{label}</div>
+      <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+        {label}
+        {tooltipTitle && tooltipBody && (
+          <InfoTooltip title={tooltipTitle} iconClassName="h-3 w-3">
+            {tooltipBody}
+          </InfoTooltip>
+        )}
+      </div>
       <div className={`font-data text-base font-bold mt-0.5 ${cls}`}>{value}</div>
     </div>
   );
