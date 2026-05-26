@@ -1,0 +1,247 @@
+# Airflow webserver + scheduler + triggerer + 초기화 Job.
+#
+# Executor: LocalExecutor — Celery 안 씀 (StepN 규모엔 과함). 향후 DAG 100+개 되면 Celery로 전환.
+# DAG 저장: 이미지에 bake-in. 코드 바뀌면 새 tag로 rebuild + rollout restart.
+# 데이터 적재 경로: emptyDir로 임시 마운트 — Bronze/Silver/Gold는 같은 DAG run 안에서만 의미. 영속 필요해지면 PVC로 교체.
+# init: 최초 1회 `airflow db migrate` + admin 사용자 생성. idempotent.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: airflow-env
+  namespace: flowstock
+data:
+  AIRFLOW__CORE__EXECUTOR: "LocalExecutor"
+  AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+  AIRFLOW__CORE__DAGS_FOLDER: "/opt/airflow/dags"
+  AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "True"  # 새 DAG는 paused로 등록 — 운영자가 명시 enable
+  AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "False"
+  AIRFLOW__WEBSERVER__BASE_URL: "https://airflow.flowstock.info"
+  AIRFLOW__LOGGING__LOGGING_LEVEL: "INFO"
+  AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL: "30"
+  # OpenTelemetry 끔 — Jaeger 통합 전까지 grpc fork 이슈 회피
+  AIRFLOW__METRICS__OTEL_ON: "False"
+  AIRFLOW__TRACES__OTEL_ON: "False"
+---
+# 공통 env source — Deployment마다 envFrom으로 들고 옴
+apiVersion: v1
+kind: Secret
+metadata:
+  name: airflow-runtime-secrets
+  namespace: flowstock
+type: Opaque
+stringData:
+  # SQLAlchemy URL — airflow-postgres에 접속. 비번은 flowstock-secrets에서 가져옴 → 여기선 빈 값,
+  # Deployment의 env에서 합성. (Secret 안에서 다른 Secret 참조가 안 되는 k8s 제약 회피.)
+  _placeholder: ""
+---
+# 1) DB migrate + admin user 생성. 최초 1회 + 이미지 갱신 시 재실행해도 idempotent.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: airflow-init
+  namespace: flowstock
+spec:
+  ttlSecondsAfterFinished: 600
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: init
+          image: ghcr.io/lemon0333/flowstock-airflow:latest
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: airflow-env
+          env:
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: flowstock-secrets
+                  key: AIRFLOW_SQL_ALCHEMY_CONN
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: flowstock-secrets
+                  key: AIRFLOW_FERNET_KEY
+            - name: AIRFLOW__WEBSERVER__SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: flowstock-secrets
+                  key: AIRFLOW_WEBSERVER_SECRET_KEY
+            - name: _ADMIN_PW
+              valueFrom:
+                secretKeyRef:
+                  name: flowstock-secrets
+                  key: AIRFLOW_ADMIN_PASSWORD
+          command:
+            - bash
+            - -c
+            - |
+              set -e
+              airflow db migrate
+              airflow users create \
+                --username admin \
+                --password "$_ADMIN_PW" \
+                --firstname Admin \
+                --lastname Admin \
+                --role Admin \
+                --email admin@flowstock.info || true
+              echo "airflow init done"
+---
+# 2) Scheduler — DAG 파일 감지, task 큐잉, LocalExecutor가 직접 워커 fork
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-scheduler
+  namespace: flowstock
+  labels:
+    app: airflow-scheduler
+spec:
+  replicas: 1  # LocalExecutor — scheduler 1개. Celery로 가면 다중화
+  strategy:
+    type: Recreate  # scheduler 중복 실행은 위험 (Postgres advisory lock으로 보호되지만 빠른 교체가 안전)
+  selector:
+    matchLabels:
+      app: airflow-scheduler
+  template:
+    metadata:
+      labels:
+        app: airflow-scheduler
+    spec:
+      containers:
+        - name: scheduler
+          image: ghcr.io/lemon0333/flowstock-airflow:latest
+          imagePullPolicy: Always
+          args: ["scheduler"]
+          envFrom:
+            - configMapRef:
+                name: airflow-env
+          env:
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              valueFrom: { secretKeyRef: { name: flowstock-secrets, key: AIRFLOW_SQL_ALCHEMY_CONN } }
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom: { secretKeyRef: { name: flowstock-secrets, key: AIRFLOW_FERNET_KEY } }
+            - name: AIRFLOW__WEBSERVER__SECRET_KEY
+              valueFrom: { secretKeyRef: { name: flowstock-secrets, key: AIRFLOW_WEBSERVER_SECRET_KEY } }
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          livenessProbe:
+            exec:
+              command: ["airflow", "jobs", "check", "--job-type", "SchedulerJob", "--hostname", "$(hostname)"]
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 20
+            failureThreshold: 5
+---
+# 3) Webserver — UI. 단일 인스턴스 + Cloudflare Tunnel 앞단에 둠
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-webserver
+  namespace: flowstock
+  labels:
+    app: airflow-webserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: airflow-webserver
+  template:
+    metadata:
+      labels:
+        app: airflow-webserver
+    spec:
+      containers:
+        - name: webserver
+          image: ghcr.io/lemon0333/flowstock-airflow:latest
+          imagePullPolicy: Always
+          args: ["webserver"]
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: airflow-env
+          env:
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              valueFrom: { secretKeyRef: { name: flowstock-secrets, key: AIRFLOW_SQL_ALCHEMY_CONN } }
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom: { secretKeyRef: { name: flowstock-secrets, key: AIRFLOW_FERNET_KEY } }
+            - name: AIRFLOW__WEBSERVER__SECRET_KEY
+              valueFrom: { secretKeyRef: { name: flowstock-secrets, key: AIRFLOW_WEBSERVER_SECRET_KEY } }
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: airflow-webserver
+  namespace: flowstock
+spec:
+  selector:
+    app: airflow-webserver
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+# 4) Triggerer — async sensor / TaskFlow deferrable 처리. 작은 footprint
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-triggerer
+  namespace: flowstock
+  labels:
+    app: airflow-triggerer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: airflow-triggerer
+  template:
+    metadata:
+      labels:
+        app: airflow-triggerer
+    spec:
+      containers:
+        - name: triggerer
+          image: ghcr.io/lemon0333/flowstock-airflow:latest
+          imagePullPolicy: Always
+          args: ["triggerer"]
+          envFrom:
+            - configMapRef:
+                name: airflow-env
+          env:
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              valueFrom: { secretKeyRef: { name: flowstock-secrets, key: AIRFLOW_SQL_ALCHEMY_CONN } }
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom: { secretKeyRef: { name: flowstock-secrets, key: AIRFLOW_FERNET_KEY } }
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "300m"

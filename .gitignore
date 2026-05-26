@@ -23,6 +23,10 @@ __pycache__/
 # Airflow runtime (DB, logs, cfg — repo에 안 박음)
 .airflow-home/
 
+# CodeGraph 인덱스 / Cursor 룰 자동생성 — 머신 로컬
+.codegraph/
+.cursor/
+
 # Node
 node_modules/
 flowstock-front/dist/

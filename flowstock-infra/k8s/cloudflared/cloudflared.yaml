@@ -21,6 +21,8 @@ data:
         service: http://prometheus.flowstock-monitoring.svc.cluster.local:9090
       - hostname: analytics.flowstock.info
         service: http://umami.flowstock.svc.cluster.local:3000
+      - hostname: airflow.flowstock.info
+        service: http://airflow-webserver.flowstock.svc.cluster.local:8080
       - service: http_status:404
 ---
 apiVersion: v1

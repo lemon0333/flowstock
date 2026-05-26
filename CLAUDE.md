@@ -14,6 +14,7 @@
 - **모니터링**: Prometheus + Grafana + kube-state-metrics + node-exporter (`flowstock-monitoring` ns)
 - **로그 집계**: Loki(monolithic, filesystem 7일 보존) + Promtail DaemonSet — Grafana Explore에서 LogQL
 - **분산추적**: Jaeger all-in-one (OTLP gRPC/HTTP, 메모리 storage)
+- **데이터 파이프라인**: Airflow 2.10 (`flowstock` ns) — KOSPI Bronze→Silver→Gold→Serve. 메타DB는 `airflow-postgres` StatefulSet에 격리. UI는 `airflow.flowstock.info`. 운영 가이드: `flowstock-infra/docs/AIRFLOW.md`
 - **API 문서**: Springdoc OpenAPI + Swagger UI (`/swagger-ui.html`)
 - **인프라**: 온프레미스 k3s (mini PC) + Cloudflare Tunnel ingress, GitHub Actions CI/CD
 - **CI/CD**: `.github/workflows/deploy.yml` — main 브랜치 push 시 자동 배포 (frontend Pages + backend/ai k3s)
@@ -230,8 +231,14 @@ flowstock-ai/
   - `promtail.yaml` (DaemonSet, flowstock+flowstock-monitoring ns만 수집)
   - `kube-state-metrics.yaml`, `node-exporter.yaml` (DaemonSet)
 - **분산추적**: `jaeger/jaeger.yaml` — all-in-one, OTLP gRPC(4317)/HTTP(4318)
+- **데이터 파이프라인** (`airflow/`):
+  - `00-postgres.yaml` (메타DB 격리 StatefulSet, 10Gi PVC)
+  - `10-airflow.yaml` (init Job + scheduler/webserver/triggerer Deployment + Service)
+  - 이미지: `ghcr.io/lemon0333/flowstock-airflow:<sha>` (Dockerfile은 `flowstock-airflow/Dockerfile`)
+  - DAGs: `flowstock-airflow/dags/` — bake-in. 변경 시 새 tag rebuild + `kubectl rollout restart`
+  - 운영 가이드: `flowstock-infra/docs/AIRFLOW.md`
 - 관리자 도메인 (Cloudflare DNS CNAME 필요):
-  - `grafana.flowstock.info`, `jaeger.flowstock.info`, `prometheus.flowstock.info`
+  - `grafana.flowstock.info`, `jaeger.flowstock.info`, `prometheus.flowstock.info`, `airflow.flowstock.info`
 
 ### 시크릿 관리
 - `k8s/namespace/secrets.yaml` — `stringData` + `${VAR}` 플레이스홀더 (커밋 가능)
@@ -256,6 +263,7 @@ flowstock-ai/
 - `JWT_SECRET`, `DB_PASSWORD`, `REDIS_PASSWORD`, `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD`
 - `DART_API_KEY` (CLAUDE_API_KEY는 제거됨 — Claude Code SDK 구독 인증 사용)
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+- Airflow: `AIRFLOW_POSTGRES_PASSWORD`, `AIRFLOW_FERNET_KEY`, `AIRFLOW_WEBSERVER_SECRET_KEY`, `AIRFLOW_ADMIN_PASSWORD`
 - OAuth: `GOOGLE_CLIENT_ID`, `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`
 - 백엔드: `AI_SERVICE_URL` (Python 서비스 주소)
 - Cloudflare Tunnel: `CLOUDFLARE_ACCOUNT_TAG`, `CLOUDFLARE_TUNNEL_ID`, `CLOUDFLARE_TUNNEL_SECRET`
