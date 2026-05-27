@@ -47,6 +47,7 @@ const FeedbackPage = lazy(() => import("./pages/FeedbackPage"));
 const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const RiskQuizPage = lazy(() => import("./pages/RiskQuizPage"));
+const AgentBuilderPage = lazy(() => import("./pages/AgentBuilderPage"));
 const ChatbotFab = lazy(() => import("./components/chatbot/ChatbotFab"));
 
 const queryClient = new QueryClient({
@@ -146,6 +147,7 @@ const App = () => (
               <Route path="/portfolio" element={<PortfolioPage />} />
               <Route path="/portfolio/game" element={<InvestGamePage />} />
               <Route path="/quiz/risk" element={<RiskQuizPage />} />
+              <Route path="/agent" element={<AgentBuilderPage />} />
               <Route path="/alerts" element={<AlertsPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

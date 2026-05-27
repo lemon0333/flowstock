@@ -6,7 +6,7 @@ import {
   BarChart3, LineChart, Globe, Grid3x3,
   Filter, GitCompareArrows, FlaskConical, Calendar,
   Newspaper, Users, BookOpen, Lightbulb, Trophy,
-  Briefcase, Gamepad2, Bell,
+  Briefcase, Gamepad2, Bell, Bot,
   type LucideIcon,
 } from "lucide-react";
 
@@ -40,6 +40,7 @@ export const NAV_GROUPS: NavGroup[] = [
     defaultPath: "/screener",
     items: [
       { path: "/screener", label: "스크리너", icon: Filter },
+      { path: "/agent", label: "에이전트 빌더", icon: Bot },
       { path: "/compare", label: "비교", icon: GitCompareArrows },
       { path: "/backtest", label: "백테스트", icon: FlaskConical },
       { path: "/earnings", label: "실적 캘린더", icon: Calendar },
