@@ -8,10 +8,13 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { Bot, Download, Sparkles, FlaskConical, Loader2 } from "lucide-react";
+import { Bot, Download, Sparkles, FlaskConical, Plus } from "lucide-react";
+import { toast } from "sonner";
 import Layout from "@/components/layout/Layout";
 import SEO from "@/components/SEO";
+import InfoTooltip from "@/components/ui/info-tooltip";
 import { stockApi } from "@/services/api";
+import { useStore } from "@/stores/useStore";
 import {
   AGENT_TEMPLATES,
   screenStocks,
@@ -59,6 +62,7 @@ function buildInstallScript(spec: AgentSpec): string {
 }
 
 export default function AgentBuilderPage() {
+  const buyStock = useStore((s) => s.buyStock);
   const [stocks, setStocks] = useState<AgentStock[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -118,6 +122,27 @@ export default function AgentBuilderPage() {
   };
 
   const upd = (patch: Partial<AgentConditions>) => setConditions((c) => ({ ...c, ...patch }));
+
+  // 미리보기 후보를 모의투자에 1주씩 담기 — 조각1(찾기) → 조각2(모의투자) 연결
+  const addToMock = (s: AgentStock) => {
+    const res = buyStock({ stockId: s.id, stockName: s.name, quantity: 1, price: s.price });
+    if (res.ok) {
+      toast.success(`${s.name} 1주를 모의투자에 담았어요`, {
+        description: `${s.price.toLocaleString()}원 · 포트폴리오에서 확인`,
+      });
+    } else {
+      toast.error(res.error || "담지 못했어요");
+    }
+  };
+
+  const addAllToMock = () => {
+    let ok = 0;
+    for (const s of preview) {
+      if (buyStock({ stockId: s.id, stockName: s.name, quantity: 1, price: s.price }).ok) ok += 1;
+    }
+    if (ok > 0) toast.success(`${ok}개 종목을 1주씩 모의투자에 담았어요`);
+    else toast.error("잔고가 모자라 담지 못했어요");
+  };
 
   return (
     <Layout>
@@ -180,7 +205,15 @@ export default function AgentBuilderPage() {
                   className="w-full px-3 py-2 rounded-lg border border-border bg-background" />
               </div>
             </Field>
-            <Field label={`등락률: ${conditions.minChangePercent}% ~ ${conditions.maxChangePercent}%`}>
+            <Field
+              label={`등락률: ${conditions.minChangePercent}% ~ ${conditions.maxChangePercent}%`}
+              tip={
+                <InfoTooltip title="등락률로 뭘 거를 수 있어요?" iconClassName="h-3 w-3">
+                  전일 종가 대비 오늘 가격 변동률. 양수만 두면 "오른 종목만", 음수만 두면 "빠진 종목만"
+                  고를 수 있어요. 한국 주식은 ±30%가 한계(상/하한가).
+                </InfoTooltip>
+              }
+            >
               <div className="flex gap-2">
                 <input type="number" value={conditions.minChangePercent}
                   onChange={(e) => upd({ minChangePercent: Number(e.target.value) })}
@@ -190,7 +223,15 @@ export default function AgentBuilderPage() {
                   className="w-full px-3 py-2 rounded-lg border border-border bg-background" />
               </div>
             </Field>
-            <Field label={`최소 거래량: ${conditions.minVolume.toLocaleString()}주`}>
+            <Field
+              label={`최소 거래량: ${conditions.minVolume.toLocaleString()}주`}
+              tip={
+                <InfoTooltip title="거래량 필터를 왜 둬요?" iconClassName="h-3 w-3">
+                  거래량이 너무 적은 종목은 사고팔기 힘들고(유동성 부족) 가격이 들쭉날쭉해요.
+                  최소 거래량을 두면 "실제로 거래가 활발한 종목"만 후보로 남아요.
+                </InfoTooltip>
+              }
+            >
               <input type="range" min={0} max={10_000_000} step={100_000} value={conditions.minVolume}
                 onChange={(e) => upd({ minVolume: Number(e.target.value) })}
                 className="w-full accent-primary" />
@@ -222,9 +263,20 @@ export default function AgentBuilderPage() {
 
         {/* 3. 미리보기 */}
         <section className="bg-card border border-border rounded-2xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-border flex items-center justify-between">
+          <div className="px-5 py-3 border-b border-border flex items-center justify-between gap-2">
             <h2 className="text-sm font-semibold">3. 미리보기 — 지금 이 조건이면 이 종목들</h2>
-            <span className="text-xs text-muted-foreground">{preview.length}개</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">{preview.length}개</span>
+              {preview.length > 0 && (
+                <button
+                  type="button"
+                  onClick={addAllToMock}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border border-border hover:bg-accent"
+                >
+                  <Plus className="h-3 w-3" /> 전체 모의투자 담기
+                </button>
+              )}
+            </div>
           </div>
           {loading ? (
             <div className="p-8 text-center text-sm text-muted-foreground">시세 불러오는 중…</div>
@@ -241,6 +293,7 @@ export default function AgentBuilderPage() {
                     <th className="text-right py-2 px-4">현재가</th>
                     <th className="text-right py-2 px-4">등락률</th>
                     <th className="text-right py-2 px-4">거래량</th>
+                    <th className="text-right py-2 px-4">모의투자</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -257,6 +310,16 @@ export default function AgentBuilderPage() {
                         {s.changePercent > 0 ? "+" : ""}{s.changePercent.toFixed(2)}%
                       </td>
                       <td className="py-2 px-4 text-right font-data text-muted-foreground">{s.volume.toLocaleString()}</td>
+                      <td className="py-2 px-4 text-right">
+                        <button
+                          type="button"
+                          onClick={() => addToMock(s)}
+                          title="모의투자에 1주 담기"
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border border-border hover:bg-accent text-primary"
+                        >
+                          <Plus className="h-3 w-3" /> 담기
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -300,10 +363,13 @@ export default function AgentBuilderPage() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children, tip }: { label: string; children: React.ReactNode; tip?: React.ReactNode }) {
   return (
     <label className="block">
-      <div className="text-xs text-muted-foreground mb-1">{label}</div>
+      <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+        {label}
+        {tip}
+      </div>
       {children}
     </label>
   );
