@@ -27,6 +27,9 @@ __pycache__/
 .codegraph/
 .cursor/
 
+# Airflow docker-compose 로컬 적재 데이터
+flowstock-airflow/.localdata/
+
 # Node
 node_modules/
 flowstock-front/dist/

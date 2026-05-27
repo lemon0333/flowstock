@@ -1,0 +1,96 @@
+# 로컬 개발용 Airflow — Mac에서 UI를 SIGSEGV 없이 보려는 용도.
+#
+# 왜 이게 필요한가:
+#   `airflow standalone`은 macOS Apple Silicon에서 fork 시 SIGSEGV로 죽음 (네이티브 라이브러리 +
+#   macOS 프레임워크 fork 비호환, 알려진 미해결 이슈). Linux 컨테이너 안에선 fork가 멀쩡하므로
+#   Docker로 띄우면 크래시 없이 UI를 볼 수 있음.
+#
+# 사용:
+#   1. Docker Desktop 실행
+#   2. cd flowstock-airflow && docker compose up -d
+#   3. http://localhost:8080  (admin / admin)
+#   4. 끄기: docker compose down  (데이터까지 지우려면 docker compose down -v)
+#
+# CLI만 필요하면 Docker 없이도 됨: `airflow dags test <dag_id>` (네이티브, fork 안 해서 안전).
+#
+# 주의: 이건 로컬 개발 전용. 운영은 k3s (flowstock-infra/k8s/airflow/, docs/AIRFLOW.md).
+
+x-airflow-common: &airflow-common
+  build: .
+  environment: &airflow-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+    AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "False"  # 로컬은 바로 켜진 상태로 보기 편하게
+    AIRFLOW__WEBSERVER__SECRET_KEY: local-dev-only-not-a-secret
+    AIRFLOW__METRICS__OTEL_ON: "False"
+    AIRFLOW__TRACES__OTEL_ON: "False"
+  volumes:
+    # dags를 마운트 — 코드 수정하면 이미지 rebuild 없이 즉시 반영 (스케줄러가 30초 내 재스캔)
+    - ./dags:/opt/airflow/dags
+    # 적재 데이터(/tmp/flowstock-data)를 호스트로 빼서 컨테이너 재시작에도 살아남게
+    - ./.localdata:/tmp/flowstock-data
+  depends_on:
+    postgres:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5433:5432"  # 로컬 5432(다른 Postgres)와 충돌 피하려고 5433로 노출
+
+  airflow-init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db migrate
+        airflow users create \
+          --username admin --password admin \
+          --firstname Admin --lastname Admin \
+          --role Admin --email admin@local || true
+        echo "init done"
+    restart: on-failure
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  scheduler:
+    <<: *airflow-common
+    command: scheduler
+    restart: unless-stopped
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+volumes:
+  airflow-pgdata:
