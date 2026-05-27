@@ -24,26 +24,31 @@ class StockController(
 
     private val seoulFmt = DateTimeFormatter.ofPattern("yyyyMMdd")
 
-    private fun fetchMarket(date: LocalDate, depth: Int = 0): Mono<List<Map<String, Any?>>> {
-        if (depth > 7) return Mono.just(emptyList())
+    private fun fetchMarket(date: LocalDate, market: String, depth: Int = 0): Mono<List<Map<String, Any?>>> {
+        // US는 date 파티션이 아니라 현재 quote라 retry 1회면 충분 (빈 결과면 키 미설정 등)
+        val maxDepth = if (market == "US") 1 else 7
+        if (depth > maxDepth) return Mono.just(emptyList())
         val d = date.format(seoulFmt)
         return client.get()
-            .uri("$aiUrl/api/ai/stock/market?date=$d&market=ALL")
+            .uri("$aiUrl/api/ai/stock/market?date=$d&market=$market")
             .retrieve()
             .bodyToMono(Map::class.java)
             .flatMap { resp ->
                 @Suppress("UNCHECKED_CAST")
                 val data = (resp["data"] as? List<Map<String, Any?>>) ?: emptyList()
-                if (data.isEmpty()) fetchMarket(date.minusDays(1), depth + 1)
+                if (data.isEmpty()) fetchMarket(date.minusDays(1), market, depth + 1)
                 else Mono.just(data)
             }
-            .onErrorResume { fetchMarket(date.minusDays(1), depth + 1) }
+            .onErrorResume { fetchMarket(date.minusDays(1), market, depth + 1) }
     }
 
     @GetMapping
-    fun list(): Mono<ApiResponse<List<Map<String, Any?>>>> {
+    fun list(
+        @RequestParam(defaultValue = "ALL") market: String,
+    ): Mono<ApiResponse<List<Map<String, Any?>>>> {
+        val mkt = if (market.uppercase() in setOf("ALL", "KOSPI", "KOSDAQ", "US")) market.uppercase() else "ALL"
         val today = LocalDate.now(ZoneId.of("Asia/Seoul"))
-        return fetchMarket(today).map { data ->
+        return fetchMarket(today, mkt).map { data ->
             val mapped = data.map {
                 mapOf(
                     "id" to (it["ticker"] ?: ""),

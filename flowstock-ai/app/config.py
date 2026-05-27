@@ -7,6 +7,10 @@ class Settings(BaseSettings):
     APP_PORT: int = 8000
     LOG_LEVEL: str = "INFO"
 
+    # Twelve Data — 미국 종목 시세 (무료 티어, batch quote). 빈 값이면 미장 비활성(빈 결과 반환).
+    # 키 발급: https://twelvedata.com/ (무료)
+    TWELVE_DATA_API_KEY: str = ""
+
     # MySQL
     MYSQL_HOST: str = "localhost"
     MYSQL_PORT: int = 3306

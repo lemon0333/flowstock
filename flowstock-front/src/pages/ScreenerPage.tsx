@@ -44,12 +44,14 @@ export default function ScreenerPage() {
   const [sortKey, setSortKey] = useState<SortKey>("volume");
   const [page, setPage] = useState(0);
   const [sortDesc, setSortDesc] = useState(true);
+  const [market, setMarket] = useState<"KR" | "US">("KR");
   const resultsRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     let alive = true;
+    setLoading(true);
     stockApi
-      .getAll()
+      .getAll(market)
       .then((res) => {
         if (!alive) return;
         const arr = (res.data ?? []) as Array<Record<string, unknown>>;
@@ -70,7 +72,7 @@ export default function ScreenerPage() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [market]);
 
   const filtered = useMemo(() => {
     const kw = keyword.trim().toLowerCase();
@@ -116,12 +118,28 @@ export default function ScreenerPage() {
     <Layout>
       <div className="space-y-5">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Filter className="h-5 w-5 text-primary" />
-            종목 스크리너
-          </h1>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+              <Filter className="h-5 w-5 text-primary" />
+              종목 스크리너
+            </h1>
+            <div className="inline-flex rounded-full border border-border p-0.5 text-xs">
+              {(["KR", "US"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMarket(m)}
+                  className={`px-3 py-1 rounded-full font-medium transition-colors ${
+                    market === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  {m === "KR" ? "🇰🇷 국내" : "🇺🇸 미국"}
+                </button>
+              ))}
+            </div>
+          </div>
           <p className="text-sm text-muted-foreground mt-1">
-            거래량 상위 KOSPI {rows.length}종목에서 조건 필터로 후보 발굴
+            {market === "KR" ? "거래량 상위 KOSPI" : "미국 대표 종목"} {rows.length}종목에서 조건 필터로 후보 발굴
           </p>
         </div>
 

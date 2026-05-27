@@ -40,8 +40,8 @@ async def get_market_ohlcv(
     market=ALL이면 KOSPI+KOSDAQ 합쳐 반환 (service 레이어에서 처리).
     backend StockController가 'ALL'로 호출 → 종목 검색 dropdown 채움.
     """
-    if market not in ("KOSPI", "KOSDAQ", "ALL"):
-        raise HTTPException(status_code=400, detail="market은 KOSPI, KOSDAQ, ALL만 허용됩니다.")
+    if market not in ("KOSPI", "KOSDAQ", "ALL", "US"):
+        raise HTTPException(status_code=400, detail="market은 KOSPI, KOSDAQ, ALL, US만 허용됩니다.")
     try:
         data = stock_data_service.get_market_ohlcv(date, market=market)
         return MarketOHLCVResponse(date=date, market=market, data=data, count=len(data))

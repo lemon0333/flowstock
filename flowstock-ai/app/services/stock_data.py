@@ -114,6 +114,8 @@ class StockDataService:
     # market="ALL"  : KOSPI 400 + KOSDAQ 400 = 800
     # market="KOSPI"/"KOSDAQ" : 해당 시장만 400
     def get_market_ohlcv(self, date: str | None = None, market: str = "ALL") -> list[dict]:
+        if market == "US":
+            return self.get_us_market()
         markets = ["KOSPI", "KOSDAQ"] if market == "ALL" else [market]
         if not all(m in ("KOSPI", "KOSDAQ") for m in markets):
             return []
@@ -204,6 +206,61 @@ class StockDataService:
             )
         return records
 
+    # ── 미국 시장 (Twelve Data batch quote) ────────────────
+    # 무료 티어는 S&P500 전종목 enumerate가 빡빡해서 대표 메가캡/인기주를 큐레이션.
+    # batch quote: /quote?symbol=AAPL,MSFT,... → symbol별 dict. 60s TTL 캐시 재사용.
+    US_TICKERS = [
+        "AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META", "TSLA", "AVGO", "LLY", "JPM",
+        "V", "UNH", "XOM", "MA", "COST", "HD", "PG", "JNJ", "WMT", "NFLX",
+        "BAC", "ORCL", "CRM", "AMD", "KO", "PEP", "ADBE", "TMO", "CSCO", "MCD",
+        "ABBV", "WFC", "INTC", "QCOM", "DIS", "INTU", "TXN", "AMAT", "BA", "PFE",
+        "GE", "CAT", "NKE", "PYPL", "SBUX", "UBER", "SHOP", "PLTR", "COIN", "ARM",
+    ]
+
+    def get_us_market(self) -> list[dict]:
+        from app.config import settings
+
+        api_key = settings.TWELVE_DATA_API_KEY
+        if not api_key:
+            logger.warning("TWELVE_DATA_API_KEY 미설정 — 미장 데이터 빈 결과 반환")
+            return []
+
+        symbols = ",".join(self.US_TICKERS)
+        url = (
+            f"https://api.twelvedata.com/quote?symbol={symbols}"
+            f"&apikey={api_key}"
+        )
+        try:
+            data = _get_json(url, timeout=20)
+        except Exception as e:
+            logger.error("Twelve Data 호출 실패: %s", e)
+            return []
+
+        # batch면 {symbol: {...}}, 단일이면 {...} — 단일 케이스 방어
+        if "symbol" in data:
+            data = {data.get("symbol", ""): data}
+
+        results: list[dict] = []
+        for sym in self.US_TICKERS:
+            q = data.get(sym)
+            if not isinstance(q, dict) or q.get("status") == "error":
+                continue
+            results.append(
+                {
+                    "ticker": sym,
+                    "name": q.get("name") or sym,
+                    "market": "US",
+                    "open": _to_int(q.get("open")),
+                    "high": _to_int(q.get("high")),
+                    "low": _to_int(q.get("low")),
+                    "close": _to_int(q.get("close")),
+                    "change": _to_int(q.get("change")),
+                    "volume": _to_int(q.get("volume")),
+                    "change_rate": _to_float(q.get("percent_change")),
+                }
+            )
+        results.sort(key=lambda x: x["volume"], reverse=True)
+        return results
 
     # ── 경제 대시보드 (맨큐 거시/미시 관점) ───────────────
     def get_economy_dashboard(self) -> dict:

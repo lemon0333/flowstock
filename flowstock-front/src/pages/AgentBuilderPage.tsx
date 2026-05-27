@@ -65,6 +65,7 @@ export default function AgentBuilderPage() {
   const buyStock = useStore((s) => s.buyStock);
   const [stocks, setStocks] = useState<AgentStock[]>([]);
   const [loading, setLoading] = useState(true);
+  const [market, setMarket] = useState<"KR" | "US">("KR");
 
   const [templateId, setTemplateId] = useState<string>(AGENT_TEMPLATES[0].id);
   const [conditions, setConditions] = useState<AgentConditions>(AGENT_TEMPLATES[0].conditions);
@@ -72,8 +73,9 @@ export default function AgentBuilderPage() {
 
   useEffect(() => {
     let alive = true;
+    setLoading(true);
     stockApi
-      .getAll()
+      .getAll(market)
       .then((res) => {
         if (!alive) return;
         const arr = (res.data ?? []) as Array<Record<string, unknown>>;
@@ -93,7 +95,7 @@ export default function AgentBuilderPage() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [market]);
 
   const pickTemplate = (t: AgentTemplate) => {
     setTemplateId(t.id);
@@ -153,10 +155,26 @@ export default function AgentBuilderPage() {
       />
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Bot className="h-6 w-6 text-primary" />
-            투자 에이전트 빌더
-          </h1>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+              <Bot className="h-6 w-6 text-primary" />
+              투자 에이전트 빌더
+            </h1>
+            <div className="inline-flex rounded-full border border-border p-0.5 text-xs">
+              {(["KR", "US"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMarket(m)}
+                  className={`px-3 py-1 rounded-full font-medium transition-colors ${
+                    market === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  {m === "KR" ? "🇰🇷 국내" : "🇺🇸 미국"}
+                </button>
+              ))}
+            </div>
+          </div>
           <p className="text-sm text-muted-foreground mt-1">
             조건만 고르면 내 요건에 맞는 종목을 찾아주는 Claude Code 스킬이 만들어져요.
             다운받아서 내 컴퓨터에서 실행 — 실거래 연결은 본인 선택.

@@ -114,7 +114,8 @@ export const authApi = {
 
 // Stock APIs
 export const stockApi = {
-  getAll: () => api.get<ApiResponse<any[]>>('/stocks'),
+  getAll: (market?: "KR" | "US") =>
+    api.get<ApiResponse<any[]>>(market === "US" ? '/stocks?market=US' : '/stocks'),
   getById: (id: string) => api.get<ApiResponse<any>>(`/stocks/${id}`),
   getOhlcv: (id: string, days = 180) =>
     api.get<ApiResponse<any[]>>(`/stocks/${id}/ohlcv?days=${days}`),
