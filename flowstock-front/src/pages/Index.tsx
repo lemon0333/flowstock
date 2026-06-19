@@ -14,8 +14,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight, Filter, GitCompareArrows, Grid3x3, FlaskConical,
-  LineChart, Globe, Calendar, Users, TrendingUp, ShieldCheck,
-  Database, Sparkles, BookOpen, Briefcase,
+  LineChart, Globe, Calendar, Users, TrendingUp, TrendingDown, ShieldCheck,
+  Database, Sparkles, BookOpen, Briefcase, Bot,
 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import SEO from "@/components/SEO";
@@ -40,6 +40,13 @@ interface FeatureCard {
 }
 
 const FEATURES: FeatureCard[] = [
+  {
+    to: "/regret",
+    title: "못 번 돈 계산기 🔥",
+    desc: "그때 그 종목 샀으면 지금 얼마? 종목·날짜만 넣으면 1초 계산 + 공유",
+    icon: TrendingDown,
+    accent: "text-rose-500",
+  },
   {
     to: "/learn",
     title: "주식 공부 (주린이 시작)",
@@ -193,35 +200,34 @@ export default function Index() {
       {/* HERO — min-h 명시로 첫 렌더에 layout 흔들림(CLS) 방지 */}
       <section className="mb-10 md:mb-14 pt-2 md:pt-6 min-h-[340px] md:min-h-[380px]">
         <div className="text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 text-rose-500 text-xs font-medium mb-4">
             <Sparkles className="h-3.5 w-3.5" />
-            주린이를 키우는 한국 주식 학습 사이트
+            1초 후회 시뮬레이터
           </div>
           <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-foreground leading-tight">
-            당신의 전략은<br className="md:hidden" /> <span className="text-primary">실전에서 통할까요?</span>
+            내가 얼마나 <span className="text-rose-500">못 벌었을까?</span>
           </h1>
           <p className="text-sm md:text-base text-muted-foreground mt-4 leading-relaxed">
-            <strong className="text-foreground">여기서 먼저 검증하세요.</strong>
+            <strong className="text-foreground">그때 그 종목 샀으면 지금 얼마였을까.</strong>
             <br />
-            45개 학습 토픽 → 가상 1,000만원 모의투자 → AI 복기 분석까지 —
-            진짜 돈 안 잃고 안전하게 연습하는 주린이 학습 사이트.
+            종목이랑 들어간 날짜만 넣으면 놓친 수익을 계산해줘요. 결과는 친구한테 공유까지.
           </p>
           <div className="flex flex-wrap gap-3 justify-center mt-6">
             <Link
-              to="/learn"
-              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              to="/regret"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-medium bg-rose-500 text-white hover:bg-rose-600 transition-colors"
             >
-              <BookOpen className="h-4 w-4" />
-              주식 공부 먼저 보기
+              <TrendingDown className="h-4 w-4" />
+              내 후회 계산하기
+              <ArrowRight className="h-4 w-4" />
             </Link>
-            <a
-              href="#today-market"
+            <Link
+              to="/agent"
               className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-medium border border-border hover:bg-accent text-foreground transition-colors"
             >
-              <TrendingUp className="h-4 w-4" />
-              오늘 시장 둘러보기
-              <ArrowRight className="h-4 w-4" />
-            </a>
+              <Bot className="h-4 w-4" />
+              에이전트 빌더
+            </Link>
           </div>
         </div>
       </section>

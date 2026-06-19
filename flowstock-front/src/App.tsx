@@ -33,6 +33,7 @@ const ScreenerPage = lazy(() => import("./pages/ScreenerPage"));
 const ComparePage = lazy(() => import("./pages/ComparePage"));
 const SectorPage = lazy(() => import("./pages/SectorPage"));
 const BacktestPage = lazy(() => import("./pages/BacktestPage"));
+const RegretPage = lazy(() => import("./pages/RegretPage"));
 const MacroPage = lazy(() => import("./pages/MacroPage"));
 const EarningsPage = lazy(() => import("./pages/EarningsPage"));
 const ArticlesPage = lazy(() => import("./pages/ArticlesPage"));
@@ -117,6 +118,7 @@ const App = () => (
               <Route path="/compare" element={<ComparePage />} />
               <Route path="/sectors" element={<SectorPage />} />
               <Route path="/backtest" element={<BacktestPage />} />
+              <Route path="/regret" element={<RegretPage />} />
               <Route path="/earnings" element={<EarningsPage />} />
               <Route path="/articles" element={<ArticlesPage />} />
               <Route path="/articles/new" element={<ArticleEditPage />} />
