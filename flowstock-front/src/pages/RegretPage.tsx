@@ -17,6 +17,7 @@ import SEO from "@/components/SEO";
 import { stockApi } from "@/services/api";
 import type { OHLCV } from "@/lib/indicators";
 import { calcRegret, won, wonKo, pctStr, type RegretResult } from "@/lib/regret";
+import { loadKakao } from "@/lib/kakao";
 import { toast } from "sonner";
 
 interface UStock {
@@ -162,17 +163,32 @@ export default function RegretPage() {
       copyLink();
     }
   };
-  const shareKakao = () => {
-    const K = (window as any).Kakao;
+  const shareKakao = async () => {
+    if (!result || !resultStock) return;
+    const K = await loadKakao();
     if (K?.Share?.sendDefault) {
+      const link = { webUrl: shareUrl(), mobileWebUrl: shareUrl() };
       K.Share.sendDefault({
-        objectType: "text",
-        text: shareText + "\n\n👉 나도 계산해보기",
-        link: { webUrl: shareUrl(), mobileWebUrl: shareUrl() },
+        objectType: "feed",
+        content: {
+          title: `${result.entryDate}에 ${resultStock.name}에 ${wonKo(amount)} 넣었다면`,
+          description:
+            result.profit >= 0
+              ? `지금 ${wonKo(result.currentValue)} (${pctStr(result.pct)}) · 못 번 돈 ${wonKo(result.profit)} 😭`
+              : `샀으면 ${wonKo(Math.abs(result.profit))} 잃었을 뻔 (${pctStr(result.pct)}) 😮‍💨`,
+          imageUrl: `${window.location.origin}/share-regret-card.png`,
+          link,
+        },
+        buttons: [{ title: "나도 계산해보기", link }],
       });
     } else {
-      // 카카오 SDK 미설정 → 네이티브 공유/복사로 폴백
-      nativeShare();
+      // 키/SDK 없이도 공유가 끊기지 않게 — 링크 복사 폴백
+      try {
+        await navigator.clipboard.writeText(shareUrl());
+        toast.success("링크를 복사했어요 — 카톡에 붙여넣으면 바로 공유돼요");
+      } catch {
+        nativeShare();
+      }
     }
   };
 

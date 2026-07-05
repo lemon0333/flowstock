@@ -1,0 +1,72 @@
+# www.flowstock.info → https://flowstock.info 301 리다이렉트 전용 nginx.
+# 프론트는 Cloudflare Pages(root 도메인)에 있고, www DNS는 Cloudflare Tunnel로 들어오므로
+# 터널 뒤에서 301만 돌려주는 초경량 서버가 필요하다. (cloudflared ingress는 자체 redirect 미지원)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: www-redirect-config
+  namespace: flowstock
+data:
+  default.conf: |
+    server {
+      listen 80;
+      server_name _;
+      return 301 https://flowstock.info$request_uri;
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: www-redirect
+  namespace: flowstock
+  labels:
+    app: www-redirect
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: www-redirect
+  template:
+    metadata:
+      labels:
+        app: www-redirect
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+              readOnly: true
+          resources:
+            requests:
+              memory: "16Mi"
+              cpu: "10m"
+            limits:
+              memory: "32Mi"
+              cpu: "50m"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 2
+            periodSeconds: 10
+      volumes:
+        - name: config
+          configMap:
+            name: www-redirect-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: www-redirect
+  namespace: flowstock
+spec:
+  selector:
+    app: www-redirect
+  ports:
+    - port: 80
+      targetPort: 80

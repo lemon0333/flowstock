@@ -79,6 +79,7 @@ npm run test       # Vitest 단위 테스트
 - `VITE_GOOGLE_CLIENT_ID` — Google OAuth Client ID
 - `VITE_NAVER_CLIENT_ID` — Naver OAuth Client ID
 - `VITE_NAVER_CALLBACK_URL` — Naver OAuth 콜백 URL
+- `VITE_KAKAO_JS_KEY` — Kakao JS SDK 키 (후회 계산기 카톡 피드 공유). 없으면 링크 복사 폴백. GitHub secret `KAKAO_JS_KEY`
 
 ### 경로 alias
 - `@/` → `src/`
@@ -253,6 +254,8 @@ flowstock-ai/
   3. SSH(appleboy/ssh-action, command_timeout 30m)로 mini PC 진입
   4. namespace → DBs → cloudflared(envsubst) → monitoring/jaeger → ai-service → backend rolling update
   5. `kubectl rollout status` 600s 대기
+  6. **verify-production 잡** — `flowstock.info/version.txt` == 커밋 sha, 메인 번들 `/regret` 라우트, `/api/market` health 직접 확인. "배포 초록불인데 프로덕션 낡음"을 잡는 최종 관문
+- `www.flowstock.info` → root 301: `k8s/www-redirect/` nginx + cloudflared ingress rule (`flowstock-infra/docs/WWW-REDIRECT.md`)
 
 ### 테스트
 - 프론트: `cd flowstock-front && npm run test` (Vitest, 20개 통과)
@@ -265,6 +268,7 @@ flowstock-ai/
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
 - Airflow: `AIRFLOW_POSTGRES_PASSWORD`, `AIRFLOW_FERNET_KEY`, `AIRFLOW_WEBSERVER_SECRET_KEY`, `AIRFLOW_ADMIN_PASSWORD`
 - OAuth: `GOOGLE_CLIENT_ID`, `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`
+- Kakao 공유: `KAKAO_JS_KEY` (GitHub secret — Kakao Developers JavaScript 키, 미설정 시 공유 버튼이 링크 복사로 폴백)
 - 백엔드: `AI_SERVICE_URL` (Python 서비스 주소)
 - Cloudflare Tunnel: `CLOUDFLARE_ACCOUNT_TAG`, `CLOUDFLARE_TUNNEL_ID`, `CLOUDFLARE_TUNNEL_SECRET`
 - KIS는 사용하지 않음 (pykrx로 대체) — `.env`에 KIS_APP_KEY/KIS_APP_SECRET이 남아있다면 무시 가능
