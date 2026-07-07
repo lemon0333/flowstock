@@ -23,6 +23,9 @@ data:
         service: http://umami.flowstock.svc.cluster.local:3000
       - hostname: airflow.flowstock.info
         service: http://airflow-webserver.flowstock.svc.cluster.local:8080
+      # www는 root로 301 (k8s/www-redirect의 nginx가 수행)
+      - hostname: www.flowstock.info
+        service: http://www-redirect.flowstock.svc.cluster.local:80
       - service: http_status:404
 ---
 apiVersion: v1
